@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  api:
+    container_name: apexflix
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "10004:10004"
+    networks:
+      - webnet
+    env_file: .env
+
+networks:
+  webnet:

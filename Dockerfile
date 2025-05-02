@@ -1,43 +1,42 @@
 # syntax = docker/dockerfile:1.2
 
-FROM node:18-alpine as base 
+FROM oven/bun:latest AS base
 
-RUN apk upgrade && \
-    apk add libgcc libstdc++ && \ 
-    apk add make gcc g++ python3
+ENV NODE_ENV="production"
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y build-essential pkg-config python-is-python3 ca-certificates
 
-RUN yarn global add turbo
-
-FROM base as builder
-
+FROM base as codegen
 WORKDIR /usr/src/app
 
+# Copy source code
 COPY . .
 
-RUN  turbo prune kamikaze --docker
+# Run turbo prune for docker build
+RUN bun install turbo --global && \
+    bun x turbo prune @raliqbot/bot --docker
 
-FROM base as installer
-
+FROM base as builder
 WORKDIR /usr/src/app
 
-COPY --from=builder /usr/src/app/out/json/ .
-RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install --frozen-lockfile
+# Install node modules
+COPY --from=codegen /usr/src/app/out/json .
+RUN bun install --frozen-lockfile
 
-COPY --from=builder /usr/src/app/out/full/ .
-RUN yarn turbo run build --filter=kamikaze
+# Build application
+COPY --from=codegen /usr/src/app/out/full . 
+RUN  bun x turbo build
 
 FROM base as runner 
+WORKDIR /usr/src/app
 
-WORKDIR /usr/src/app 
+# Copy built application
+COPY --from=builder /usr/src/app/ .
+WORKDIR /usr/src/app/servers/api
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nodejs
-USER nodejs
+ENV HOST="0.0.0.0"
+ENV PORT=10004
+ENV NODE_ENV=production
 
-COPY --from=installer --chown=nodejs:nodejs /usr/src/app/ .
 
-WORKDIR /usr/src/app/servers/kamikaze
-
-RUN npx --yes @fastify/secure-session > secret-key
-
-CMD yarn migrate && node dist/index.cjs
+CMD ["bun", "x", "pm2-runtime", "start", "ecosystem.config.js"]
