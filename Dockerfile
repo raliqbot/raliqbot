@@ -30,9 +30,9 @@ RUN  bun x turbo build
 FROM base as runner 
 WORKDIR /usr/src/app
 
-# Copy built application
+# Copy built application f
 COPY --from=builder /usr/src/app/ .
-WORKDIR /usr/src/app/servers/api
+WORKDIR /usr/src/app/servers/bot
 
 ENV HOST="0.0.0.0"
 ENV PORT=10004
