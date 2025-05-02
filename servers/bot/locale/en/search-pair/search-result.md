@@ -1,0 +1,1 @@
+> Open a position for %name% or Buy\/Sell tokens in this pair\.

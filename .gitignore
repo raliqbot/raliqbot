@@ -1,0 +1,7 @@
+.keep 
+.turbo 
+node_modules
+.ropeproject
+dist 
+.env
+.env.prod
