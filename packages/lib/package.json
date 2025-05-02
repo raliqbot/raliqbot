@@ -1,8 +1,8 @@
 {
   "name": "@raliqbot/lib",
-  "module": "src/index.ts",
-  "type": "module",
+  "version": "0.0.0",
   "private": true,
+  "module": "./dist/index.js",
   "types": "./src/index.ts",
   "scripts": {
     "build": "tsc"

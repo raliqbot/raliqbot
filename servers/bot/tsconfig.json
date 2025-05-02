@@ -1,15 +1,14 @@
 {
   "extends": "@tsconfig/recommended",
   "compilerOptions": {
-    "module": "ESNext",
-    "target": "ESNext",
     "outDir": "dist",
-    "moduleResolution": "Node",
-    "strict": true,
-    "skipLibCheck": true,
-    "isolatedModules": true,
-    "esModuleInterop": true,
+    "baseUrl": "src",
     "resolveJsonModule": true,
-    "forceConsistentCasingInFileNames": true
-  }
+    "sourceMap": true,
+    "inlineSources": true,
+    "sourceRoot": "/",
+    "allowJs": true
+  },
+  "exclude": ["node_modules"],
+  "include": ["src", "drizzle.config.ts", "ecosystem.config.js"]
 }

@@ -1,7 +1,7 @@
 {
   "name": "@raliqbot/bot",
-  "module": "src/index.ts",
-  "type": "module",
+  "version": "0.0.0",
+  "private": "true",
   "scripts": {
     "build": "tsc",
     "codegen": "bun scripts/codegen",
