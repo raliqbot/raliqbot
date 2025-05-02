@@ -2,7 +2,7 @@ import "dotenv/config";
 
 import { format } from "@raliqbot/shared";
 
-type Env = %env%;
+type Env = "DEV_WALLET"|"DATABASE_URL"|"TELEGRAM_BOT_API_KEY"|"SECRET_KEY"|"BITQUERY_API_KEY";
 
 export const getEnv = <T extends object | number | string | null = string>(
   name: Env,

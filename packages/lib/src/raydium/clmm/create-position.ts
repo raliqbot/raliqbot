@@ -1,5 +1,6 @@
 import assert from "assert";
 import { Decimal } from "decimal.js";
+import { format } from "@raliqbot/shared";
 import { BN, web3 } from "@coral-xyz/anchor";
 import {
   PoolUtils,
@@ -12,7 +13,6 @@ import {
   TxVersion,
 } from "@raydium-io/raydium-sdk-v2";
 
-import { format } from "../utils";
 import { isValidClmm } from "./utils";
 
 export const createPosition = async (

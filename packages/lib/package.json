@@ -5,7 +5,8 @@
   "module": "./dist/index.js",
   "types": "./src/index.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "codegen": "bun ./scripts/codegen.ts"
   },
   "exports": {
     ".": {
@@ -15,6 +16,10 @@
     "./dexscreener": {
       "type": "./src/dexscreener/index.ts",
       "default": "./dist/dexscreener/index.js"
+    },
+    "./raydium": {
+      "type": "./src/raydium/index.ts",
+      "default": "./dist/raydium/index.js"
     }
   },
   "devDependencies": {

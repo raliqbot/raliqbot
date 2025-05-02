@@ -2,12 +2,11 @@ import { web3 } from "@coral-xyz/anchor";
 import type {
   ApiV3PoolInfoConcentratedItem,
   ClmmPositionLayout,
+  Raydium,
 } from "@raydium-io/raydium-sdk-v2";
 
-import type { Context } from "../context";
-
 export const harvestAllRewards = async (
-  { raydium }: Context,
+  raydium: Raydium,
   programId: web3.PublicKey
 ) => {
   const positions = await raydium.clmm.getOwnerPositionInfo({ programId });

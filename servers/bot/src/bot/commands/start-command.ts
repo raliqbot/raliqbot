@@ -23,7 +23,7 @@ export const startCommand = (telegraf: Telegraf) => {
           ],
           [
             Markup.button.callback("⚙️ Settings", "settings"),
-            Markup.button.callback("⚙️ Help", "help"),
+            Markup.button.callback("🆘 Help", "help"),
           ],
         ]).reply_markup,
       }

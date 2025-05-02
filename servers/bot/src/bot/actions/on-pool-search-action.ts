@@ -1,8 +1,7 @@
-import millify from "millify";
 import { Context, Markup } from "telegraf";
 import { format } from "@raliqbot/shared";
 
-import { dexscreemer } from "../../instances";
+import { getEnv } from "../../core";
 import { cleanText, readFileSync } from "../utils";
 
 export const onPoolSearchAction = async (context: Context) => {
@@ -11,50 +10,50 @@ export const onPoolSearchAction = async (context: Context) => {
     const query = inlineQuery.query;
     if (query.trim().length < 2) return;
 
-    const pairs = await dexscreemer.search
-      .searchPairs(query)
-      .then(({ data }) =>
-        data.pairs.filter((pair) => pair.dexId === "raydium" && pair.info)
-      );
+    const pools = (
+      await Promise.all([
+        context.raydium.api
+          .fetchPoolByMints({ mint1: query, sort: "apr30d" })
+          .then((pools) => pools.data),
+        context.raydium.api.fetchPoolById({ ids: query }),
+      ])
+    ).flat();
 
-    if (pairs.length > 0) {
+    if (pools.length > 0) {
       return context.answerInlineQuery(
-        pairs.map((pair) => {
-          const name = format(
-            "%-%",
-            pair.baseToken.symbol,
-            pair.quoteToken.symbol
-          );
+        pools.map((pool) => {
+          const name = format("%-%", pool.mintA.symbol, pool.mintB.symbol);
+          const photoUrl = format("%/%", getEnv("MEDIA_APP_URL"), pool.id);
 
           return {
-            id: pair.pairAddress,
+            id: pool.id,
             type: "article" as const,
             title: name,
-            thumbnail_url: pair.info.imageUrl,
+            thumbnail_url: pool.mintA.logoURI,
             description: format(
-              "Price $%/ MCap $% / Volume 24h % / Price change %",
-              pair.priceUsd,
-              millify(pair.marketCap),
-              pair.volume["24h"],
-              pair.priceChange["24"]
+              "Price % SOL/ 24hr Fee/ TVL $% / Fee rate % / Price change %",
+              pool.price,
+              pool.tvl,
+              pool.feeRate,
+              pool.day
             ),
             hide_url: true,
             reply_markup: Markup.inlineKeyboard([
               [
                 Markup.button.callback(
                   "➕ Open Position",
-                  format("create-position-%", pair.pairAddress)
+                  format("createPosition-%", pool.id)
                 ),
               ],
             ]).reply_markup,
             input_message_content: {
               is_flexible: true,
               link_preview_options: {
-                url: pair.info.openGraph,
+                url: photoUrl,
                 show_above_text: true,
                 prefer_large_media: true,
               },
-              photo_url: pair.info.openGraph,
+              photo_url: photoUrl,
               message_text: readFileSync(
                 "locale/en/search-pair/search-result.md",
                 "utf-8"

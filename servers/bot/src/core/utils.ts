@@ -1,3 +1,6 @@
+import { readFileSync } from "fs";
+import { web3 } from "@coral-xyz/anchor";
+
 export const format = <
   T extends Array<string | number | object | null | undefined>
 >(
@@ -11,4 +14,9 @@ export const format = <
       delimiter
     )
   );
+};
+
+export const loadWalletFromFile = (file: string) => {
+  const key = readFileSync(file, "utf-8");
+  return web3.Keypair.fromSecretKey(Buffer.from(Array.from(JSON.parse(key))));
 };

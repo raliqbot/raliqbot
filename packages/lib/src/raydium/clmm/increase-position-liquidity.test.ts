@@ -2,7 +2,7 @@ import { web3 } from "@coral-xyz/anchor";
 import { beforeAll, describe, test } from "bun:test";
 import { DEVNET_PROGRAM_ID, Raydium } from "@raydium-io/raydium-sdk-v2";
 
-import { getEnv } from "../env";
+import { getEnv } from "../../env";
 import { loadWalletFromFile } from "./utils";
 import { increatePositionLiquidity } from "./increase-position-liquidity";
 

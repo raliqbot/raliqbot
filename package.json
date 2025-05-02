@@ -11,6 +11,8 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@raydium-io/raydium-sdk-v2": "^0.1.128-alpha",
+    "@solana/web3.js": "^1.98.2",
     "@tsconfig/recommended": "^1.0.8",
     "assert": "^2.1.0",
     "decimal.js": "^10.5.0",
@@ -19,6 +21,7 @@
   },
   "workspaces": [
     "servers/*",
-    "packages/*"
+    "packages/*",
+    "web/*"
   ]
 }

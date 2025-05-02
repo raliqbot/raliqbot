@@ -1,14 +1,14 @@
 import {
   TxVersion,
+  type Raydium,
   type ApiV3PoolInfoConcentratedItem,
   type ClmmKeys,
 } from "@raydium-io/raydium-sdk-v2";
 
 import { isValidClmm } from "./utils";
-import type { Context } from "../context";
 
 export const closePosition = async (
-  { raydium }: Context,
+  raydium: Raydium,
   poolId: string,
   position: Awaited<
     ReturnType<typeof raydium.clmm.getOwnerPositionInfo>
