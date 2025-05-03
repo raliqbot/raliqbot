@@ -15,18 +15,29 @@ describe("open position on raydium", async () => {
 
     raydium = await Raydium.load({
       owner,
-      cluster: "devnet",
-      connection: new web3.Connection(web3.clusterApiUrl("devnet")),
+      cluster: "mainnet",
+      connection: new web3.Connection(
+        "https://smart-proportionate-dew.solana-mainnet.quiknode.pro/c852fdbf045b068fb359cad845b4cc95c99738b1/"
+      ),
     });
   });
+  // mint: "So11111111111111111111111111111111111111112",
 
   test("open a position with a single token", async () => {
     const tx = await createPosition(
       raydium,
-      { mint: "GWvUXPxDpNiTaWKKfKLpn8ihfCLeVNLAAQtExxTCjWJp", amount: 10 },
-      "2byeyx1ynRhLudcetkHWnsKLUAVtGN7ktMxDV7fzjnjn",
-      [0.1, 1.5],
-      0
+      { amount: 0.1 },
+      "BZtgQEyS6eXUXicYPHecYQ7PybqodXQMvkjUbP4R8mUU",
+      [0.999000549780072, 1.000300030001],
+      0.05
+      // {
+      //   tokenASwapConfig: {
+      //     poolId: "5mjMuhZenZpHX5PBHepdtQNPXrcg2qPQ54yNtEqnukAK",
+      //   },
+      //   tokenBSwapConfig: {
+      //     poolId: "7MZadGscoyyGL9Ut3Whm6EshnuACt6Fkgat23F1NmFrq",
+      //   },
+      // }
     );
     console.log(JSON.stringify(tx));
   }, 5000000);
