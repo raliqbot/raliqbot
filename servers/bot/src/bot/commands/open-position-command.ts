@@ -27,9 +27,12 @@ export const openPositionCommand = async (telegraf: Telegraf) => {
         let poolInfo: ApiV3PoolInfoConcentratedItem | undefined;
 
         if (context.raydium.cluster === "mainnet") {
+          const [mint1, mint2] = address.split(/,/g);
+
           const poolInfos = await context.raydium.api.fetchPoolByMints({
-            mint1: address,
-            sort: "apr30d",
+            mint1,
+            mint2,
+            sort: "liquidity",
             type: PoolFetchType.Concentrated,
           });
 
@@ -72,7 +75,6 @@ export const openPositionCommand = async (telegraf: Telegraf) => {
               "utf-8"
             ).replace("%name%", cleanText(name)),
             {
-             
               parse_mode: "MarkdownV2" as const,
               reply_markup: Markup.inlineKeyboard([
                 [

@@ -102,7 +102,6 @@ export const createSwap = async (
       remainingAccounts,
       amountOutMin: minAmountOut.amount.raw,
       observationId: clmmPoolInfo.observationId,
-      checkCreateATAOwner: true,
       txVersion: TxVersion.LEGACY,
       ownerInfo: {
         useSOLBalance: true,
