@@ -1,6 +1,5 @@
 import { Markup, Scenes } from "telegraf";
 import { createPosition } from "@raliqbot/lib";
-import { Raydium } from "@raydium-io/raydium-sdk-v2";
 
 import { format } from "../../core";
 import { readFileSync } from "../utils";
@@ -34,7 +33,8 @@ export const createPositionScene = new Scenes.WizardScene(
         const endPrice = info.price + delta;
 
         const [[, , signature], nftMint] = await createPosition(
-          context.raydium as Raydium,
+          // @ts-ignore
+          context.raydium,
           { mint: "So11111111111111111111111111111111111111112", amount },
           info.id,
           [startPrice, endPrice],

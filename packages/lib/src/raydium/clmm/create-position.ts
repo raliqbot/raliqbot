@@ -9,7 +9,6 @@ import {
   type Raydium,
   TickUtils,
   TxVersion,
-  ComputeClmmPoolInfo,
 } from "@raydium-io/raydium-sdk-v2";
 
 import { isValidClmm } from "./utils";

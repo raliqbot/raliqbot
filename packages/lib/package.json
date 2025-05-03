@@ -11,15 +11,15 @@
   "exports": {
     ".": {
       "type": "./src/index.ts",
-      "default": "./dist/index.js"
+      "default": "./dist/src/index.js"
     },
     "./dexscreener": {
       "type": "./src/dexscreener/index.ts",
-      "default": "./dist/dexscreener/index.js"
+      "default": "./dist/src/dexscreener/index.js"
     },
     "./raydium": {
       "type": "./src/raydium/index.ts",
-      "default": "./dist/raydium/index.js"
+      "default": "./dist/src/raydium/index.js"
     }
   },
   "devDependencies": {

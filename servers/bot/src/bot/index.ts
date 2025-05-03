@@ -26,7 +26,7 @@ export const authenticateUser = async (
     context.raydium = await Raydium.load({
       owner,
       connection,
-      cluster: "devnet",
+      cluster: "mainnet",
     });
     context.session = { createPosition: {} };
     return next();
@@ -34,7 +34,9 @@ export const authenticateUser = async (
 };
 
 export default function registerBot(bot: Telegraf) {
+  const scenes = [createPositionScene];
   const stage = new Scenes.Stage<any>([createPositionScene]);
+  scenes.map((scene) => scene.use(authenticateUser));
   bot.use(session());
   bot.use(stage.middleware());
   bot.use(authenticateUser);
