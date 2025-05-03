@@ -9,6 +9,7 @@ import {
   type Raydium,
   TickUtils,
   TxVersion,
+  ComputeClmmPoolInfo,
 } from "@raydium-io/raydium-sdk-v2";
 
 import { isValidClmm } from "./utils";
@@ -26,6 +27,7 @@ export const createPosition = async (
   }
 ) => {
   let poolKeys: ClmmKeys | undefined;
+  let clmmPoolInfo: ComputeClmmPoolInfo | undefined;
   let poolInfo: ApiV3PoolInfoConcentratedItem | undefined;
 
   if (raydium.cluster === "mainnet") {
@@ -33,7 +35,10 @@ export const createPosition = async (
     for (const poolInfoItem of poolInfos)
       if (isValidClmm(poolInfoItem.programId)) {
         poolInfo = poolInfoItem as ApiV3PoolInfoConcentratedItem;
-
+        clmmPoolInfo = await PoolUtils.fetchComputeClmmInfo({
+          connection: raydium.connection,
+          poolInfo,
+        });
         break;
       }
   } else {
@@ -89,7 +94,7 @@ export const createPosition = async (
   } else {
     const swapAResult = await createSwap(
       raydium,
-      { mint: input.mint, amount: input.amount * 0.5 },
+      { mint: input.mint, amount: input.amount * 0.45 },
       poolInfo.mintA.address,
       slippage,
       epochInfo,
@@ -97,7 +102,7 @@ export const createPosition = async (
     );
     const swapBResult = await createSwap(
       raydium,
-      { mint: input.mint, amount: input.amount * 0.5 },
+      { mint: input.mint, amount: input.amount * 0.55 },
       poolInfo.mintB.address,
       slippage,
       epochInfo,
@@ -169,17 +174,6 @@ export const createPosition = async (
     tickLower: Math.min(lowerTick, upperTick),
   });
 
-  console.log("tokenA=", baseAmountIn!.toString());
-  console.log("tokenB=", quoteAmountIn!.toString());
-  console.log(
-    "slippageAmountA=",
-    liquidityInfo.amountSlippageB.amount.toString()
-  );
-  console.log(
-    "slippageAmountB=",
-    liquidityInfo.amountSlippageB.amount.toString()
-  );
-
   const {
     transaction: positionTransaction,
     extInfo,
@@ -230,14 +224,17 @@ export const createPosition = async (
 
   console.log("swap_b_signature=", swapBSignature);
 
-  const signature = await web3.sendAndConfirmTransaction(
+  const positionnSignature = await web3.sendAndConfirmTransaction(
     raydium.connection,
     positionTransaction,
     [raydium.owner!.signer!, ...positionSigners],
     { commitment: "confirmed" }
   );
 
-  console.log("position_signature=", signature);
+  console.log("position_signature=", positionnSignature);
 
-  return [signature, extInfo.nftMint.toBase58()];
+  return [
+    [swapASignature, swapBSignature, positionnSignature],
+    extInfo.nftMint.toBase58(),
+  ] as const;
 };

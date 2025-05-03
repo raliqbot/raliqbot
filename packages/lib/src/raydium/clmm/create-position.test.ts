@@ -26,8 +26,8 @@ describe("open position on raydium", async () => {
   test("open a position with a single token", async () => {
     const tx = await createPosition(
       raydium,
-      { amount: 0.1 },
-      "BZtgQEyS6eXUXicYPHecYQ7PybqodXQMvkjUbP4R8mUU",
+      { mint: "So11111111111111111111111111111111111111112", amount: 0.1 },
+      "8sLbNZoA1cfnvMJLPfp98ZLAnFSYCFApfJKMbiXNLwxj",
       [0.999000549780072, 1.000300030001],
       0.05
       // {
