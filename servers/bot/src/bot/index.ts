@@ -27,6 +27,7 @@ export const authenticateUser = async (
       owner,
       connection,
       cluster: "mainnet",
+      disableLoadToken: true,
     });
     if (!context.session) context.session = {} as any;
     if (!context.session.createPosition) context.session.createPosition = {};
