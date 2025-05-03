@@ -28,7 +28,8 @@ export const authenticateUser = async (
       connection,
       cluster: "mainnet",
     });
-    context.session = { createPosition: {} };
+    if (!context.session) context.session = {} as any;
+    if (!context.session.createPosition) context.session.createPosition = {};
     return next();
   }
 };
