@@ -66,13 +66,13 @@ export const openPositionCommand = async (telegraf: Telegraf) => {
             (poolInfo.mintB.symbol ?? poolInfo.mintB.name).toUpperCase()
           ).replace(/\s/g, "");
 
-          return context.replyWithPhoto(
-            Input.fromURL(format("%/%", getEnv("MEDIA_APP_URL"), poolInfo.id)),
+          return context.replyWithMarkdownV2(
+            readFileSync(
+              "locale/en/search-pair/search-result.md",
+              "utf-8"
+            ).replace("%name%", cleanText(name)),
             {
-              caption: readFileSync(
-                "locale/en/search-pair/search-result.md",
-                "utf-8"
-              ).replace("%name%", cleanText(name)),
+             
               parse_mode: "MarkdownV2" as const,
               reply_markup: Markup.inlineKeyboard([
                 [

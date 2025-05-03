@@ -27,7 +27,6 @@ export const createPosition = async (
   }
 ) => {
   let poolKeys: ClmmKeys | undefined;
-  let clmmPoolInfo: ComputeClmmPoolInfo | undefined;
   let poolInfo: ApiV3PoolInfoConcentratedItem | undefined;
 
   if (raydium.cluster === "mainnet") {
@@ -35,10 +34,6 @@ export const createPosition = async (
     for (const poolInfoItem of poolInfos)
       if (isValidClmm(poolInfoItem.programId)) {
         poolInfo = poolInfoItem as ApiV3PoolInfoConcentratedItem;
-        clmmPoolInfo = await PoolUtils.fetchComputeClmmInfo({
-          connection: raydium.connection,
-          poolInfo,
-        });
         break;
       }
   } else {

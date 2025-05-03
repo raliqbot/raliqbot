@@ -23,7 +23,7 @@ export const onPoolSearchAction = async (context: Context) => {
       return context.answerInlineQuery(
         pools.map((pool) => {
           const name = format("%-%", pool.mintA.symbol, pool.mintB.symbol);
-          const photoUrl = format("%/%", getEnv("MEDIA_APP_URL"), pool.id);
+          //const photoUrl = format("%/%", getEnv("MEDIA_APP_URL"), pool.id);
 
           return {
             id: pool.id,
@@ -49,11 +49,11 @@ export const onPoolSearchAction = async (context: Context) => {
             input_message_content: {
               is_flexible: true,
               link_preview_options: {
-                url: photoUrl,
+                // url: photoUrl,
                 show_above_text: true,
                 prefer_large_media: true,
               },
-              photo_url: photoUrl,
+              // photo_url: photoUrl,
               message_text: readFileSync(
                 "locale/en/search-pair/search-result.md",
                 "utf-8"

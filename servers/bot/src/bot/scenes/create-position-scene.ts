@@ -2,6 +2,9 @@ import { Markup, Scenes } from "telegraf";
 import { createPosition } from "@raliqbot/lib";
 import { Raydium } from "@raydium-io/raydium-sdk-v2";
 
+import { format } from "../../core";
+import { readFileSync } from "../utils";
+
 export const createPositionSceneId = "create-position-scene";
 
 export const createPositionScene = new Scenes.WizardScene(
@@ -20,6 +23,7 @@ export const createPositionScene = new Scenes.WizardScene(
       const amount = Number(message.text);
       const { info } = context.session.createPosition;
       if (info) {
+        const name = format("%-%", info.mintA.symbol, info.mintB.symbol);
         const rpcPoolInfo = await context.raydium.clmm.getRpcClmmPoolInfo({
           poolId: info.id,
         });
@@ -29,7 +33,7 @@ export const createPositionScene = new Scenes.WizardScene(
         const startPrice = info.price - delta;
         const endPrice = info.price + delta;
 
-        const [signatures, nftMint] = await createPosition(
+        const [[, , signature], nftMint] = await createPosition(
           context.raydium as Raydium,
           { mint: "So11111111111111111111111111111111111111112", amount },
           info.id,
@@ -37,7 +41,12 @@ export const createPositionScene = new Scenes.WizardScene(
           0.05
         );
 
-        return context.reply([signatures, nftMint].join(","));
+        return context.replyWithMarkdownV2(
+          readFileSync("locale/en/create-position/position-created.md", "utf-8")
+            .replace("%name%", name)
+            .replace("%signature%", signature)
+            .replace("%positionId%", nftMint)
+        );
       }
       return context.scene.leave();
     }
