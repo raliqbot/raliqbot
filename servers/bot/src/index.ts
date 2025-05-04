@@ -6,7 +6,8 @@ async function main() {
   const bot = new Telegraf(getEnv("TELEGRAM_BOT_API_KEY"));
   registerBot(bot);
 
-  bot.launch();
+  bot.catch((error) => console.error(error));
+  bot.launch().then(() => console.log("bot running in background"));
 
   process.once("SIGINT", () => bot.stop("SIGINT"));
   process.once("SIGTERM", () => bot.stop("SIGTERM"));

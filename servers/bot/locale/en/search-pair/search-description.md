@@ -1,0 +1,1 @@
+Fee %fee%%, Liquidity $%liquidity%, Volume 24H $%volume%, Fee 24H $%fee_24h%, APR 24H %apr_24h%%
