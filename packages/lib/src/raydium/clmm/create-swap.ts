@@ -116,5 +116,11 @@ export const createSwap = async (
     ] as const;
   }
 
-  return null;
+  throw new Error(
+    format(
+      "no valid pool found for mint1= and mint2=",
+      input.mint,
+      poolInfo.mintB.address
+    )
+  );
 };

@@ -6,7 +6,7 @@ import type {
   Raydium,
 } from "@raydium-io/raydium-sdk-v2";
 
-import type { selectUserSchema, selectWalletSchema } from "./db/zod";
+import type { selectSettingsSchema, selectUserSchema, selectWalletSchema } from "./db/zod";
 
 type SessionData = {
   createPosition: {
@@ -22,6 +22,7 @@ declare module "telegraf" {
   interface Context extends Scenes.WizardContext<Session> {
     user: Zod.infer<typeof selectUserSchema> & {
       wallet: Zod.infer<typeof selectWalletSchema>;
+      settings: Zod.infer<typeof selectSettingsSchema>
     };
     wallet: web3.Keypair;
     raydium: Raydium;

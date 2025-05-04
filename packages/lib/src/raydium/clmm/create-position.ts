@@ -14,16 +14,28 @@ import {
 import { isValidClmm } from "./utils";
 import { createSwap } from "./create-swap";
 
-export const createPosition = async (
-  raydium: Raydium,
-  input: { mint?: string; amount: number },
-  poolId: string,
-  [startPrice, endPrice]: [number, number],
-  slippage: number,
+type CreatePositionParams = {
+  poolId: string;
+  slippage: number;
+  tickPercentage: [number, number];
+  singleSided?: "MintA" | "MintB";
+  input: { mint?: string; amount: number };
   devConfig?: {
     tokenASwapConfig: { poolId: string };
     tokenBSwapConfig: { poolId: string };
-  }
+  };
+};
+
+export const createPosition = async (
+  raydium: Raydium,
+  {
+    poolId,
+    slippage,
+    tickPercentage: [startPercentage, endPercentage],
+    singleSided,
+    input,
+    devConfig,
+  }: CreatePositionParams
 ) => {
   let poolKeys: ClmmKeys | undefined;
   let poolInfo: ApiV3PoolInfoConcentratedItem | undefined;
@@ -62,50 +74,36 @@ export const createPosition = async (
         .toFixed(0)
     );
 
-    const swapResult = await createSwap(
-      raydium,
-      { mint: input.mint, amount: input.amount / 2 },
-      poolInfo[baseIn ? "mintB" : "mintA"].address,
-      slippage,
-      epochInfo,
-      devConfig?.[baseIn ? "tokenBSwapConfig" : "tokenASwapConfig"].poolId
-    );
-
-    if (swapResult) {
-      const [{ minAmountOut }, { transaction, signers: swapSigners }] =
-        swapResult;
-
-      signers.push(...swapSigners);
-      transactions.push([transaction]);
-
-      quoteAmountIn = minAmountOut.amount.raw;
-    } else
-      baseAmountIn = new BN(
-        new Decimal(input.amount)
-          .mul(Math.pow(10, poolInfo[baseIn ? "mintA" : "mintB"].decimals))
-          .toFixed(0)
+    const [{ minAmountOut }, { transaction, signers: swapSigners }] =
+      await createSwap(
+        raydium,
+        {
+          mint: input.mint,
+          amount: singleSided ? input.amount : input.amount / 2,
+        },
+        poolInfo[baseIn ? "mintB" : "mintA"].address,
+        slippage,
+        epochInfo,
+        devConfig?.[baseIn ? "tokenBSwapConfig" : "tokenASwapConfig"].poolId
       );
-  } else {
-    const swapAResult = await createSwap(
-      raydium,
-      { mint: input.mint, amount: input.amount * 0.45 },
-      poolInfo.mintA.address,
-      slippage,
-      epochInfo,
-      devConfig?.tokenASwapConfig.poolId
-    );
-    const swapBResult = await createSwap(
-      raydium,
-      { mint: input.mint, amount: input.amount * 0.55 },
-      poolInfo.mintB.address,
-      slippage,
-      epochInfo,
-      devConfig?.tokenBSwapConfig.poolId
-    );
 
-    if (swapAResult) {
+    signers.push(...swapSigners);
+    transactions.push([transaction]);
+    quoteAmountIn = minAmountOut.amount.raw;
+  } else {
+    {
       const [{ minAmountOut }, { transaction, signers: swapSigners }] =
-        swapAResult;
+        await createSwap(
+          raydium,
+          {
+            mint: input.mint,
+            amount: singleSided ? input.amount * 0.9 : input.amount * 0.45,
+          },
+          poolInfo.mintA.address,
+          slippage,
+          epochInfo,
+          devConfig?.tokenASwapConfig.poolId
+        );
 
       signers.push(...swapSigners);
       transactions.push([transaction]);
@@ -113,7 +111,18 @@ export const createPosition = async (
       baseAmountIn = minAmountOut.amount.raw;
     }
 
-    if (swapBResult) {
+    {
+      const swapBResult = await createSwap(
+        raydium,
+        {
+          mint: input.mint,
+          amount: singleSided ? input.amount * 0.1 : input.amount * 0.55,
+        },
+        poolInfo.mintB.address,
+        slippage,
+        epochInfo,
+        devConfig?.tokenBSwapConfig.poolId
+      );
       const [{ minAmountOut }, { transaction, signers: swapSigners }] =
         swapBResult;
 
@@ -121,15 +130,6 @@ export const createPosition = async (
       transactions.push([transaction]);
       quoteAmountIn = minAmountOut.amount.raw;
     }
-
-    assert(
-      swapAResult && swapBResult,
-      format(
-        "single sided liquidity not supported for these mints mint1=% mint2=%",
-        poolInfo.mintA.address,
-        poolInfo.mintB.address
-      )
-    );
   }
 
   const rpcPoolInfo = await raydium.clmm.getRpcClmmPoolInfo({
@@ -137,20 +137,49 @@ export const createPosition = async (
   });
   poolInfo.price = rpcPoolInfo.currentPrice;
 
+  const startPrice = singleSided
+    ? singleSided === "MintA"
+      ? poolInfo.price + poolInfo.price * startPercentage
+      : poolInfo.price - poolInfo.price * startPercentage
+    : poolInfo.price - poolInfo.price * startPercentage;
+  const endPrice = singleSided
+    ? singleSided === "MintB"
+      ? poolInfo.price - poolInfo.price * endPercentage
+      : poolInfo.price + poolInfo.price * endPercentage
+    : poolInfo.price + poolInfo.price * endPercentage;
+
   const { tick: lowerTick } = TickUtils.getPriceAndTick({
     poolInfo,
-    baseIn: inputMintInPool ? baseIn : true,
+    baseIn: singleSided
+      ? singleSided === "MintA"
+      : inputMintInPool
+      ? baseIn
+      : true,
     price: new Decimal(startPrice),
   });
 
   const { tick: upperTick } = TickUtils.getPriceAndTick({
     poolInfo,
-    baseIn: inputMintInPool ? baseIn : true,
+    baseIn: singleSided
+      ? singleSided === "MintA"
+      : inputMintInPool
+      ? baseIn
+      : true,
     price: new Decimal(endPrice),
   });
 
-  if (baseAmountIn)
+  if (!singleSided && baseAmountIn)
     baseAmountIn = baseAmountIn.mul(new BN(70)).div(new BN(100));
+
+  const baseAmount = singleSided
+    ? singleSided === "MintA"
+      ? baseAmountIn!
+      : quoteAmountIn!
+    : inputMintInPool
+    ? baseIn
+      ? baseAmountIn!
+      : quoteAmountIn!
+    : baseAmountIn!;
 
   const liquidityInfo = await PoolUtils.getLiquidityAmountOutFromAmountIn({
     poolInfo,
@@ -158,15 +187,23 @@ export const createPosition = async (
     add: true,
     slippage: 0,
     amountHasFee: true,
-    amount: inputMintInPool
+    amount: baseAmount,
+    inputA: singleSided
+      ? singleSided === "MintA"
+      : inputMintInPool
       ? baseIn
-        ? baseAmountIn!
-        : quoteAmountIn!
-      : baseAmountIn!,
-    inputA: inputMintInPool ? baseIn : true,
+      : true,
     tickUpper: Math.max(lowerTick, upperTick),
     tickLower: Math.min(lowerTick, upperTick),
   });
+
+  console.log("startPrice=", startPrice);
+  console.log("endPrice=", endPrice);
+  console.log("singleSided=", singleSided === "MintA");
+  console.log("singleSided=", singleSided);
+  console.log("baseAmount=", baseAmount.toString());
+  console.log("baseAmount=", liquidityInfo.amountSlippageA.amount.toString());
+  console.log("quoteAmount=", liquidityInfo.amountSlippageB.amount.toString());
 
   const {
     transaction: positionTransaction,
@@ -175,13 +212,19 @@ export const createPosition = async (
   } = await raydium.clmm.openPositionFromBase({
     poolInfo,
     poolKeys,
-    base: inputMintInPool ? (baseIn ? "MintA" : "MintB") : "MintA",
-    baseAmount: inputMintInPool
+    baseAmount,
+    base: singleSided
+      ? singleSided
+      : inputMintInPool
       ? baseIn
-        ? baseAmountIn!
-        : quoteAmountIn!
-      : baseAmountIn!,
-    otherAmountMax: inputMintInPool
+        ? "MintA"
+        : "MintB"
+      : "MintA",
+    otherAmountMax: singleSided
+      ? singleSided === "MintA"
+        ? liquidityInfo.amountSlippageB.amount
+        : liquidityInfo.amountSlippageA.amount
+      : inputMintInPool
       ? baseIn
         ? liquidityInfo.amountSlippageB.amount
         : liquidityInfo.amountSlippageA.amount
@@ -198,37 +241,42 @@ export const createPosition = async (
     txVersion: TxVersion.LEGACY,
   });
 
+  const signatures: string[] = [];
   const [tx1, ...txs] = transactions;
 
-  const swapASignature = await web3.sendAndConfirmTransaction(
-    raydium.connection,
-    new web3.Transaction().add(...tx1),
-    [...signers],
-    { commitment: "confirmed" }
-  );
+  // const swap1Signature = await web3.sendAndConfirmTransaction(
+  //   raydium.connection,
+  //   new web3.Transaction().add(...tx1),
+  //   [...signers],
+  //   { commitment: "confirmed" }
+  // );
 
-  console.log("swap_a_signature=", swapASignature);
+  // signatures.push(swap1Signature);
+  // console.log("swap_1_signature=", swap1Signature);
 
-  const swapBSignature = await web3.sendAndConfirmTransaction(
-    raydium.connection,
-    new web3.Transaction().add(...txs.flat()),
-    [...signers],
-    { commitment: "confirmed" }
-  );
+  let swap2ignature;
 
-  console.log("swap_b_signature=", swapBSignature);
+  // if (txs.flat().length > 0) {
+  //   const swap2Signature = await web3.sendAndConfirmTransaction(
+  //     raydium.connection,
+  //     new web3.Transaction().add(...txs.flat()),
+  //     [...signers],
+  //     { commitment: "confirmed" }
+  //   );
 
-  const positionnSignature = await web3.sendAndConfirmTransaction(
+  //   console.log("swap_2_signature=", swap2ignature);
+  //   signatures.push(swap2Signature);
+  // }
+
+  const positionSignature = await web3.sendAndConfirmTransaction(
     raydium.connection,
     positionTransaction,
     [raydium.owner!.signer!, ...positionSigners],
     { commitment: "confirmed" }
   );
 
-  console.log("position_signature=", positionnSignature);
+  signatures.push(positionSignature);
+  console.log("position_signature=", positionSignature);
 
-  return [
-    [swapASignature, swapBSignature, positionnSignature],
-    extInfo.nftMint.toBase58(),
-  ] as const;
+  return [signatures, extInfo.nftMint.toBase58()] as const;
 };

@@ -1,5 +1,5 @@
 import type { Database } from "../db";
-import { users, wallets } from "../db/schema";
+import { settings, users, wallets } from "../db/schema";
 import { insertUserSchema } from "../db/zod";
 
 export const createUser = async (
@@ -20,7 +20,15 @@ export const createUser = async (
       target: [wallets.user, wallets.name],
       set: { user: user.id },
     })
-    .returning();
+    .returning()
+    .execute();
 
-  return { ...user, wallet };
+  const [setting] = await db
+    .insert(settings)
+    .values({})
+    .onConflictDoUpdate({ target: [settings.user], set: { user: user.id } })
+    .returning()
+    .execute();
+
+  return { ...user, wallet, settings: setting };
 };

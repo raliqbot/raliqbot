@@ -2,7 +2,7 @@ import { Markup, Scenes } from "telegraf";
 import { createPosition } from "@raliqbot/lib";
 
 import { format } from "../../core";
-import { readFileSync } from "../utils";
+import { cleanText, readFileSync } from "../utils";
 
 export const createPositionSceneId = "create-position-scene";
 
@@ -22,30 +22,44 @@ export const createPositionScene = new Scenes.WizardScene(
       const amount = Number(message.text);
       const { info } = context.session.createPosition;
       if (info) {
-        const name = format("%-%", info.mintA.symbol, info.mintB.symbol);
+        const name = format("%/%", info.mintA.symbol, info.mintB.symbol);
         const rpcPoolInfo = await context.raydium.clmm.getRpcClmmPoolInfo({
           poolId: info.id,
         });
         info.price = rpcPoolInfo.currentPrice;
 
-        const delta = info.price * 0.1;
-        const startPrice = info.price - delta;
-        const endPrice = info.price + delta;
-
         const [[, , signature], nftMint] = await createPosition(
-          // @ts-ignore
           context.raydium,
-          { mint: "So11111111111111111111111111111111111111112", amount },
-          info.id,
-          [startPrice, endPrice],
-          0.05
+          {
+            slippage: 0.05,
+            singleSided: "MintA",
+            input: {
+              mint: "So11111111111111111111111111111111111111112",
+              amount,
+            },
+            poolId: info.id,
+            tickPercentage: [0.01, 0],
+          }
         );
 
         return context.replyWithMarkdownV2(
           readFileSync("locale/en/create-position/position-created.md", "utf-8")
-            .replace("%name%", name)
-            .replace("%signature%", signature)
-            .replace("%positionId%", nftMint)
+            .replace("%name%", cleanText(name))
+            .replace("%signature%", cleanText(signature))
+            .replace("%positionId%", cleanText(nftMint)),
+          {
+            link_preview_options: {
+              is_disabled: true,
+            },
+            reply_markup: Markup.inlineKeyboard([
+              [
+                Markup.button.url(
+                  "🔗 View in Explorer",
+                  format("https://solscan.io/tx/%", signature)
+                ),
+              ],
+            ]).reply_markup,
+          }
         );
       }
       return context.scene.leave();

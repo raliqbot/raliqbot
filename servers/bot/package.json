@@ -22,7 +22,7 @@
     "@coral-xyz/anchor": "^0.31.1",
     "@raliqbot/lib": "*",
     "@raliqbot/shared": "*",
-    "@raydium-io/raydium-sdk-v2": "^0.1.126-alpha",
+    "@raydium-io/raydium-sdk-v2": "^0.1.128-alpha",
     "@tsconfig/recommended": "^1.0.8",
     "@types/bn.js": "^5.1.6",
     "bs58": "^6.0.0",

@@ -701,7 +701,7 @@
     "@raliqbot/lib" "*"
     "@raliqbot/shared" "*"
   dependencies:
-    "@raydium-io/raydium-sdk-v2" "^0.1.126-alpha"
+    "@raydium-io/raydium-sdk-v2" "^0.1.128-alpha"
     "@tsconfig/recommended" "^1.0.8"
     "@types/bn.js" "^5.1.6"
     bs58 "^6.0.0"
@@ -722,6 +722,7 @@
   dependencies:
     "@raliqbot/shared" "*"
   dependencies:
+    "@raydium-io/raydium-sdk-v2" "^0.1.128-alpha"
     xior "^0.7.8"
 
 "@raliqbot/shared@^workspace:packages/shared", "@raliqbot/shared@*":
@@ -733,10 +734,10 @@
   dependencies:
     xior "^0.7.8"
 
-"@raydium-io/raydium-sdk-v2@^0.1.126-alpha":
-  version "0.1.126-alpha"
-  resolved "https://registry.npmjs.org/@raydium-io/raydium-sdk-v2/-/raydium-sdk-v2-0.1.126-alpha.tgz"
-  integrity sha512-wpCb1rDvlENO+nfdjC1QVh6P4ImzgF/uhApw5194ycU1i8OSJrb0iZc1Egy5chafcn4i3gY2B1ivMdEeaNsSzA==
+"@raydium-io/raydium-sdk-v2@^0.1.128-alpha":
+  version "0.1.128-alpha"
+  resolved "https://registry.npmjs.org/@raydium-io/raydium-sdk-v2/-/raydium-sdk-v2-0.1.128-alpha.tgz"
+  integrity sha512-y0FykxqpuioQM40V7Gr/b4OeKUpVDwlz9UTL+bVExR4qdFGcGTzpdiuHEYo/CHZzLpQcCGbHfVjqf6sXeaSPIw==
   dependencies:
     "@solana/buffer-layout" "^4.0.1"
     "@solana/spl-token" "^0.4.8"
@@ -889,10 +890,31 @@
   dependencies:
     "@solana/codecs" "2.0.0-rc.1"
 
-"@solana/web3.js@^1.32.0", "@solana/web3.js@^1.69.0", "@solana/web3.js@^1.95.3", "@solana/web3.js@^1.95.5":
+"@solana/web3.js@^1.32.0", "@solana/web3.js@^1.69.0", "@solana/web3.js@^1.95.3":
   version "1.98.1"
   resolved "https://registry.npmjs.org/@solana/web3.js/-/web3.js-1.98.1.tgz"
   integrity sha512-gRAq1YPbfSDAbmho4kY7P/8iLIjMWXAzBJdP9iENFR+dFQSBSueHzjK/ou8fxhqHP9j+J4Msl4p/oDemFcIjlg==
+  dependencies:
+    "@babel/runtime" "^7.25.0"
+    "@noble/curves" "^1.4.2"
+    "@noble/hashes" "^1.4.0"
+    "@solana/buffer-layout" "^4.0.1"
+    "@solana/codecs-numbers" "^2.1.0"
+    agentkeepalive "^4.5.0"
+    bn.js "^5.2.1"
+    borsh "^0.7.0"
+    bs58 "^4.0.1"
+    buffer "6.0.3"
+    fast-stable-stringify "^1.0.0"
+    jayson "^4.1.1"
+    node-fetch "^2.7.0"
+    rpc-websockets "^9.0.2"
+    superstruct "^2.0.2"
+
+"@solana/web3.js@^1.69.0", "@solana/web3.js@^1.95.3", "@solana/web3.js@^1.95.5", "@solana/web3.js@^1.98.2":
+  version "1.98.2"
+  resolved "https://registry.npmjs.org/@solana/web3.js/-/web3.js-1.98.2.tgz"
+  integrity sha512-BqVwEG+TaG2yCkBMbD3C4hdpustR4FpuUFRPUmqRZYYlPI9Hg4XMWxHWOWRzHE9Lkc9NDjzXFX7lDXSgzC7R1A==
   dependencies:
     "@babel/runtime" "^7.25.0"
     "@noble/curves" "^1.4.2"
@@ -3480,6 +3502,8 @@ media@^workspace:web/media:
     eslint-config-next "15.3.1"
     tailwindcss "^4"
     typescript "^5"
+  dependencies:
+    "@raliqbot/lib" "*"
   dependencies:
     next "15.3.1"
     react "^19.0.0"

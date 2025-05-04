@@ -26,10 +26,16 @@ describe("open position on raydium", async () => {
   test("open a position with a single token", async () => {
     const tx = await createPosition(
       raydium,
-      { mint: "So11111111111111111111111111111111111111112", amount: 0.1 },
-      "8sLbNZoA1cfnvMJLPfp98ZLAnFSYCFApfJKMbiXNLwxj",
-      [0.999000549780072, 1.000300030001],
-      0.05
+      {
+        slippage: 0.05,
+        singleSided: "MintA",
+        tickPercentage: [0, 0.01],
+        poolId: "BZtgQEyS6eXUXicYPHecYQ7PybqodXQMvkjUbP4R8mUU",
+        input: {
+          mint: "So11111111111111111111111111111111111111112",
+          amount: 0.01,
+        },
+      }
       // {
       //   tokenASwapConfig: {
       //     poolId: "5mjMuhZenZpHX5PBHepdtQNPXrcg2qPQ54yNtEqnukAK",

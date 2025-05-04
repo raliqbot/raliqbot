@@ -7,7 +7,7 @@ export const format = <
   return String(
     values.reduce(
       (result, value) =>
-        String(result).replace(/(%|%d|%s)/, value ? value.toString() : ""),
+        String(result).replace(/(?<![\/\\])%/g, value ? value.toString() : ""),
       delimiter
     )
   );

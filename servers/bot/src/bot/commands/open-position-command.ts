@@ -5,7 +5,7 @@ import {
   PoolFetchType,
 } from "@raydium-io/raydium-sdk-v2";
 
-import { format, getEnv } from "../../core";
+import { format } from "../../core";
 import { cleanText, readFileSync } from "../utils";
 
 const commandFilter = /^open(?:-([1-9A-HJ-NP-Za-km-z]{32,44}))?$/;
