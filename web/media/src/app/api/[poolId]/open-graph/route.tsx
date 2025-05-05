@@ -1,5 +1,6 @@
-import { readFileSync } from "fs";
+import path from "path";
 import millify from "millify";
+import { readFileSync } from "fs";
 import { ImageResponse } from "next/og";
 import { format } from "@raliqbot/shared";
 import { web3 } from "@coral-xyz/anchor";
@@ -257,14 +258,20 @@ export async function GET(request: NextRequest, { params }) {
           {
             name: "aiWriterDouspace",
             data: readFileSync(
-              "src/app/assets/fonts/iAWriterDuospace-Regular.ttf"
+              path.join(
+                process.cwd(),
+                "src/app/assets/fonts/iAWriterDuospace-Regular.ttf"
+              )
             ),
             weight: 500,
           },
           {
             name: "aiWriterDouspace",
             data: readFileSync(
-              "src/app/assets/fonts/iAWriterDuospace-Bold.ttf"
+              path.join(
+                process.cwd(),
+                "src/app/assets/fonts/iAWriterDuospace-Bold.ttf"
+              )
             ),
             weight: 600,
           },
