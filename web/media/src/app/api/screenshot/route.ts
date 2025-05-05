@@ -13,7 +13,7 @@ export const GET = async (request: NextRequest) => {
           headless: true,
           args: ["--no-sandbox", "--disable-setuid-sandbox"],
         })
-      : puppeteer.launch({
+      : puppeteerCore.launch({
           args: chromium.args,
           headless: chromium.headless,
           defaultViewport: {
