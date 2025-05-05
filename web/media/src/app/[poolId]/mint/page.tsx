@@ -1,11 +1,14 @@
 import Image from "next/image";
 
+import { web3 } from "@coral-xyz/anchor";
 import { isValidClmm } from "@raliqbot/lib";
-import { clusterApiUrl, Connection } from "@solana/web3.js";
 import {
   type ApiV3PoolInfoConcentratedItem,
   Raydium,
 } from "@raydium-io/raydium-sdk-v2";
+
+import { getTokenImage } from "../../../utils/to-image-url";
+import { getClusterURL } from "../../../utils/refine-cluster";
 
 type PageProps = {
   searchParams: Promise<{ cluster: "mainnet" | "devnet" | undefined }>;
@@ -15,18 +18,15 @@ type PageProps = {
 export default async function poolId({ params, searchParams }: PageProps) {
   const { poolId } = await params;
   const { cluster } = await searchParams;
-  const refinedCluster = cluster === "mainnet" ? "mainnet-beta" : cluster;
 
   const raydium = await Raydium.load({
     cluster: cluster ? cluster : "mainnet",
-    connection: new Connection(
-      clusterApiUrl(refinedCluster)
-    ) as unknown as Parameters<typeof Raydium.load>[number]["connection"],
+    connection: new web3.Connection(getClusterURL(cluster)),
   });
 
   let poolInfo: ApiV3PoolInfoConcentratedItem | undefined;
 
-  if (cluster === "mainnet") {
+  if (raydium.cluster === "mainnet") {
     const pools = await raydium.api.fetchPoolById({ ids: poolId });
 
     for (const pool of pools) {
@@ -42,20 +42,23 @@ export default async function poolId({ params, searchParams }: PageProps) {
 
   if (poolInfo) {
     return (
-      <div id="media" className="relative size-14">
+      <div
+        id="media"
+        className="relative size-14"
+      >
         <Image
-          src={poolInfo.mintA.logoURI}
+          src={getTokenImage(poolInfo.mintA.logoURI, poolInfo.mintA.address)}
           alt={poolInfo.mintA.name}
           width={32}
           height={32}
-          className="absolute rounded-full object-full"
+          className="absolute object-full rounded-full"
         />
         <Image
-          src={poolInfo.mintB.logoURI}
+          src={getTokenImage(poolInfo.mintB.logoURI, poolInfo.mintB.address)}
           alt={poolInfo.mintB.name}
           width={32}
           height={32}
-          className="absolute right-0 object-full"
+          className="absolute right-0 object-full rounded-full"
         />
       </div>
     );

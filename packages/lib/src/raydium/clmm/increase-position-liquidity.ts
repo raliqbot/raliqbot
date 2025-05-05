@@ -27,8 +27,10 @@ export const increatePositionLiquidity = async (
   if (raydium.cluster === "mainnet") {
     const pools = await raydium.api.fetchPoolById({ ids: poolId });
     for (const pool of pools)
-      if (isValidClmm(pool.programId))
+      if (isValidClmm(pool.programId)) {
         poolInfo = pool as ApiV3PoolInfoConcentratedItem;
+        break;
+      }
   } else {
     const pool = await raydium.clmm.getPoolInfoFromRpc(poolId);
     poolInfo = pool.poolInfo;

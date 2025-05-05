@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import LocalFont from "next/font/local";
+
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const aiWriterDouspace = LocalFont({
+  src: [
+    {
+      weight: "500",
+      path: "./assets/fonts/iAWriterDuospace-Regular.ttf",
+    },
+  ],
 });
 
 export const metadata: Metadata = {
@@ -24,11 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
+      <body className={aiWriterDouspace.className}>{children}</body>
     </html>
   );
 }
