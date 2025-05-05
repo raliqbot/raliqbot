@@ -58,29 +58,6 @@ export async function GET(request: NextRequest, { params }) {
     poolInfo = pool.poolInfo;
   }
 
-  const stats = [
-    {
-      label: "Fees",
-      value: `${poolInfo.feeRate * 100}%`,
-    },
-    {
-      label: "Liquidity",
-      value: `$${poolInfo.tvl}`,
-    },
-    {
-      label: "24H VOL",
-      value: `$${millify(poolInfo.day.volume)}`,
-    },
-    {
-      label: "24H Fee",
-      value: `$${millify(poolInfo.day.volumeFee)}`,
-    },
-    {
-      label: "24H APR",
-      value: `${poolInfo.day.apr.toFixed(2)}%`,
-    },
-  ];
-
   if (poolInfo) {
     return new ImageResponse(
       (

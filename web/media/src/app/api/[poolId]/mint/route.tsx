@@ -10,11 +10,6 @@ import {
 import { getTokenImage } from "../../../../utils/to-image-url";
 import { getClusterURL } from "../../../../utils/refine-cluster";
 
-type PageProps = {
-  searchParams: Promise<{ cluster: "mainnet" | "devnet" | undefined }>;
-  params: Promise<{ poolId: string }>;
-};
-
 export async function GET(request: NextRequest, { params }) {
   const { poolId } = await params;
   const url = new URL(request.url);
@@ -99,7 +94,7 @@ export async function GET(request: NextRequest, { params }) {
           </div>
         </div>
       ),
-      { width: 96, height: 50,  }
+      { width: 96, height: 50 }
     );
   }
 }
