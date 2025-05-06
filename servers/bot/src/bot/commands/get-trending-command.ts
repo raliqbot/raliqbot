@@ -1,7 +1,9 @@
-import { format } from "@raliqbot/shared";
-import { cleanText, readFileSync } from "bot/utils";
 import millify from "millify";
+import { format } from "@raliqbot/shared";
 import { Context, Markup, Telegraf } from "telegraf";
+
+import { cleanText, readFileSync } from "../utils";
+
 
 export const commandFilter = /trending(-\d+)?/;
 
