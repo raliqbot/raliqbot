@@ -7,6 +7,7 @@ import {
 
 import { buildMediaURL, format } from "../../core";
 import { cleanText, isValidAddress, readFileSync } from "../utils";
+import { openPositionSceneId } from "../scenes/open-position-scene";
 
 const commandFilter = /^open(?:-([1-9A-HJ-NP-Za-km-z]{32,44}))?$/;
 
@@ -112,4 +113,14 @@ export const onOpenPosition = async (context: Context) => {
 export const openPositionCommand = async (telegraf: Telegraf) => {
   telegraf.action(commandFilter, onOpenPosition);
   telegraf.command(commandFilter, onOpenPosition);
+  telegraf.action(/open_position/, onOpenPosition);
+  telegraf.command(/open_position/, (context: Context) => {
+    const message = context.message;
+    if (message && "text" in message) {
+      const [, amount] = message.text.split(/\s/g);
+      if (Number.isNaN(Number(amount)))
+        context.session.createPosition.amount = Number(amount);
+      return context.scene.enter(openPositionSceneId);
+    }
+  });
 };
