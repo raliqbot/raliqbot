@@ -13,7 +13,7 @@ export const isValidAddress = (address: string) => {
   }
 };
 
-export const handleError = async <T extends (context: Context) => unknown>(
+export const catchBotRuntimeError =  <T extends (context: Context) => unknown>(
   fn: T
 ) => {
   return async (context: Context) => {

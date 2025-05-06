@@ -2,7 +2,7 @@ import { Input, Markup, Scenes } from "telegraf";
 import { createPosition } from "@raliqbot/lib";
 
 import { buildMediaURL, format } from "../../core";
-import { cleanText, readFileSync } from "../utils";
+import { catchBotRuntimeError, cleanText, readFileSync } from "../utils";
 
 export const createPositionSceneId = "create-position-scene";
 
@@ -16,7 +16,7 @@ export const createPositionScene = new Scenes.WizardScene(
 
     return context.wizard.next();
   },
-  async (context) => {
+  catchBotRuntimeError(async (context) => {
     const message = context.message;
     if (message && "text" in message) {
       const amount = Number(message.text.replace(/\s/g, ""));
@@ -70,5 +70,5 @@ export const createPositionScene = new Scenes.WizardScene(
       }
       return context.scene.leave();
     }
-  }
+  })
 );

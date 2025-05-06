@@ -2,6 +2,7 @@ import assert from "assert";
 import { Decimal } from "decimal.js";
 import { format } from "@raliqbot/shared";
 import { BN, web3 } from "@coral-xyz/anchor";
+import { getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 import {
   PoolUtils,
   type ApiV3PoolInfoConcentratedItem,
@@ -13,6 +14,7 @@ import {
 
 import { isValidClmm } from "./utils";
 import { createSwap } from "./create-swap";
+import { Connection, PublicKey } from "@solana/web3.js";
 
 type CreatePositionParams = {
   poolId: string;
@@ -65,6 +67,26 @@ export const createPosition = async (
   let quoteAmountIn;
   const signers: web3.Signer[] = [];
   const transactions: web3.Transaction[][] = [];
+
+  // check ATA accounts
+  if (raydium.owner && raydium.owner.signer) {
+    await getOrCreateAssociatedTokenAccount(
+      raydium.connection as unknown as Connection,
+      raydium.owner.signer,
+      new PublicKey(poolInfo.mintA.address),
+      raydium.ownerPubKey,
+      false,
+      "confirmed"
+    );
+    await getOrCreateAssociatedTokenAccount(
+      raydium.connection as unknown as Connection,
+      raydium.owner.signer,
+      new PublicKey(poolInfo.mintB.address),
+      raydium.ownerPubKey,
+      false,
+      "confirmed"
+    );
+  }
 
   if (inputMintInPool) {
     baseAmountIn = new BN(
@@ -197,14 +219,6 @@ export const createPosition = async (
     tickLower: Math.min(lowerTick, upperTick),
   });
 
-  console.log("startPrice=", startPrice);
-  console.log("endPrice=", endPrice);
-  console.log("singleSided=", singleSided === "MintA");
-  console.log("singleSided=", singleSided);
-  console.log("baseAmount=", baseAmount.toString());
-  console.log("baseAmount=", liquidityInfo.amountSlippageA.amount.toString());
-  console.log("quoteAmount=", liquidityInfo.amountSlippageB.amount.toString());
-
   const {
     transaction: positionTransaction,
     extInfo,
@@ -220,6 +234,8 @@ export const createPosition = async (
         ? "MintA"
         : "MintB"
       : "MintA",
+    checkCreateATAOwner: true,
+    associatedOnly: true,
     otherAmountMax: singleSided
       ? singleSided === "MintA"
         ? liquidityInfo.amountSlippageB.amount
@@ -244,17 +260,17 @@ export const createPosition = async (
   const signatures: string[] = [];
   const [tx1, ...txs] = transactions;
 
-  const swap1Signature = await web3.sendAndConfirmTransaction(
-    raydium.connection,
-    new web3.Transaction().add(...tx1),
-    [...signers],
-    { commitment: "confirmed" }
-  );
+  if (txs.length > 0) {
+    const swap1Signature = await web3.sendAndConfirmTransaction(
+      raydium.connection,
+      new web3.Transaction().add(...tx1),
+      [...signers],
+      { commitment: "confirmed" }
+    );
 
-  signatures.push(swap1Signature);
-  console.log("swap_1_signature=", swap1Signature);
-
-  let swap2ignature;
+    signatures.push(swap1Signature);
+    console.log("swap_1_signature=", swap1Signature);
+  }
 
   if (txs.flat().length > 0) {
     const swap2Signature = await web3.sendAndConfirmTransaction(
@@ -264,7 +280,7 @@ export const createPosition = async (
       { commitment: "confirmed" }
     );
 
-    console.log("swap_2_signature=", swap2ignature);
+    console.log("swap_2_signature=", swap2Signature);
     signatures.push(swap2Signature);
   }
 

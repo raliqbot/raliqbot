@@ -38,5 +38,6 @@ ENV HOST="0.0.0.0"
 ENV PORT=10004
 ENV NODE_ENV=production
 
+EXPOSE 10004
 
 CMD ["bun", "x", "pm2-runtime", "start", "ecosystem.config.js"]
