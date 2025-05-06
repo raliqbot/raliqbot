@@ -12,12 +12,14 @@ async function main() {
 
   bot.catch((error) => console.error(error));
   if (process.env.DOMAIN) {
-    const server = fastify();
+    const server = fastify({ logger: true });
     server.post(
       format("/telegraf/%", bot.secretPathComponent()),
       (await bot.createWebhook({ domain: process.env.DOMAIN! })) as any
     );
-    server.listen({ port: 10004 });
+    server.listen({
+      port: process.env.PORT ? Number(process.env.PORT!) : undefined,
+    });
   } else bot.launch().then(() => console.log("bot running in background"));
 
   process.once("SIGINT", () => bot.stop("SIGINT"));
