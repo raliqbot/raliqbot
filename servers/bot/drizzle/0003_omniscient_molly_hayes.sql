@@ -1,0 +1,1 @@
+ALTER TABLE "settings" ALTER COLUMN "user" SET NOT NULL;

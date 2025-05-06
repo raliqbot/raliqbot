@@ -8,3 +8,6 @@
 
 *Rebalancing Schedule*
 %rebalancing_schedule%
+
+*Slippage*
+%slippage%%

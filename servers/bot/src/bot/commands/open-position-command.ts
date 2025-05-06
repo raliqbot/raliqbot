@@ -5,7 +5,7 @@ import {
   PoolFetchType,
 } from "@raydium-io/raydium-sdk-v2";
 
-import { format } from "../../core";
+import { buildMediaURL, format } from "../../core";
 import { cleanText, isValidAddress, readFileSync } from "../utils";
 
 const commandFilter = /^open(?:-([1-9A-HJ-NP-Za-km-z]{32,44}))?$/;
@@ -74,12 +74,16 @@ export const openPositionCommand = async (telegraf: Telegraf) => {
               (poolInfo.mintB.symbol ?? poolInfo.mintB.name).toUpperCase()
             ).replace(/\s/g, "");
 
-            return context.replyWithMarkdownV2(
-              readFileSync(
-                "locale/en/search-pair/search-result.md",
-                "utf-8"
-              ).replace("%name%", cleanText(name)),
+            return context.replyWithPhoto(
+              Input.fromURLStream(
+                buildMediaURL(format("%/open-graph/", poolInfo.id))
+              ),
+
               {
+                caption: readFileSync(
+                  "locale/en/search-pair/search-result.md",
+                  "utf-8"
+                ).replace("%name%", cleanText(name)),
                 parse_mode: "MarkdownV2" as const,
                 reply_markup: Markup.inlineKeyboard([
                   [

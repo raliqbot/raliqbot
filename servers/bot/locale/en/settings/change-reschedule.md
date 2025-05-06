@@ -1,0 +1,1 @@
+Choose your default rebalancing schedule. This will be applied to all new positions when rebalancing is enabled

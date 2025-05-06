@@ -1,7 +1,7 @@
-import { Markup, Scenes } from "telegraf";
+import { Input, Markup, Scenes } from "telegraf";
 import { createPosition } from "@raliqbot/lib";
 
-import { format } from "../../core";
+import { buildMediaURL, format } from "../../core";
 import { cleanText, readFileSync } from "../utils";
 
 export const createPositionSceneId = "create-position-scene";
@@ -19,7 +19,7 @@ export const createPositionScene = new Scenes.WizardScene(
   async (context) => {
     const message = context.message;
     if (message && "text" in message) {
-      const amount = Number(message.text);
+      const amount = Number(message.text.replace(/\s/g, ""));
       const { info } = context.session.createPosition;
       if (info) {
         const name = format("%/%", info.mintA.symbol, info.mintB.symbol);
@@ -31,31 +31,37 @@ export const createPositionScene = new Scenes.WizardScene(
         const [[, , signature], nftMint] = await createPosition(
           context.raydium,
           {
-            slippage: 0.05,
+            slippage: Number(context.user.settings.slippage),
             singleSided: "MintA",
             input: {
               mint: "So11111111111111111111111111111111111111112",
               amount,
             },
             poolId: info.id,
-            tickPercentage: [0.01, 0],
+            tickPercentage: [0.1, 0],
           }
         );
 
-        return context.replyWithMarkdownV2(
-          readFileSync("locale/en/create-position/position-created.md", "utf-8")
-            .replace("%name%", cleanText(name))
-            .replace("%signature%", cleanText(signature))
-            .replace("%positionId%", cleanText(nftMint)),
+        return context.replyWithPhoto(
+          Input.fromURLStream(buildMediaURL(format("%/open-graph", info.id))),
           {
-            link_preview_options: {
-              is_disabled: true,
-            },
+            caption: readFileSync(
+              "locale/en/create-position/position-created.md",
+              "utf-8"
+            )
+              .replace("%name%", cleanText(name))
+              .replace("%signature%", cleanText(signature)),
             reply_markup: Markup.inlineKeyboard([
               [
                 Markup.button.url(
                   "🔗 View in Explorer",
                   format("https://solscan.io/tx/%", signature)
+                ),
+              ],
+              [
+                Markup.button.callback(
+                  "❌ Close Position",
+                  format("close-%", info.id)
                 ),
               ],
             ]).reply_markup,

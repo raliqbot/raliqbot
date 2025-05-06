@@ -25,7 +25,7 @@ export const createUser = async (
 
   const [setting] = await db
     .insert(settings)
-    .values({})
+    .values({ user: user.id })
     .onConflictDoUpdate({ target: [settings.user], set: { user: user.id } })
     .returning()
     .execute();

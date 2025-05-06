@@ -13,7 +13,7 @@ export const wallets = pgTable(
     key: text()
       .$defaultFn(() => {
         const { secretKey: data } = web3.Keypair.generate();
-        return encrypt(secretKey, Array.from(data.values()));
+        return encrypt(secretKey, data.toBase64());
       })
       .notNull(),
 

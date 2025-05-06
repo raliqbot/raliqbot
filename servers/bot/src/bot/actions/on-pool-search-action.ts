@@ -2,7 +2,7 @@ import millify from "millify";
 import { Context, Markup } from "telegraf";
 import { format } from "@raliqbot/shared";
 
-import { getEnv } from "../../core";
+import { buildMediaURL } from "../../core";
 import { cleanText, isValidAddress, readFileSync } from "../utils";
 
 export const onPoolSearchAction = async (context: Context) => {
@@ -13,34 +13,45 @@ export const onPoolSearchAction = async (context: Context) => {
     const mints = query.split(/,/g).filter(isValidAddress);
 
     if (mints.length > 0) {
+      const cachedPool = context.session.searchCache[query];
+
       const [mint1, mint2] = mints;
 
-      const pools = (
-        await Promise.all([
-          context.raydium.api
-            .fetchPoolByMints({ mint1, mint2, sort: "fee24h" })
-            .then((pools) => pools.data),
-          context.raydium.api.fetchPoolById({ ids: query }),
-        ])
-      ).flat();
-      console.log(pools.length);
+      const pools = cachedPool
+        ? cachedPool
+        : (
+            await Promise.all([
+              context.raydium.api
+                .fetchPoolByMints({ mint1, mint2, sort: "fee24h" })
+                .then((pools) => pools.data),
+              context.raydium.api.fetchPoolById({ ids: query }),
+            ])
+          ).flat();
+
+      if (!cachedPool) context.session.searchCache[query] = pools;
+
+      const currentOffset = context.session.searchCache
+        ? inlineQuery.offset
+          ? Number(inlineQuery.offset)
+          : 0
+        : 0;
 
       if (pools.length > 0) {
         return context.answerInlineQuery(
           pools
             .filter((pool) => pool && pool.mintA && pool.mintB)
-            .slice(0, 32)
+            .slice(0 + currentOffset, currentOffset + 32)
             .map((pool) => {
               const name = format("%/%", pool.mintA.symbol, pool.mintB.symbol);
-              //const photoUrl = format("%/%", getEnv("MEDIA_APP_URL"), pool.id);
+              const photoUrl = buildMediaURL(format("%/open-graph/", pool.id));
 
               return {
                 id: pool.id,
                 type: "article" as const,
                 title: name,
-                thumbnail_url: pool.mintA.logoURI,
+                thumbnail_url: buildMediaURL(format("%/mint", pool.id)),
                 description: readFileSync(
-                  "locale/en/search-result/search-description.md",
+                  "locale/en/search-pair/search-description.md",
                   "utf-8"
                 )
                   .replace("%fee%", String(pool.feeRate * 100))
@@ -60,11 +71,11 @@ export const onPoolSearchAction = async (context: Context) => {
                 input_message_content: {
                   is_flexible: true,
                   link_preview_options: {
-                    // url: photoUrl,
+                    url: photoUrl,
                     show_above_text: true,
                     prefer_large_media: true,
                   },
-                  // photo_url: photoUrl,
+                  photo_url: photoUrl,
                   message_text: readFileSync(
                     "locale/en/search-pair/search-result.md",
                     "utf-8"
@@ -73,7 +84,7 @@ export const onPoolSearchAction = async (context: Context) => {
                 },
               };
             }),
-          { cache_time: 0 }
+          { cache_time: 0, next_offset: String(currentOffset + 32) }
         );
       }
     }

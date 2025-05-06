@@ -1,12 +1,15 @@
+import { format } from "@raliqbot/shared";
 import { Input, Markup, type Telegraf } from "telegraf";
 
-import { cleanText, readFileSync } from "../utils";
 import { connection } from "../../instances";
+import { cleanText, readFileSync } from "../utils";
+import { getEnv } from "../../core";
 
 export const startCommand = (telegraf: Telegraf) => {
   telegraf.start(async (context) => {
     const { wallet } = context;
-    const solBalance = await connection.getBalance(wallet.publicKey);
+    const solBalance =
+      (await connection.getBalance(wallet.publicKey)) / Math.pow(10, 9);
 
     return context.replyWithAnimation(
       Input.fromLocalFile("assets/welcome.gif"),
@@ -18,7 +21,15 @@ export const startCommand = (telegraf: Telegraf) => {
         reply_markup: Markup.inlineKeyboard([
           [Markup.button.switchToCurrentChat("🔍 Search for pairs", "")],
           [
-            Markup.button.callback("💼 Porfolio", "portfolio"),
+            Markup.button.url(
+              "💼 Porfolio",
+              format(
+                "%?address=%&cluster=%",
+                getEnv("MEDIA_APP_URL").replace(/api\//g, "porfolio"),
+                context.wallet.publicKey,
+                context.raydium.cluster
+              )
+            ),
             Markup.button.callback("💳 Wallet", "wallet"),
           ],
           [

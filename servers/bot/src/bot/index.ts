@@ -1,6 +1,7 @@
 import { Raydium } from "@raydium-io/raydium-sdk-v2";
 import { Scenes, session, type Context, type Telegraf } from "telegraf";
 
+import { scenes } from "./scenes";
 import registerActions from "./actions";
 import registerCommands from "./commands";
 import { connection, db } from "../instances";
@@ -30,14 +31,15 @@ export const authenticateUser = async (
       disableLoadToken: true,
     });
     if (!context.session) context.session = {} as any;
+    if (!context.session.searchCache) context.session.searchCache = {};
+    if(!context.session.closePosition) context.session.closePosition = {};
     if (!context.session.createPosition) context.session.createPosition = {};
     return next();
   }
 };
 
 export default function registerBot(bot: Telegraf) {
-  const scenes = [createPositionScene];
-  const stage = new Scenes.Stage<any>([createPositionScene]);
+  const stage = new Scenes.Stage<any>(scenes);
   scenes.map((scene) => scene.use(authenticateUser));
   bot.use(session());
   bot.use(stage.middleware());

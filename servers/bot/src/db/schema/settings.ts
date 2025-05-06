@@ -5,6 +5,7 @@ export const settings = pgTable("settings", {
   id: uuid().defaultRandom().primaryKey(),
   user: text()
     .references(() => users.id, { onDelete: "cascade" })
+    .notNull()
     .unique(),
   vaultAddress: text(),
   slippage: decimal().default("0.05").notNull(),

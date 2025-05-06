@@ -1,5 +1,5 @@
 import bs58 from "bs58";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { web3 } from "@coral-xyz/anchor";
 
 import type { Database } from "../db";
@@ -27,9 +27,22 @@ export const getWalletsByUser = (
     })
     .execute();
 
+export const updateWalletByUserAndId = (
+  db: Database,
+  user: Zod.infer<typeof selectUserSchema>["id"],
+  id: Zod.infer<typeof selectWalletSchema>["id"],
+  value: Partial<Zod.infer<typeof insertWalletSchema>>
+) =>
+  db
+    .update(wallets)
+    .set(value)
+    .where(and(eq(wallets.user, user), eq(wallets.id, id)))
+    .returning()
+    .execute();
+
 export const loadWallet = (
   wallet: Pick<Zod.infer<typeof selectWalletSchema>, "key">
 ) => {
-  const data = decrypt<number[]>(secretKey, wallet.key);
-  return web3.Keypair.fromSecretKey(Buffer.from(data));
+  const data = decrypt<string>(secretKey, wallet.key);
+  return web3.Keypair.fromSecretKey(Buffer.from(data, 'base64'));
 };
