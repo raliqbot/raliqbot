@@ -18,7 +18,8 @@ async function main() {
       (await bot.createWebhook({ domain: process.env.DOMAIN! })) as any
     );
     server.listen({
-      port: process.env.PORT ? Number(process.env.PORT!) : undefined,
+      host: process.env.HOST ? process.env.HOST : "0.0.0.0",
+      port: process.env.PORT ? Number(process.env.PORT!) : 10004,
     });
   } else bot.launch().then(() => console.log("bot running in background"));
 
