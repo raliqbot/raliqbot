@@ -62,9 +62,13 @@ export const onPoolSearchAction = async (context: Context) => {
                 hide_url: true,
                 reply_markup: Markup.inlineKeyboard([
                   [
-                    Markup.button.callback(
+                    Markup.button.url(
                       "➕ Open Position",
-                      format("createPosition-%", pool.id)
+                      format(
+                        "https://t.me/%?start=%",
+                        context.botInfo.username,
+                        format("createPosition-%", pool.id)
+                      )
                     ),
                   ],
                 ]).reply_markup,

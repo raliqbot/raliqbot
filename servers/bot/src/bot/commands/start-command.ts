@@ -1,13 +1,22 @@
 import { format } from "@raliqbot/shared";
 import { Input, Markup, type Telegraf } from "telegraf";
 
+import { getEnv } from "../../core";
 import { connection } from "../../instances";
 import { cleanText, readFileSync } from "../utils";
-import { getEnv } from "../../core";
+import { onOpenPosition } from "./open-position-command";
+import { onCreatePosition } from "../actions/create-position-action";
 
 export const startCommand = (telegraf: Telegraf) => {
   telegraf.start(async (context) => {
     const { wallet } = context;
+
+    if (context.message.text) {
+      if (/open/.test(context.message.text)) return onOpenPosition(context);
+      if (/createPosition/.test(context.message.text))
+        return onCreatePosition(context);
+    }
+
     const solBalance =
       (await connection.getBalance(wallet.publicKey)) / Math.pow(10, 9);
 
@@ -20,6 +29,7 @@ export const startCommand = (telegraf: Telegraf) => {
         parse_mode: "MarkdownV2",
         reply_markup: Markup.inlineKeyboard([
           [Markup.button.switchToCurrentChat("🔍 Search for pairs", "")],
+          [Markup.button.callback("📈 Trending pairs", "trending")],
           [
             Markup.button.url(
               "💼 Porfolio",

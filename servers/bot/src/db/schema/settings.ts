@@ -7,6 +7,7 @@ export const settings = pgTable("settings", {
     .references(() => users.id, { onDelete: "cascade" })
     .notNull()
     .unique(),
+  locale: text().default("en").notNull(),
   vaultAddress: text(),
   slippage: decimal().default("0.05").notNull(),
   priorityFees: decimal().default("0.0001").notNull(),

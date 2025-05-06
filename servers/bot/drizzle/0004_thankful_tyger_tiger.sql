@@ -1,0 +1,1 @@
+ALTER TABLE "settings" ADD COLUMN "locale" text DEFAULT 'en' NOT NULL;

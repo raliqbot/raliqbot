@@ -13,6 +13,7 @@ export const onSettings =
       )
       .replace("%priority_fee%", cleanText(String(settings.priorityFees)))
       .replace("%slippage%", cleanText(String(settings.slippage)))
+      .replace("%language%", settings.locale)
       .replace(
         "%rebalancing_schedule%",
         cleanText(moment.duration(settings.rebalanceSchedule).humanize())
@@ -32,12 +33,12 @@ export const onSettings =
           "change-priority-fees"
         ),
       ],
-      // [
-      //   Markup.button.callback(
-      //     "🕟 Change Rebalancing Schedule",
-      //     "change-rebalancing-schedule"
-      //   ),
-      // ],
+      [
+        Markup.button.callback(
+          "🌎 Change Bot Language",
+          "change-locale"
+        ),
+      ],
     ]);
 
     const messageId = await (editMessageId

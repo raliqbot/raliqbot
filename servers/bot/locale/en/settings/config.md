@@ -11,3 +11,6 @@
 
 *Slippage*
 %slippage%%
+
+*Bot language*
+%language%

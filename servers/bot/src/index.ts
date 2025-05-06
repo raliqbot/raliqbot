@@ -1,10 +1,10 @@
 import "dotenv/config";
 import fastify from "fastify";
 import { Telegraf } from "telegraf";
+import { format } from "@raliqbot/shared";
 
 import { getEnv } from "./core";
 import registerBot from "./bot";
-import { format } from "@raliqbot/shared";
 
 async function main() {
   const bot = new Telegraf(getEnv("TELEGRAM_BOT_API_KEY"));

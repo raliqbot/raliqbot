@@ -46,8 +46,8 @@ export async function GET(request: NextRequest, { params }) {
             display: "flex",
             justifyContent: "center",
             justifyItems: "center",
-            width: "6rem",
-            height: "6rem",
+            width: "4rem",
+            height: "4rem",
             borderRadius: "9999px",
           }}
         >
@@ -71,8 +71,9 @@ export async function GET(request: NextRequest, { params }) {
               height={32}
               style={{
                 position: "absolute",
-                left: "-0.5rem",
                 objectFit: "fill",
+                border: "2px",
+                borderColor: "white",
                 borderRadius: "9999px",
               }}
             />
@@ -86,15 +87,17 @@ export async function GET(request: NextRequest, { params }) {
               height={32}
               style={{
                 position: "absolute",
-                right: "-0.5rem",
+                right: "0",
                 objectFit: "fill",
+                border: "2px",
+                borderColor: "white",
                 borderRadius: "9999px",
               }}
             />
           </div>
         </div>
       ),
-      { width: 96, height: 50 }
+      { width: 64, height: 32 }
     );
   }
 }
