@@ -244,29 +244,29 @@ export const createPosition = async (
   const signatures: string[] = [];
   const [tx1, ...txs] = transactions;
 
-  // const swap1Signature = await web3.sendAndConfirmTransaction(
-  //   raydium.connection,
-  //   new web3.Transaction().add(...tx1),
-  //   [...signers],
-  //   { commitment: "confirmed" }
-  // );
+  const swap1Signature = await web3.sendAndConfirmTransaction(
+    raydium.connection,
+    new web3.Transaction().add(...tx1),
+    [...signers],
+    { commitment: "confirmed" }
+  );
 
-  // signatures.push(swap1Signature);
-  // console.log("swap_1_signature=", swap1Signature);
+  signatures.push(swap1Signature);
+  console.log("swap_1_signature=", swap1Signature);
 
   let swap2ignature;
 
-  // if (txs.flat().length > 0) {
-  //   const swap2Signature = await web3.sendAndConfirmTransaction(
-  //     raydium.connection,
-  //     new web3.Transaction().add(...txs.flat()),
-  //     [...signers],
-  //     { commitment: "confirmed" }
-  //   );
+  if (txs.flat().length > 0) {
+    const swap2Signature = await web3.sendAndConfirmTransaction(
+      raydium.connection,
+      new web3.Transaction().add(...txs.flat()),
+      [...signers],
+      { commitment: "confirmed" }
+    );
 
-  //   console.log("swap_2_signature=", swap2ignature);
-  //   signatures.push(swap2Signature);
-  // }
+    console.log("swap_2_signature=", swap2ignature);
+    signatures.push(swap2Signature);
+  }
 
   const positionSignature = await web3.sendAndConfirmTransaction(
     raydium.connection,

@@ -28,7 +28,7 @@ export const closePositionCommand = (telegraf: Telegraf) => {
         );
       }
 
-      if (context.session.closePosition.position && isValidAddress) {
+      if (context.session.closePosition.position) {
         const signature = await closePosition(
           context.raydium,
           context.session.closePosition.position

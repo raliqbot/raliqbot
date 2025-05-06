@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 import millify from "millify";
 import { format } from "@raliqbot/shared";
 import { ImageResponse } from "next/og";
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { web3 } from "@coral-xyz/anchor";
 import { isValidClmm } from "@raliqbot/lib";
 import {
@@ -318,4 +318,8 @@ export async function GET(request: NextRequest, { params }) {
       }
     );
   }
+
+    return new NextResponse(format("position with id=% not found", positionId), {
+      status: 404,
+    });
 }

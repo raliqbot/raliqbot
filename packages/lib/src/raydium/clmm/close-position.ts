@@ -1,3 +1,5 @@
+import assert from "assert";
+import { format } from "@raliqbot/shared";
 import {
   TxVersion,
   type Raydium,
@@ -9,7 +11,6 @@ import { isValidClmm } from "./utils";
 
 export const closePosition = async (
   raydium: Raydium,
-  poolId: string,
   position: Awaited<
     ReturnType<typeof raydium.clmm.getOwnerPositionInfo>
   >[number]
@@ -17,25 +18,25 @@ export const closePosition = async (
   let poolKeys: ClmmKeys | undefined;
   let poolInfo: ApiV3PoolInfoConcentratedItem | undefined;
 
-  switch (raydium.cluster) {
-    case "devnet":
-      {
-        const rpcPoolInfo = await raydium.clmm.getPoolInfoFromRpc(poolId);
-        poolInfo = rpcPoolInfo.poolInfo;
-        poolKeys = rpcPoolInfo.poolKeys;
+  if (raydium.cluster === "mainnet") {
+    const apiPoolInfos = await raydium.api.fetchPoolById({
+      ids: position.poolId.toBase58(),
+    });
+    for (const apiPoolInfo of apiPoolInfos) {
+      if (isValidClmm(apiPoolInfo.programId)) {
+        poolInfo = apiPoolInfo as ApiV3PoolInfoConcentratedItem;
+        break;
       }
-      break;
-    default:
-      const apiPoolInfos = await raydium.api.fetchPoolById({ ids: poolId });
-      for (const apiPoolInfo of apiPoolInfos) {
-        if (isValidClmm(apiPoolInfo.programId)) {
-          poolInfo = apiPoolInfo as ApiV3PoolInfoConcentratedItem;
-          break;
-        }
-      }
-
-      if (!poolInfo) throw new Error("target pool=% is not a CLMM pool");
+    }
+  } else {
+    const rpcPoolInfo = await raydium.clmm.getPoolInfoFromRpc(
+      position.poolId.toBase58()
+    );
+    poolInfo = rpcPoolInfo.poolInfo;
+    poolKeys = rpcPoolInfo.poolKeys;
   }
+
+  assert(poolInfo, format("target pool=% is not a CLMM pool", position.poolId));
 
   const { execute } = await raydium.clmm.closePosition({
     poolInfo,

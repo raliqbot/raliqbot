@@ -67,8 +67,8 @@ export async function GET(request: NextRequest, { params }) {
                 poolInfo.mintA.address
               )}
               alt={poolInfo.mintA.name}
-              width={48}
-              height={48}
+              width={32}
+              height={32}
               style={{
                 position: "absolute",
                 left: "-0.5rem",
@@ -82,8 +82,8 @@ export async function GET(request: NextRequest, { params }) {
                 poolInfo.mintB.address
               )}
               alt={poolInfo.mintB.name}
-              width={48}
-              height={48}
+              width={32}
+              height={32}
               style={{
                 position: "absolute",
                 right: "-0.5rem",

@@ -5,7 +5,7 @@ import { ImageResponse } from "next/og";
 import { format } from "@raliqbot/shared";
 import { web3 } from "@coral-xyz/anchor";
 import { isValidClmm } from "@raliqbot/lib";
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import {
   type ApiV3PoolInfoConcentratedItem,
   Raydium,
@@ -41,6 +41,33 @@ export async function GET(request: NextRequest, { params }) {
     const pool = await raydium.clmm.getPoolInfoFromRpc(poolId);
     poolInfo = pool.poolInfo;
   }
+
+  const stats = [
+    {
+      label: "solana",
+      value: format("%-%", poolInfo.mintA.symbol, poolInfo.mintB.symbol),
+    },
+    {
+      label: "Fees",
+      value: `${poolInfo.feeRate * 100}%`,
+    },
+    {
+      label: "Liquidity",
+      value: `$${poolInfo.tvl}`,
+    },
+    {
+      label: "24H VOL",
+      value: `$${millify(poolInfo.day.volume)}`,
+    },
+    {
+      label: "24H Fee",
+      value: `$${millify(poolInfo.day.volumeFee)}`,
+    },
+    {
+      label: "24H APR",
+      value: `${poolInfo.day.apr.toFixed(2)}%`,
+    },
+  ];
 
   if (poolInfo) {
     return new ImageResponse(
@@ -183,36 +210,7 @@ export async function GET(request: NextRequest, { params }) {
                   overflowX: "auto",
                 }}
               >
-                {[
-                  {
-                    label: "solana",
-                    value: format(
-                      "%-%",
-                      poolInfo.mintA.symbol,
-                      poolInfo.mintB.symbol
-                    ),
-                  },
-                  {
-                    label: "Fees",
-                    value: `${poolInfo.feeRate * 100}%`,
-                  },
-                  {
-                    label: "Liquidity",
-                    value: `$${poolInfo.tvl}`,
-                  },
-                  {
-                    label: "24H VOL",
-                    value: `$${millify(poolInfo.day.volume)}`,
-                  },
-                  {
-                    label: "24H Fee",
-                    value: `$${millify(poolInfo.day.volumeFee)}`,
-                  },
-                  {
-                    label: "24H APR",
-                    value: `${poolInfo.day.apr.toFixed(2)}%`,
-                  },
-                ].map((item, index) => (
+                {stats.map((item, index) => (
                   <div
                     key={index}
                     style={{
@@ -279,4 +277,9 @@ export async function GET(request: NextRequest, { params }) {
       }
     );
   }
+
+  return new NextResponse(format("pool with poolId=% not found", poolId), {
+    status: 404,
+  });
 }
+
