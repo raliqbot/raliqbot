@@ -1,6 +1,6 @@
 import { format } from "@raliqbot/shared";
-import { Context, Markup, Telegraf } from "telegraf";
 import { closePosition } from "@raliqbot/lib";
+import { Context, Markup, Telegraf } from "telegraf";
 import { CLMM_PROGRAM_ID } from "@raydium-io/raydium-sdk-v2";
 
 import { isValidAddress, readFileSync } from "../utils";

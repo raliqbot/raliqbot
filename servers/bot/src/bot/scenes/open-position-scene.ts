@@ -15,7 +15,7 @@ composer.on("message", (context) => {
   ) {
     context.message.text = format("open-%", context.message.text);
     return onOpenPosition(context);
-  }
+  } else return context.scene.leave();
 });
 
 export const openPositionSceneId = "open-position-scene-id";
