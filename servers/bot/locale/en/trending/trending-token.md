@@ -1,4 +1,4 @@
-Choose a token from the below trending list, to open a position.
+Choose a token from the below trending list, to open a position\.
 
 %list%
 

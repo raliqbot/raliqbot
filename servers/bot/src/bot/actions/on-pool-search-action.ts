@@ -49,6 +49,8 @@ export const onPoolSearchAction = async (context: Context) => {
                 id: pool.id,
                 type: "article" as const,
                 title: name,
+                thumbnail_width: 64,
+                thumbnail_height: 32,
                 thumbnail_url: buildMediaURL(format("%/mint", pool.id)),
                 description: readFileSync(
                   "locale/en/search-pair/search-description.md",
