@@ -7,22 +7,6 @@ import { updateSettingsByUser } from "../../controllers/settings.controller";
 
 export const changeLocaleSceneId = "change-locale-scene";
 
-const composer = new Composer();
-composer.on("callback_query", async (context) => {
-  const locale =
-    context.callbackQuery && "data" in context.callbackQuery
-      ? context.callbackQuery.data
-      : undefined;
-  if (locale && context.user.settings.locale !== locale) {
-    const [settings] = await updateSettingsByUser(db, context.user.id, {
-      locale,
-    });
-    context.user.settings = settings;
-    if (context.session.messageId)
-      return onSettings(context.session.messageId)(context);
-  }
-});
-
 export const changeLocaleScene = new Scenes.WizardScene(
   changeLocaleSceneId,
   async (context) => {
@@ -33,5 +17,18 @@ export const changeLocaleScene = new Scenes.WizardScene(
 
     return context.wizard.next();
   },
-  composer
+  async (context) => {
+    const locale =
+      context.callbackQuery && "data" in context.callbackQuery
+        ? context.callbackQuery.data
+        : undefined;
+    if (locale && context.user.settings.locale !== locale) {
+      const [settings] = await updateSettingsByUser(db, context.user.id, {
+        locale,
+      });
+      context.user.settings = settings;
+      if (context.session.messageId)
+        return onSettings(context.session.messageId)(context);
+    }
+  }
 );

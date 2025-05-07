@@ -54,9 +54,11 @@ export const importKeyScene = new Scenes.WizardScene(
         return context.scene.leave();
       }
 
-      return context.replyWithMarkdownV2(
+      await context.replyWithMarkdownV2(
         readFileSync("locale/en/wallet/invalid-import-key.md", "utf-8")
       );
+
+      return context.scene.leave();
     }
   }
 );

@@ -106,17 +106,22 @@ export const onTrending = async (context: Context) => {
             .join("\n")
         );
 
+      const reply_markup = Markup.inlineKeyboard([
+        buttons,
+        [Markup.button.callback("❌ Cancel", "cancel")],
+      ]).reply_markup;
+
       return context.callbackQuery && Number.isInteger(parseFloat(page))
         ? context.editMessageText(message, {
+            reply_markup,
             link_preview_options: { is_disabled: true },
             parse_mode: "MarkdownV2",
-            reply_markup: Markup.inlineKeyboard(buttons).reply_markup,
           })
         : context.replyWithMarkdownV2(message, {
+            reply_markup,
             link_preview_options: {
               is_disabled: true,
             },
-            reply_markup: Markup.inlineKeyboard(buttons).reply_markup,
           });
     }
   }

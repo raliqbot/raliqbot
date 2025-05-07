@@ -1,11 +1,10 @@
-import { Composer, type Context, Scenes } from "telegraf";
+import { Composer, type Context, Markup, Scenes } from "telegraf";
+import { PoolFetchType } from "@raydium-io/raydium-sdk-v2";
 
+import millify from "millify";
 import { format } from "../../core";
-import { isValidAddress } from "../utils";
-import { onTrending } from "../commands/get-trending-command";
+import { cleanText, isValidAddress, readFileSync } from "../utils";
 import { onOpenPosition } from "../commands/open-position-command";
-
-const composer = new Composer();
 
 const onAddress = async (context: Context) => {
   const address =
@@ -19,13 +18,141 @@ const onAddress = async (context: Context) => {
     context.message.text = format("open-%", address);
     await onOpenPosition(context);
     return context.scene.leave();
-  } else return context.scene.leave();
+  }
 };
 
+export const onTrending = async (context: Context) => {
+  const message =
+    context.message && "text" in context.message
+      ? context.message.text
+      : context.callbackQuery && "data" in context.callbackQuery
+      ? context.callbackQuery.data
+      : undefined;
+
+  if (message) {
+    const [, page] = message.split(/-/g);
+    let refinedPage = Number(page);
+    refinedPage = Number.isNaN(refinedPage) ? 1 : refinedPage;
+
+    const poolInfos = await context.raydium.api
+      .getPoolList({
+        sort: "fee24h",
+        page: refinedPage,
+        type: PoolFetchType.Concentrated,
+        pageSize: 5,
+      })
+      .then((poolInfos) => ({
+        ...poolInfos,
+        data: poolInfos.data.filter(
+          (data) => data.mintA.symbol && data.mintB.symbol
+        ),
+      }));
+
+    if (poolInfos.data.length > 0) {
+      const buttons = [];
+
+      if (refinedPage > 1)
+        buttons.push(
+          Markup.button.callback(
+            "⬅️ Previous",
+            format("trending-%", refinedPage - 1)
+          )
+        );
+
+      if (poolInfos.hasNextPage)
+        buttons.push(
+          Markup.button.callback(
+            "Next ➡️",
+            format("trending-%", refinedPage + 1)
+          )
+        );
+
+      const message = readFileSync(
+        "locale/en/trending/trending-token.md",
+        "utf-8"
+      )
+        .replace("%page%", refinedPage.toString())
+        .replace("%page_count%", poolInfos.count.toString())
+        .replace(
+          "%list%",
+          poolInfos.data
+            .map((poolInfo, index) =>
+              readFileSync(
+                "locale/en/trending/trending-token-detail.md",
+                "utf-8"
+              )
+                .replace(
+                  "%index%",
+                  (index + 1 + (refinedPage - 1) * 5).toString()
+                )
+                .replace(
+                  "%name%",
+                  cleanText(
+                    format("%/%", poolInfo.mintA.symbol, poolInfo.mintB.symbol)
+                  )
+                )
+                .replace(
+                  "%link%",
+                  format(
+                    "https://t.me/%?start=%",
+                    context.botInfo.username,
+                    format("open-%", poolInfo.id)
+                  )
+                )
+                .replace(
+                  "%fees%",
+                  cleanText((poolInfo.feeRate * 100).toString())
+                )
+                .replace(
+                  "%liquidity%",
+                  cleanText(poolInfo.tvl.toLocaleString())
+                )
+                .replace("%volume%", cleanText(millify(poolInfo.day.volume)))
+                .replace(
+                  "%fees_24h%",
+                  cleanText(millify(poolInfo.day.volumeFee))
+                )
+                .replace(
+                  "%apr%",
+                  cleanText(poolInfo.day.apr.toFixed(2).toString())
+                )
+            )
+            .join("\n")
+        );
+
+      const reply_markup = Markup.inlineKeyboard([
+        buttons,
+        [Markup.button.callback("❌ Cancel", "cancel")],
+      ]).reply_markup;
+
+      return context.callbackQuery && Number.isInteger(parseFloat(page))
+        ? context.editMessageText(message, {
+            reply_markup,
+            link_preview_options: { is_disabled: true },
+            parse_mode: "MarkdownV2",
+          })
+        : context.replyWithMarkdownV2(message, {
+            reply_markup,
+            link_preview_options: {
+              is_disabled: true,
+            },
+          });
+    }
+  }
+};
+
+const cancelCommandFilter = /cancel/;
+const trendingCommandFilter = /trending(-\d+)?/;
+
+const composer = new Composer();
 composer.on("message", onAddress);
+composer.action(trendingCommandFilter, onTrending);
+composer.action(cancelCommandFilter, async (context) => {
+  await context.deleteMessage();
+  return context.scene.leave();
+});
 
 export const openPositionSceneId = "open-position-scene-id";
-
 export const openPositionScene = new Scenes.WizardScene(
   openPositionSceneId,
   async (context) => {
