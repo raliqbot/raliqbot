@@ -143,8 +143,8 @@ export const openPositionCommand = async (telegraf: Telegraf) => {
     }
   };
 
-  const commandFilter = /^open-position(?:-([1-9A-HJ-NP-Za-km-z]{32,44}))?$/;
+  const commandFilter = /^(open_position)(?:-([1-9A-HJ-NP-Za-km-z]{32,44}))?$/;
 
-  telegraf.command(commandFilter, onOpenPosition);
   telegraf.action(commandFilter, onOpenPosition);
+  telegraf.command(commandFilter, onOpenPosition);
 };

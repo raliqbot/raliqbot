@@ -50,7 +50,7 @@ export const createPositionScene = new Scenes.WizardScene(
         );
 
         return context.wizard.next();
-      }
+      } else return context.wizard.next();
     }
   },
   async (context) => {
