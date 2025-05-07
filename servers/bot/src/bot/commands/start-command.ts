@@ -12,7 +12,6 @@ export const startCommand = (telegraf: Telegraf) => {
     const { wallet } = context;
 
     if (context.message.text) {
-      console.log(context.message.text);
       if (/open/.test(context.message.text)) return onOpenPosition(context);
       if (/createPosition/.test(context.message.text))
         return onCreatePosition(context);

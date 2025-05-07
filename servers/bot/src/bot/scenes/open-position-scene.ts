@@ -5,6 +5,7 @@ import millify from "millify";
 import { format } from "../../core";
 import { cleanText, isValidAddress, readFileSync } from "../utils";
 import { onOpenPosition } from "../commands/open-position-command";
+import { onCreatePosition } from "../actions/create-position-action";
 
 const onAddress = async (context: Context) => {
   const address =
@@ -17,6 +18,15 @@ const onAddress = async (context: Context) => {
   if (context.message && "text" in context.message && address) {
     context.message.text = format("open-%", address);
     await onOpenPosition(context);
+    return context.scene.leave();
+  } else if (
+    context.message &&
+    "text" in context.message &&
+    context.message.text
+  ) {
+    if (/open/.test(context.message.text)) await onOpenPosition(context);
+    if (/createPosition/.test(context.message.text))
+      await onCreatePosition(context);
     return context.scene.leave();
   }
 };
