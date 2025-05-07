@@ -30,7 +30,7 @@ export const startCommand = (telegraf: Telegraf) => {
         parse_mode: "MarkdownV2",
         reply_markup: Markup.inlineKeyboard([
           [Markup.button.switchToCurrentChat("🔍 Search for pairs", "")],
-          [Markup.button.callback("➕ Open Position", "open-position")],
+          [Markup.button.callback("➕ Open Position", "open_position")],
           [
             Markup.button.url(
               "💼 Porfolio",
