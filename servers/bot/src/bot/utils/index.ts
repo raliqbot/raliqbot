@@ -1,6 +1,7 @@
 import { Context } from "telegraf";
-import { cleanText } from "./format";
 import { web3 } from "@coral-xyz/anchor";
+
+import { cleanText } from "./format";
 
 export * from "./format";
 
@@ -13,10 +14,10 @@ export const isValidAddress = (address: string) => {
   }
 };
 
-export const catchBotRuntimeError =  <T extends (context: Context) => unknown>(
+export const catchBotRuntimeError = <U extends Context, T extends (context: U) => unknown>(
   fn: T
 ) => {
-  return async (context: Context) => {
+  return async (...[context]: Parameters<T>) => {
     try {
       return await fn(context);
     } catch (error) {

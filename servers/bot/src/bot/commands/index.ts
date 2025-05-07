@@ -6,18 +6,18 @@ import { settingsCommand } from "./settings-command";
 import { getWalletCommand } from "./get-wallet-command";
 import { getTrendingCommand } from "./get-trending-command";
 import { getPortfolioCommand } from "./get-portfolio-command";
-import { closePositionCommand } from "./close-position-command";
 import { openPositionCommand } from "./open-position-command";
+import { closePositionCommand } from "./close-position-command";
 
 export const registerCommands = async (telegraf: Telegraf) => {
-  startCommand(telegraf);
   helpCommand(telegraf);
+  startCommand(telegraf);
   settingsCommand(telegraf);
+  getWalletCommand(telegraf); 
   getTrendingCommand(telegraf);
-  getWalletCommand(telegraf);
+  openPositionCommand(telegraf);
   getPortfolioCommand(telegraf);
   closePositionCommand(telegraf);
-  openPositionCommand(telegraf);
 };
 
 export default registerCommands;

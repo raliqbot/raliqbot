@@ -12,6 +12,7 @@ export const startCommand = (telegraf: Telegraf) => {
     const { wallet } = context;
 
     if (context.message.text) {
+      console.log(context.message.text);
       if (/open/.test(context.message.text)) return onOpenPosition(context);
       if (/createPosition/.test(context.message.text))
         return onCreatePosition(context);
@@ -29,7 +30,7 @@ export const startCommand = (telegraf: Telegraf) => {
         parse_mode: "MarkdownV2",
         reply_markup: Markup.inlineKeyboard([
           [Markup.button.switchToCurrentChat("🔍 Search for pairs", "")],
-          [Markup.button.callback("📈 Trending pairs", "trending")],
+          [Markup.button.callback("➕ Open Position", "open-position")],
           [
             Markup.button.url(
               "💼 Porfolio",

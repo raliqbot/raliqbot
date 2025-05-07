@@ -4,8 +4,6 @@ import type { ApiV3PoolInfoConcentratedItem } from "@raydium-io/raydium-sdk-v2";
 
 import { createPositionSceneId } from "../scenes/create-position-scene";
 
-const commandFilter = /^createPosition(?:-([1-9A-HJ-NP-Za-km-z]{32,44}))?$/;
-
 export const onCreatePosition = async (context: Context) => {
   let text =
     context.callbackQuery && "data" in context.callbackQuery
@@ -14,13 +12,13 @@ export const onCreatePosition = async (context: Context) => {
       ? context.message.text
       : undefined;
 
-  text = text?.replace("/start ", "");
-
   if (text) {
-    const [, ...poolIds] = text.split(/-/g);
-    const poolId = poolIds.join("-");
+    const [, ...poolIds] = text.replace(/\/start?(\s+)/, "").split(/-/g);
+    const poolId = poolIds.join(",");
+
     if (!context.session.createPosition.info) {
       const pools = await context.raydium.api.fetchPoolById({ ids: poolId });
+
       for (const pool of pools) {
         if (isValidClmm(pool.programId)) {
           context.session.createPosition = {
@@ -37,5 +35,8 @@ export const onCreatePosition = async (context: Context) => {
 };
 
 export const createPositionAction = (telegraf: Telegraf) => {
-  telegraf.action(commandFilter, onCreatePosition);
+  telegraf.action(
+    /^createPosition(?:-([1-9A-HJ-NP-Za-km-z]{32,44}))?$/,
+    onCreatePosition
+  );
 };

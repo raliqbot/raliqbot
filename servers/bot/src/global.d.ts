@@ -1,5 +1,5 @@
-import type { Context, Scenes } from "telegraf";
 import type { web3 } from "@coral-xyz/anchor";
+import type { Context, Scenes } from "telegraf";
 import type {
   ApiV3PoolInfoConcentratedItem,
   ApiV3PoolInfoItem,
@@ -15,14 +15,20 @@ import type {
 } from "./db/zod";
 
 type SessionData = {
-  createPosition: {
+  openPosition: {
     amount?: number;
+    address?: string;
+  };
+  createPosition: {
     mint?: string;
+    amount?: number;
+    singleSided?: "MintA" | "MintB",
+    algorithm?: "single-sided" | "spot";
     info?: ApiV3PoolInfoConcentratedItem;
   };
   closePosition: {
-    position?: ClmmPositionLayout,
-  },
+    position?: ClmmPositionLayout;
+  };
   messageId?: number;
   searchCache: Record<string, ApiV3PoolInfoItem[]>;
 };

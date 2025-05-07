@@ -1,6 +1,7 @@
 import millify from "millify";
 import { format } from "@raliqbot/shared";
 import { Context, Markup, Telegraf } from "telegraf";
+import { PoolFetchType } from "@raydium-io/raydium-sdk-v2";
 
 import { cleanText, readFileSync } from "../utils";
 
@@ -19,11 +20,19 @@ export const onTrending = async (context: Context) => {
     let refinedPage = Number(page);
     refinedPage = Number.isNaN(refinedPage) ? 1 : refinedPage;
 
-    const poolInfos = await context.raydium.api.getPoolList({
-      sort: "fee24h",
-      page: refinedPage,
-      pageSize: 5,
-    });
+    const poolInfos = await context.raydium.api
+      .getPoolList({
+        sort: "fee24h",
+        page: refinedPage,
+        type: PoolFetchType.Concentrated,
+        pageSize: 5,
+      })
+      .then((poolInfos) => ({
+        ...poolInfos,
+        data: poolInfos.data.filter(
+          (data) => data.mintA.symbol && data.mintB.symbol
+        ),
+      }));
 
     if (poolInfos.data.length > 0) {
       const buttons = [];
@@ -96,7 +105,8 @@ export const onTrending = async (context: Context) => {
             )
             .join("\n")
         );
-      return context.callbackQuery && page
+
+      return context.callbackQuery && Number.isInteger(parseFloat(page))
         ? context.editMessageText(message, {
             link_preview_options: { is_disabled: true },
             parse_mode: "MarkdownV2",

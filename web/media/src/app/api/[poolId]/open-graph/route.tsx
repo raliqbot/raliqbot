@@ -1,5 +1,4 @@
 import path from "path";
-import millify from "millify";
 import { readFileSync } from "fs";
 import { ImageResponse } from "next/og";
 import { format } from "@raliqbot/shared";
@@ -7,7 +6,7 @@ import { web3 } from "@coral-xyz/anchor";
 import { isValidClmm } from "@raliqbot/lib";
 import { NextResponse, type NextRequest } from "next/server";
 import {
-  type ApiV3PoolInfoConcentratedItem,
+  ApiV3PoolInfoConcentratedItem,
   Raydium,
 } from "@raydium-io/raydium-sdk-v2";
 
@@ -53,15 +52,15 @@ export async function GET(request: NextRequest, { params }) {
     },
     {
       label: "Liquidity",
-      value: `$${poolInfo.tvl}`,
+      value: `$${poolInfo.tvl.toLocaleString()}`,
     },
     {
       label: "24H VOL",
-      value: `$${millify(poolInfo.day.volume)}`,
+      value: `$${poolInfo.day.volume.toLocaleString()}`,
     },
     {
       label: "24H Fee",
-      value: `$${millify(poolInfo.day.volumeFee)}`,
+      value: `$${poolInfo.day.volumeFee.toLocaleString()}`,
     },
     {
       label: "24H APR",
@@ -282,4 +281,3 @@ export async function GET(request: NextRequest, { params }) {
     status: 404,
   });
 }
-
