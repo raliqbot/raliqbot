@@ -14,17 +14,29 @@ import {
 
 import { isValidClmm } from "./utils";
 
+type BasedCreateSwapParams = {
+  slippage: number;
+
+  epochInfo: web3.EpochInfo;
+};
+
+type CreateSwapParams = (
+  | {
+      outputMint: string;
+      input: { mint: string; amount: number };
+    }
+  | { input: { amount: number }; poolId: string; side: "MintA" | "MintB" }
+) &
+  BasedCreateSwapParams;
+
 export const createSwap = async (
   raydium: Raydium,
-  input: { mint?: string; amount: number },
-  outputMint: string,
-  slippage: number,
-  epochInfo: web3.EpochInfo,
-  poolId?: string
+  { slippage, epochInfo, input, ...params }: CreateSwapParams
 ) => {
-  const inputMint = input.mint
-    ? input.mint
-    : "So11111111111111111111111111111111111111112";
+  assert(
+    ("mint" in input && "outputMint" in params) || "poolId" in params,
+    "provide input.mint & outputMint or poolId"
+  );
 
   let poolKeys: ClmmKeys | undefined;
   let clmmPoolInfo: ComputeClmmPoolInfo | undefined;
@@ -32,49 +44,71 @@ export const createSwap = async (
   let tickCache: ReturnTypeFetchMultiplePoolTickArrays | undefined;
 
   if (raydium.cluster === "mainnet") {
-    const pools = await raydium.api.fetchPoolByMints({
-      mint1: inputMint,
-      mint2: outputMint,
-      sort: "liquidity",
-    });
+    if ("poolId" in params) {
+    }
+    if ("mint" in input && "outputMint" in params) {
+      const pools = await raydium.api.fetchPoolByMints({
+        mint1: input.mint,
+        mint2: params.outputMint,
+        sort: "liquidity",
+      });
 
-    for (const pool of pools.data) {
-      if (isValidClmm(pool.programId)) {
-        poolInfo = pool as ApiV3PoolInfoConcentratedItem;
-        clmmPoolInfo = await PoolUtils.fetchComputeClmmInfo({
-          connection: raydium.connection,
-          poolInfo,
-        });
-        tickCache = await PoolUtils.fetchMultiplePoolTickArrays({
-          connection: raydium.connection,
-          poolKeys: [clmmPoolInfo],
-        });
-        break;
+      for (const pool of pools.data) {
+        if (isValidClmm(pool.programId)) {
+          poolInfo = pool as ApiV3PoolInfoConcentratedItem;
+          clmmPoolInfo = await PoolUtils.fetchComputeClmmInfo({
+            connection: raydium.connection,
+            poolInfo,
+          });
+          tickCache = await PoolUtils.fetchMultiplePoolTickArrays({
+            connection: raydium.connection,
+            poolKeys: [clmmPoolInfo],
+          });
+          break;
+        }
       }
     }
-  } else if (poolId) {
-    const pool = await raydium.clmm.getPoolInfoFromRpc(poolId);
+  } else if ("poolId" in params) {
+    const pool = await raydium.clmm.getPoolInfoFromRpc(params.poolId);
     poolInfo = pool.poolInfo;
     poolKeys = pool.poolKeys;
     tickCache = pool.tickData;
     clmmPoolInfo = pool.computePoolInfo;
   }
 
-  assert(
-    poolInfo && clmmPoolInfo && tickCache,
-    format("pool for mint1=% and mint2=% not found.", inputMint, outputMint)
-  );
+  assert(poolInfo && tickCache && clmmPoolInfo);
 
-  assert(
-    [poolInfo.mintA.address, poolInfo.mintB.address].includes(inputMint),
-    format(
-      "pool for mint1=% and mint2=% not found.",
-      poolInfo.mintA.address,
-      poolInfo.mintB.address
-    )
-  );
+  let baseIn = false;
 
-  const baseIn = poolInfo.mintA.address === inputMint;
+  if ("mint" in input && "outputMint" in params) {
+    assert(
+      poolInfo && clmmPoolInfo && tickCache,
+      format(
+        "pool for mint1=% and mint2=% not found.",
+        input.mint,
+        params.outputMint
+      )
+    );
+
+    assert(
+      [poolInfo.mintA.address, poolInfo.mintB.address].includes(input.mint),
+      format(
+        "pool for mint1=% and mint2=% not found.",
+        poolInfo.mintA.address,
+        poolInfo.mintB.address
+      )
+    );
+
+    baseIn = poolInfo.mintA.address === input.mint;
+  } else if ("side" in params && "poolId" in params) {
+    assert(
+      poolInfo && clmmPoolInfo && tickCache,
+      format("pool info for pool=% not found.", params.poolId)
+    );
+
+    baseIn = params.side === "MintA";
+  }
+
   const amountIn = new BN(
     new Decimal(input.amount)
       .mul(Math.pow(10, poolInfo[baseIn ? "mintA" : "mintB"].decimals))
@@ -97,14 +131,12 @@ export const createSwap = async (
     const swapResult = await raydium.clmm.swap({
       poolInfo,
       poolKeys,
-      inputMint,
       amountIn,
       remainingAccounts,
-      //checkCreateATAOwner: true,
+      txVersion: TxVersion.LEGACY,
       amountOutMin: minAmountOut.amount.raw,
       observationId: clmmPoolInfo.observationId,
-      txVersion: TxVersion.LEGACY,
-     // associatedOnly: true,
+      inputMint: poolInfo[baseIn ? "mintA" : "mintB"].address,
       ownerInfo: {
         useSOLBalance: true,
       },
@@ -114,12 +146,13 @@ export const createSwap = async (
       { minAmountOut, remainingAccounts, ...computedeData },
       swapResult,
     ] as const;
+
   }
 
   throw new Error(
     format(
       "no valid pool found for mint1= and mint2=",
-      input.mint,
+      poolInfo.mintA.address,
       poolInfo.mintB.address
     )
   );

@@ -1,5 +1,5 @@
 [/%index% %name%](%link%) 
-
+_Value_: *value*
 _Fees_: *%fees%\%*
 _Liquidity_: *$%liquidity%* @ *%current_price%*
 _24H VOL_: *$%volume%* 

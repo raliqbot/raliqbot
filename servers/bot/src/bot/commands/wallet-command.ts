@@ -4,7 +4,7 @@ import { format, getEnv } from "../../core";
 import { connection } from "../../instances";
 import { cleanText, readFileSync } from "../utils";
 
-export const getWalletCommand = (telegraf: Telegraf) => {
+export const WalletCommand = (telegraf: Telegraf) => {
   const onWallet = async (context: Context) => {
     const address = context.wallet.publicKey.toBase58();
     const solBalance =

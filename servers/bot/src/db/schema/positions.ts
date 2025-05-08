@@ -1,14 +1,21 @@
-import { boolean, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 import { pools } from "./pools";
 import { wallets } from "./wallets";
 
 export type PositionMetadata = {
   entryPrice: number;
-  lowerBound: number;
-  upperBound: number;
-  stopLossPercentage: number;
+  startPrice: number;
+  endPrice: number;
   epochTime: number;
+  stopLossPercentage: number;
 };
 
 export const positions = pgTable("positions", {
@@ -19,7 +26,9 @@ export const positions = pgTable("positions", {
   wallet: uuid()
     .references(() => wallets.id)
     .notNull(),
+  algorithm: text({ enum: ["spot", "single-sided"] }).notNull(),
   metadata: jsonb().$type<PositionMetadata>().notNull(),
   enabled: boolean().default(true).notNull(),
   createdAt: timestamp().defaultNow().notNull(),
+  updatedAt: timestamp().defaultNow().notNull(),
 });

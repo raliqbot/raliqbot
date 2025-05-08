@@ -98,16 +98,20 @@ export const createPositionScene = new Scenes.WizardScene(
         poolId: info.id,
       });
       info.price = rpcPoolInfo.currentPrice;
+      const tickPercentage: [number, number] = singleSided
+        ? singleSided === "MintA"
+          ? [0.2, 0]
+          : [0, 0.2]
+        : [0.2, 0.2];
 
       const [[, , signature], nftMint] = await createPosition(context.raydium, {
-        singleSided,
+        tickPercentage,
         slippage: Number(context.user.settings.slippage),
         input: {
           amount,
           mint: "So11111111111111111111111111111111111111112",
         },
         poolId: info.id,
-        tickPercentage: [0.1, 0],
       });
 
       return context.replyWithPhoto(
@@ -128,7 +132,7 @@ export const createPositionScene = new Scenes.WizardScene(
             ],
             [
               Markup.button.callback(
-                "❌ Close Position",
+                "🅇 Close Position",
                 format("close-%", nftMint)
               ),
             ],

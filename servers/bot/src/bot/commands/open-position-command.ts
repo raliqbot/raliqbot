@@ -81,7 +81,9 @@ export const onOpenPosition = async (context: Context) => {
               caption: readFileSync(
                 "locale/en/search-pair/search-result.md",
                 "utf-8"
-              ).replace("%name%", cleanText(name)),
+              )
+                .replace("%pool_id%", cleanText(poolInfo.id))
+                .replace("%name%", cleanText(name)),
               parse_mode: "MarkdownV2" as const,
               reply_markup: Markup.inlineKeyboard([
                 [

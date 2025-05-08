@@ -1,5 +1,10 @@
-export * from "./close-position";
-export * from "./create-position";
-export * from "./harvest-all-rewards";
+export { closePosition } from "./close-position";
+export { createPosition } from "./create-position";
+export { harvestAllRewards } from "./harvest-all-rewards";
 
-export * from "./utils";
+export {
+  isValidClmm,
+  getPositions,
+  getPoolInfo,
+  createPoolMintAta,
+} from "./utils";

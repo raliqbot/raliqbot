@@ -85,7 +85,9 @@ export const onPoolSearchAction = async (context: Context) => {
                   message_text: readFileSync(
                     "locale/en/search-pair/search-result.md",
                     "utf-8"
-                  ).replace("%name%", cleanText(name)),
+                  )
+                    .replace("%pool_id%", cleanText(pool.id))
+                    .replace("%name%", cleanText(name)),
                   parse_mode: "MarkdownV2" as const,
                 },
               };

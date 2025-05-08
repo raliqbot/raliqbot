@@ -28,12 +28,12 @@ describe("open position on raydium", async () => {
       raydium,
       {
         slippage: 0.05,
-        singleSided: "MintA",
-        tickPercentage: [0, 0.01],
+        tickPercentage: [0, 0.00154],
+        // tickPercentage: [0.0015, 0.00154],
         poolId: "BZtgQEyS6eXUXicYPHecYQ7PybqodXQMvkjUbP4R8mUU",
         input: {
           mint: "So11111111111111111111111111111111111111112",
-          amount: 0.01,
+          amount: 1,
         },
       }
       // {

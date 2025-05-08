@@ -27,7 +27,7 @@ export const exportKeyScene = new Scenes.WizardScene(
       readFileSync("locale/en/wallet/export-key-confirmation.md", "utf8"),
       Markup.inlineKeyboard([
         [Markup.button.callback("✅ I understand, proceed", "accept")],
-        [Markup.button.callback("❌ Cancel", "cancel")],
+        [Markup.button.callback("🅇 Cancel", "cancel")],
       ])
     );
     return context.wizard.next();

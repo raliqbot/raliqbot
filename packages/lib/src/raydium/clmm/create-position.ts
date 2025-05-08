@@ -2,25 +2,21 @@ import assert from "assert";
 import { Decimal } from "decimal.js";
 import { format } from "@raliqbot/shared";
 import { BN, web3 } from "@coral-xyz/anchor";
-import { getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 import {
   PoolUtils,
-  type ApiV3PoolInfoConcentratedItem,
-  type ClmmKeys,
   type Raydium,
   TickUtils,
   TxVersion,
 } from "@raydium-io/raydium-sdk-v2";
 
-import { isValidClmm } from "./utils";
+import { createPoolMintAta } from "./utils";
 import { createSwap } from "./create-swap";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { getPoolInfo } from "./utils/get-pool-info";
 
 type CreatePositionParams = {
   poolId: string;
   slippage: number;
   tickPercentage: [number, number];
-  singleSided?: "MintA" | "MintB";
   input: { mint?: string; amount: number };
   devConfig?: {
     tokenASwapConfig: { poolId: string };
@@ -31,31 +27,22 @@ type CreatePositionParams = {
 export const createPosition = async (
   raydium: Raydium,
   {
+    input,
     poolId,
     slippage,
     tickPercentage: [startPercentage, endPercentage],
-    singleSided,
-    input,
-    devConfig,
   }: CreatePositionParams
 ) => {
-  let poolKeys: ClmmKeys | undefined;
-  let poolInfo: ApiV3PoolInfoConcentratedItem | undefined;
+  assert(startPercentage > 0 || endPercentage > 0, "invalid tick percentage.");
 
-  if (raydium.cluster === "mainnet") {
-    const poolInfos = await raydium.api.fetchPoolById({ ids: poolId });
-    for (const poolInfoItem of poolInfos)
-      if (isValidClmm(poolInfoItem.programId)) {
-        poolInfo = poolInfoItem as ApiV3PoolInfoConcentratedItem;
-        break;
-      }
-  } else {
-    const pool = await raydium.clmm.getPoolInfoFromRpc(poolId);
-    poolInfo = pool.poolInfo;
-    poolKeys = pool.poolKeys;
-  }
+  const singleSided =
+    startPercentage === 0 ? "MintA" : endPercentage === 0 ? "MintB" : undefined;
 
-  assert(poolInfo, format("target pool=% is not a CLMM pool", poolId));
+  const { poolInfo, poolKeys } = await getPoolInfo(raydium, poolId);
+  const ataSignature = await createPoolMintAta(raydium, poolInfo);
+
+  if (ataSignature)
+    console.log("[position.create.ataSignature] ", ataSignature);
 
   const epochInfo = await raydium.fetchEpochInfo();
   const baseIn = input.mint === poolInfo.mintA.address;
@@ -63,101 +50,102 @@ export const createPosition = async (
     input.mint &&
     [poolInfo.mintA.address, poolInfo.mintB.address].includes(input.mint);
 
-  let baseAmountIn;
-  let quoteAmountIn;
-  const signers: web3.Signer[] = [];
+  let baseAmountIn: BN | undefined;
+  let quoteAmountIn: BN | undefined;
+  const signers: web3.Signer[][] = [];
   const transactions: web3.Transaction[][] = [];
 
-  // check ATA accounts
-  if (raydium.owner && raydium.owner.signer) {
-    await getOrCreateAssociatedTokenAccount(
-      raydium.connection as unknown as Connection,
-      raydium.owner.signer,
-      new PublicKey(poolInfo.mintA.address),
-      raydium.ownerPubKey,
-      false,
-      "confirmed"
-    );
-    await getOrCreateAssociatedTokenAccount(
-      raydium.connection as unknown as Connection,
-      raydium.owner.signer,
-      new PublicKey(poolInfo.mintB.address),
-      raydium.ownerPubKey,
-      false,
-      "confirmed"
-    );
-  }
-
   if (inputMintInPool) {
+    const percentageSum = startPercentage + endPercentage;
+    const swapAAmount = (startPercentage / percentageSum) * input.amount;
+    const swapBAmount = (endPercentage / percentageSum) * input.amount;
+
     baseAmountIn = new BN(
-      new Decimal(input.amount)
-        .div(2)
+      new Decimal(swapAAmount)
         .mul(Math.pow(10, poolInfo[baseIn ? "mintA" : "mintB"].decimals))
         .toFixed(0)
     );
 
-    const [{ minAmountOut }, { transaction, signers: swapSigners }] =
-      await createSwap(
-        raydium,
-        {
-          mint: input.mint,
-          amount: singleSided ? input.amount : input.amount / 2,
-        },
-        poolInfo[baseIn ? "mintB" : "mintA"].address,
+    if (swapBAmount > 0) {
+      const [
+        { minAmountOut: minBAmountOut },
+        { transaction: swapBTransaction, signers: swapBSigners },
+      ] = await createSwap(raydium, {
         slippage,
         epochInfo,
-        devConfig?.[baseIn ? "tokenBSwapConfig" : "tokenASwapConfig"].poolId
-      );
+        input: { mint: input.mint!, amount: swapBAmount },
+        outputMint: poolInfo[baseIn ? "mintB" : "mintA"].address,
+      });
 
-    signers.push(...swapSigners);
-    transactions.push([transaction]);
-    quoteAmountIn = minAmountOut.amount.raw;
+      quoteAmountIn = minBAmountOut.amount.raw;
+
+      signers.push(swapBSigners);
+      transactions.push([swapBTransaction]);
+    }
   } else {
-    {
-      const [{ minAmountOut }, { transaction, signers: swapSigners }] =
-        await createSwap(
-          raydium,
-          {
-            mint: input.mint,
-            amount: singleSided ? input.amount * 0.9 : input.amount * 0.45,
-          },
-          poolInfo.mintA.address,
-          slippage,
-          epochInfo,
-          devConfig?.tokenASwapConfig.poolId
-        );
+    const percentageSum = startPercentage + endPercentage;
+    const swapAAmount = (startPercentage / percentageSum) * input.amount;
+    const swapBAmount = (endPercentage / percentageSum) * input.amount;
 
-      signers.push(...swapSigners);
-      transactions.push([transaction]);
+    console.log(
+      "[position.swap.config] ",
+      format("swapAAmount=% swapBAmount=%", swapAAmount, swapBAmount)
+    );
 
-      baseAmountIn = minAmountOut.amount.raw;
+    if (swapAAmount > 0) {
+      const [
+        { minAmountOut: minAAmountOut },
+        { transaction: swapATransaction, signers: swapASigners },
+      ] = await createSwap(raydium, {
+        slippage,
+        epochInfo,
+        input: { mint: input.mint!, amount: swapAAmount },
+        outputMint: poolInfo.mintA.address,
+      });
+
+      baseAmountIn = minAAmountOut.amount.raw;
+
+      signers.push(swapASigners);
+      transactions.push([swapATransaction]);
     }
 
-    {
-      const swapBResult = await createSwap(
-        raydium,
-        {
-          mint: input.mint,
-          amount: singleSided ? input.amount * 0.1 : input.amount * 0.55,
-        },
-        poolInfo.mintB.address,
+    if (swapBAmount > 0) {
+      const [
+        { minAmountOut: minBAmountOut },
+        { transaction: swapBTransaction, signers: swapBSigners },
+      ] = await createSwap(raydium, {
         slippage,
         epochInfo,
-        devConfig?.tokenBSwapConfig.poolId
-      );
-      const [{ minAmountOut }, { transaction, signers: swapSigners }] =
-        swapBResult;
+        input: { mint: input.mint!, amount: swapBAmount },
+        outputMint: poolInfo.mintB.address,
+      });
 
-      signers.push(...swapSigners);
-      transactions.push([transaction]);
-      quoteAmountIn = minAmountOut.amount.raw;
+      quoteAmountIn = minBAmountOut.amount.raw;
+
+      signers.push(swapBSigners);
+      transactions.push([swapBTransaction]);
     }
   }
 
-  const rpcPoolInfo = await raydium.clmm.getRpcClmmPoolInfo({
-    poolId: poolInfo.id,
-  });
-  poolInfo.price = rpcPoolInfo.currentPrice;
+  assert(
+    baseAmountIn || quoteAmountIn,
+    "baseAmountIn and quoteAmountIn can't both be undefined"
+  );
+
+  console.log(
+    "[position.swap.initialized] ",
+    format(
+      "baseAmountIn=% quoteAmountIn=%",
+      baseAmountIn?.toString(),
+      quoteAmountIn?.toString()
+    )
+  );
+
+  poolInfo.price = (
+    await raydium.clmm.getRpcClmmPoolInfo({
+      poolId: poolInfo.id,
+    })
+  ).currentPrice;
 
   const startPrice = singleSided
     ? singleSided === "MintA"
@@ -170,7 +158,12 @@ export const createPosition = async (
       : poolInfo.price + poolInfo.price * endPercentage
     : poolInfo.price + poolInfo.price * endPercentage;
 
-  const { tick: lowerTick } = TickUtils.getPriceAndTick({
+  console.log(
+    "[position.tick.config] ",
+    format("startPrice=% endPrice=%", startPrice, endPrice)
+  );
+
+  let { tick: lowerTick } = TickUtils.getPriceAndTick({
     poolInfo,
     baseIn: singleSided
       ? singleSided === "MintA"
@@ -180,7 +173,7 @@ export const createPosition = async (
     price: new Decimal(startPrice),
   });
 
-  const { tick: upperTick } = TickUtils.getPriceAndTick({
+  let { tick: upperTick } = TickUtils.getPriceAndTick({
     poolInfo,
     baseIn: singleSided
       ? singleSided === "MintA"
@@ -190,18 +183,44 @@ export const createPosition = async (
     price: new Decimal(endPrice),
   });
 
-  if (!singleSided && baseAmountIn)
-    baseAmountIn = baseAmountIn.mul(new BN(70)).div(new BN(100));
+  if (singleSided) {
+    if (singleSided === "MintA" && lowerTick !== 0) lowerTick = 0;
+    if (singleSided === "MintB" && upperTick !== 0) upperTick = 0;
+  }
+
+  console.log(
+    "[position.tick.initialized] ",
+    format("lowerTick=% upperTick=%", lowerTick, upperTick)
+  );
 
   const baseAmount = singleSided
-    ? singleSided === "MintA"
-      ? baseAmountIn!
-      : quoteAmountIn!
+    ? baseAmountIn
+      ? baseAmountIn
+      : quoteAmountIn
     : inputMintInPool
     ? baseIn
-      ? baseAmountIn!
-      : quoteAmountIn!
-    : baseAmountIn!;
+      ? baseAmountIn
+      : quoteAmountIn
+    : baseAmountIn;
+
+  const quoteAmount = singleSided
+    ? undefined
+    : inputMintInPool
+    ? baseIn
+      ? quoteAmountIn
+      : baseAmountIn
+    : quoteAmountIn;
+
+  assert(baseAmount, "baseAmount can't be undefined");
+
+  console.log(
+    "[position.initialized] ",
+    format(
+      "baseAmount=% quoteAmount=%",
+      baseAmount?.toString(),
+      quoteAmount?.toString()
+    )
+  );
 
   const liquidityInfo = await PoolUtils.getLiquidityAmountOutFromAmountIn({
     poolInfo,
@@ -209,7 +228,7 @@ export const createPosition = async (
     add: true,
     slippage: 0,
     amountHasFee: true,
-    amount: baseAmount,
+    amount: baseAmount!,
     inputA: singleSided
       ? singleSided === "MintA"
       : inputMintInPool
@@ -219,6 +238,32 @@ export const createPosition = async (
     tickLower: Math.min(lowerTick, upperTick),
   });
 
+  console.log(
+    "[position.liquidity.info] ",
+    format(
+      "amountIn=% amountOut=% liquidity=%",
+      liquidityInfo.amountSlippageA.amount.toString(),
+      liquidityInfo.amountSlippageB.amount.toString(),
+      liquidityInfo.liquidity.toString()
+    )
+  );
+
+  const otherAmountMax = singleSided
+    ? singleSided === "MintA"
+      ? liquidityInfo.amountSlippageB.amount
+      : liquidityInfo.amountSlippageA.amount
+    : inputMintInPool
+    ? baseIn
+      ? liquidityInfo.amountSlippageB.amount
+      : liquidityInfo.amountSlippageA.amount
+    : liquidityInfo.amountSlippageB.amount;
+
+  if (quoteAmount)
+    assert(
+      quoteAmount.gt(otherAmountMax),
+      "swap quote amount should be greater than amountIn, adjust ticks"
+    );
+
   const {
     transaction: positionTransaction,
     extInfo,
@@ -227,6 +272,7 @@ export const createPosition = async (
     poolInfo,
     poolKeys,
     baseAmount,
+    otherAmountMax,
     base: singleSided
       ? singleSided
       : inputMintInPool
@@ -234,17 +280,6 @@ export const createPosition = async (
         ? "MintA"
         : "MintB"
       : "MintA",
-    checkCreateATAOwner: true,
-    associatedOnly: true,
-    otherAmountMax: singleSided
-      ? singleSided === "MintA"
-        ? liquidityInfo.amountSlippageB.amount
-        : liquidityInfo.amountSlippageA.amount
-      : inputMintInPool
-      ? baseIn
-        ? liquidityInfo.amountSlippageB.amount
-        : liquidityInfo.amountSlippageA.amount
-      : liquidityInfo.amountSlippageB.amount,
     tickUpper: Math.max(lowerTick, upperTick),
     tickLower: Math.min(lowerTick, upperTick),
     ownerInfo: {
@@ -259,40 +294,42 @@ export const createPosition = async (
 
   const signatures: string[] = [];
   const [tx1, ...txs] = transactions;
+  const [signers1, signers2] = signers;
 
-  if (txs.length > 0) {
-    const swap1Signature = await web3.sendAndConfirmTransaction(
+  if (tx1.length > 0) {
+    const signature = await web3.sendAndConfirmTransaction(
       raydium.connection,
       new web3.Transaction().add(...tx1),
-      [...signers],
+      signers1,
       { commitment: "confirmed" }
     );
 
-    signatures.push(swap1Signature);
-    console.log("swap_1_signature=", swap1Signature);
+    signatures.push(signature);
+    console.log("[position.swapA.success] signature=", signature);
   }
 
   if (txs.flat().length > 0) {
-    const swap2Signature = await web3.sendAndConfirmTransaction(
+    const signature = await web3.sendAndConfirmTransaction(
       raydium.connection,
       new web3.Transaction().add(...txs.flat()),
-      [...signers],
+      signers2,
       { commitment: "confirmed" }
     );
 
-    console.log("swap_2_signature=", swap2Signature);
-    signatures.push(swap2Signature);
+    console.log("[position.swapB.success] signature=", signature);
+    signatures.push(signature);
   }
 
-  const positionSignature = await web3.sendAndConfirmTransaction(
+  const signature = await web3.sendAndConfirmTransaction(
     raydium.connection,
     positionTransaction,
     [raydium.owner!.signer!, ...positionSigners],
     { commitment: "confirmed" }
   );
 
-  signatures.push(positionSignature);
-  console.log("position_signature=", positionSignature);
+  signatures.push(signature);
+
+  console.log("[position.created.success] signature=", signature);
 
   return [signatures, extInfo.nftMint.toBase58()] as const;
 };

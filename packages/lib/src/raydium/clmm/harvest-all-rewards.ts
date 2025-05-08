@@ -14,6 +14,8 @@ export const harvestAllRewards = async (
     position.liquidity.isZero()
   );
 
+  nonZeroPositions[0].rewardInfos.map(reward => reward.rewardAmountOwed)
+
   let positionsPoolInfos: ApiV3PoolInfoConcentratedItem[] | null = null;
   const poolIds = nonZeroPositions.map((position) =>
     position.poolId.toBase58()

@@ -1,7 +1,6 @@
 import { Composer, type Context, Markup, Scenes } from "telegraf";
 import { PoolFetchType } from "@raydium-io/raydium-sdk-v2";
 
-import millify from "millify";
 import { format } from "../../core";
 import { cleanText, isValidAddress, readFileSync } from "../utils";
 import { onOpenPosition } from "../commands/open-position-command";
@@ -110,6 +109,10 @@ export const onTrending = async (context: Context) => {
                   )
                 )
                 .replace(
+                  "%current_price%",
+                  cleanText(poolInfo.price.toFixed(2))
+                )
+                .replace(
                   "%fees%",
                   cleanText((poolInfo.feeRate * 100).toString())
                 )
@@ -117,10 +120,10 @@ export const onTrending = async (context: Context) => {
                   "%liquidity%",
                   cleanText(poolInfo.tvl.toLocaleString())
                 )
-                .replace("%volume%", cleanText(millify(poolInfo.day.volume)))
+                .replace("%volume%", cleanText(poolInfo.day.volume.toFixed(2)))
                 .replace(
                   "%fees_24h%",
-                  cleanText(millify(poolInfo.day.volumeFee))
+                  cleanText(poolInfo.day.volumeFee.toFixed(2))
                 )
                 .replace(
                   "%apr%",
@@ -132,7 +135,7 @@ export const onTrending = async (context: Context) => {
 
       const reply_markup = Markup.inlineKeyboard([
         buttons,
-        [Markup.button.callback("❌ Cancel", "cancel")],
+        [Markup.button.callback("🅇 Cancel", "cancel")],
       ]).reply_markup;
 
       return context.callbackQuery && Number.isInteger(parseFloat(page))
