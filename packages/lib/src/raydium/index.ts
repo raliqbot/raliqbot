@@ -2,7 +2,8 @@ export {
   isValidClmm,
   closePosition,
   createPoolMintAta,
+  harvestRewards,
   createPosition,
   getPoolInfo,
-  getPositions,
+  getPortfolio,
 } from "./clmm";

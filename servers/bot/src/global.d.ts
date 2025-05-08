@@ -20,16 +20,21 @@ type SessionData = {
     address?: string;
   };
   createPosition: {
+    range?: [number, number],
     mint?: string;
     amount?: number;
-    singleSided?: "MintA" | "MintB",
+    singleSided?: "MintA" | "MintB";
     algorithm?: "single-sided" | "spot";
     info?: ApiV3PoolInfoConcentratedItem;
   };
   closePosition: {
     position?: ClmmPositionLayout;
   };
+  positionsCache: {
+    positions: Awaited<ReturnType<Raydium["clmm"]["getOwnerPositionInfo"]>>;
+  };
   messageId?: number;
+  messageIdsStack: number[],
   searchCache: Record<string, ApiV3PoolInfoItem[]>;
 };
 

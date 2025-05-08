@@ -28,7 +28,7 @@ describe("open position on raydium", async () => {
       raydium,
       {
         slippage: 0.05,
-        tickPercentage: [0, 0.00154],
+        range: [0, 0.00154],
         // tickPercentage: [0.0015, 0.00154],
         poolId: "BZtgQEyS6eXUXicYPHecYQ7PybqodXQMvkjUbP4R8mUU",
         input: {

@@ -30,9 +30,12 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@coral-xyz/anchor": "^0.31.1",
     "@raliqbot/shared": "*",
     "@raydium-io/raydium-sdk-v2": "^0.1.128-alpha",
     "@solana/spl-token": "^0.4.13",
+    "@types/lodash": "^4.17.16",
+    "lodash": "^4.17.21",
     "xior": "^0.7.8"
   }
 }

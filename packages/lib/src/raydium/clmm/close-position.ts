@@ -1,51 +1,68 @@
-import assert from "assert";
-import { format } from "@raliqbot/shared";
-import {
-  TxVersion,
-  type Raydium,
-  type ApiV3PoolInfoConcentratedItem,
-  type ClmmKeys,
-} from "@raydium-io/raydium-sdk-v2";
+import { chunk } from "lodash";
+import { BN, web3 } from "@coral-xyz/anchor";
+import { TxVersion, type Raydium } from "@raydium-io/raydium-sdk-v2";
 
-import { isValidClmm } from "./utils";
+import { getPortfolio } from "./utils";
 
 export const closePosition = async (
   raydium: Raydium,
-  position: Awaited<
-    ReturnType<typeof raydium.clmm.getOwnerPositionInfo>
-  >[number]
+  porfolio: Awaited<ReturnType<typeof getPortfolio>>
 ) => {
-  let poolKeys: ClmmKeys | undefined;
-  let poolInfo: ApiV3PoolInfoConcentratedItem | undefined;
+  const transactions = [];
+  const txSigners: web3.Signer[][] = [];
 
-  if (raydium.cluster === "mainnet") {
-    const apiPoolInfos = await raydium.api.fetchPoolById({
-      ids: position.poolId.toBase58(),
-    });
-    for (const apiPoolInfo of apiPoolInfos) {
-      if (isValidClmm(apiPoolInfo.programId)) {
-        poolInfo = apiPoolInfo as ApiV3PoolInfoConcentratedItem;
-        break;
-      }
+  console.log(
+    "[position.close.initializing] ",
+    porfolio.map(({ positions }) =>
+      positions.map((position) => position.nftMint.toBase58())
+    )
+  );
+
+  for (const {
+    poolInfo: { poolInfo, poolKeys },
+    positions,
+  } of porfolio) {
+    for (const position of positions) {
+      const { transaction, signers } = await raydium.clmm.decreaseLiquidity({
+        poolInfo,
+        poolKeys,
+        amountMinA: new BN(0),
+        amountMinB: new BN(0),
+        ownerPosition: position,
+        liquidity: position.liquidity,
+        txVersion: TxVersion.LEGACY,
+        ownerInfo: {
+          closePosition: true,
+          useSOLBalance: true,
+        },
+      });
+
+      txSigners.push(signers);
+      transactions.push(transaction);
     }
-  } else {
-    const rpcPoolInfo = await raydium.clmm.getPoolInfoFromRpc(
-      position.poolId.toBase58()
-    );
-    poolInfo = rpcPoolInfo.poolInfo;
-    poolKeys = rpcPoolInfo.poolKeys;
   }
 
-  assert(poolInfo, format("target pool=% is not a CLMM pool", position.poolId));
+  if (transactions.length > 0) {
+    console.log(
+      "[position.close.processing] transactions.length=",
+      transactions.length
+    );
 
-  const { execute } = await raydium.clmm.closePosition({
-    poolInfo,
-    poolKeys,
-    ownerPosition: position,
-    txVersion: TxVersion.LEGACY,
-  });
+    const chunkedTxs = chunk(transactions, 5);
+    const signatures = await Promise.all(
+      chunkedTxs.map((transaction) =>
+        web3.sendAndConfirmTransaction(
+          raydium.connection,
+          new web3.Transaction().add(...transaction),
+          txSigners.flat(),
+          { commitment: "confirmed" }
+        )
+      )
+    );
+    console.log("[position.close.processing] signature=", signatures);
 
-  const { txId } = await execute({ sendAndConfirm: true });
+    return signatures;
+  }
 
-  return txId;
+  return null;
 };

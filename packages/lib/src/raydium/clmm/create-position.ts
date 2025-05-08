@@ -16,7 +16,7 @@ import { getPoolInfo } from "./utils/get-pool-info";
 type CreatePositionParams = {
   poolId: string;
   slippage: number;
-  tickPercentage: [number, number];
+  range: [number, number];
   input: { mint?: string; amount: number };
   devConfig?: {
     tokenASwapConfig: { poolId: string };
@@ -30,7 +30,7 @@ export const createPosition = async (
     input,
     poolId,
     slippage,
-    tickPercentage: [startPercentage, endPercentage],
+    range: [startPercentage, endPercentage],
   }: CreatePositionParams
 ) => {
   assert(startPercentage > 0 || endPercentage > 0, "invalid tick percentage.");

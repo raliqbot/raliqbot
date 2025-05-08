@@ -7,7 +7,6 @@ import registerCommands from "./commands";
 import { connection, db } from "../instances";
 import { createUser } from "../controllers/users.controller";
 import { loadWallet } from "../controllers/wallets.controller";
-import { createPositionScene } from "./scenes/create-position-scene";
 
 export const authenticateUser = async (
   context: Context,
@@ -32,8 +31,9 @@ export const authenticateUser = async (
     });
     if (!context.session) context.session = {} as any;
     if (!context.session.searchCache) context.session.searchCache = {};
-    if(!context.session.closePosition) context.session.closePosition = {};
+    if (!context.session.closePosition) context.session.closePosition = {};
     if (!context.session.createPosition) context.session.createPosition = {};
+    if (!context.session.messageIdsStack) context.session.messageIdsStack = [];
     return next();
   }
 };

@@ -14,7 +14,10 @@ export const isValidAddress = (address: string) => {
   }
 };
 
-export const catchBotRuntimeError = <U extends Context, T extends (context: U) => unknown>(
+export const catchBotRuntimeError = <
+  U extends Context,
+  T extends (context: U) => unknown
+>(
   fn: T
 ) => {
   return async (...[context]: Parameters<T>) => {
@@ -24,6 +27,9 @@ export const catchBotRuntimeError = <U extends Context, T extends (context: U) =
       console.error(error);
       const message =
         error instanceof Error ? error.message : JSON.stringify(error);
+      context.session.createPosition = {};
+      context.session.openPosition = {};
+      await context.scene.leave();
       return context.replyWithMarkdownV2(cleanText(message));
     }
   };

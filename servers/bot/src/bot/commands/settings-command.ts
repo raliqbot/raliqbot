@@ -33,12 +33,7 @@ export const onSettings =
           "change-priority-fees"
         ),
       ],
-      [
-        Markup.button.callback(
-          "🌎 Change Bot Language",
-          "change-locale"
-        ),
-      ],
+      [Markup.button.callback("🌎 Change Bot Language", "change-locale")],
     ]);
 
     const messageId = await (editMessageId
@@ -59,3 +54,6 @@ export const settingsCommand = (telegraf: Telegraf) => {
   telegraf.settings(onSettings());
   telegraf.action("settings", onSettings());
 };
+
+settingsCommand.commandName = "settings";
+settingsCommand.help = "Get and manage bot settings.";

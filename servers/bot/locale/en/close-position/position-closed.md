@@ -1,3 +1,5 @@
-✅ Position Closed 
+*✅ Position Closed Successfully\.*
 
-%name% position closed.
+View Transaction using the links\, below\.
+
+%list%

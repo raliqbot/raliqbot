@@ -6,8 +6,16 @@ import {
 } from "@raydium-io/raydium-sdk-v2";
 import { getPoolInfo } from "./get-pool-info";
 
-export const getPositions = async (raydium: Raydium, programId: PublicKey) => {
-  const positions = await raydium.clmm.getOwnerPositionInfo({ programId });
+export const getPortfolio = async (
+  raydium: Raydium,
+  programId: PublicKey,
+  filteredPositions?: Awaited<
+    ReturnType<typeof raydium.clmm.getOwnerPositionInfo>
+  >
+) => {
+  const positions = filteredPositions
+    ? filteredPositions
+    : await raydium.clmm.getOwnerPositionInfo({ programId });
 
   const poolsWithPositions = new Map<
     string,

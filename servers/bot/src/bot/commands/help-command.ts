@@ -12,3 +12,6 @@ export const helpCommand = (telegraf: Telegraf) => {
   telegraf.help(onHelp);
   telegraf.action("help", onHelp);
 };
+
+helpCommand.commandName = "help";
+helpCommand.help = "Bot FAQ and detailed instructions.";

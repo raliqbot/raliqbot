@@ -1,7 +1,6 @@
 import { Input, Markup, type Telegraf } from "telegraf";
 
 import { connection } from "../../instances";
-import { onPortfolio } from "./portfolio-command";
 import { cleanText, readFileSync } from "../utils";
 import { onOpenPosition } from "./open-position-command";
 import { onCreatePosition } from "../actions/create-position-action";
@@ -13,7 +12,6 @@ export const startCommand = (telegraf: Telegraf) => {
       if (/open/.test(context.message.text)) return onOpenPosition(context);
       if (/createPosition/.test(context.message.text))
         return onCreatePosition(context);
-      if (/portfolio/.test(context.message.text)) return onPortfolio(context);
     }
 
     const solBalance =
@@ -42,3 +40,6 @@ export const startCommand = (telegraf: Telegraf) => {
     );
   });
 };
+
+startCommand.commandName = "settings";
+startCommand.help = "Update and upgrade bot to latest version.";

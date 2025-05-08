@@ -4,7 +4,7 @@ import { format, getEnv } from "../../core";
 import { connection } from "../../instances";
 import { cleanText, readFileSync } from "../utils";
 
-export const WalletCommand = (telegraf: Telegraf) => {
+export const walletCommand = (telegraf: Telegraf) => {
   const onWallet = async (context: Context) => {
     const address = context.wallet.publicKey.toBase58();
     const solBalance =
@@ -38,3 +38,6 @@ export const WalletCommand = (telegraf: Telegraf) => {
   telegraf.action("wallet", onWallet);
   telegraf.command("wallet", onWallet);
 };
+
+walletCommand.commandName = "wallet";
+walletCommand.help = "Get and manage your wallet settings.";

@@ -34,5 +34,6 @@ export const harvestRewards = async (
 
   for (const [key, positions] of groupedPositions) {
     const wallet = loadWallet({ key });
+    
   }
 };

@@ -150,3 +150,7 @@ export const openPositionCommand = async (telegraf: Telegraf) => {
   telegraf.command(commandFilter, onOpenPosition);
   telegraf.action(commandFilter, onOpenPosition);
 };
+
+openPositionCommand.commandName = "open_position";
+openPositionCommand.help =
+  "open new position for a pool. Optional SOL amount or pair address.";
