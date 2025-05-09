@@ -296,7 +296,7 @@ export const createPosition = async (
   const [tx1, ...txs] = transactions;
   const [signers1, signers2] = signers;
 
-  if (tx1.length > 0) {
+  if (tx1 && tx1.length > 0) {
     const signature = await web3.sendAndConfirmTransaction(
       raydium.connection,
       new web3.Transaction().add(...tx1),

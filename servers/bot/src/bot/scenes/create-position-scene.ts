@@ -1,62 +1,54 @@
 import { createPosition } from "@raliqbot/lib";
-import { Composer, Input, Markup, Scenes } from "telegraf";
+import { Context, Input, Markup, Scenes } from "telegraf";
 
 import { buildMediaURL, format } from "../../core";
+import { authenticateUser } from "../middlewares/authenticate-user";
 import { catchBotRuntimeError, cleanText, readFileSync } from "../utils";
 
-const createPositionComposer = new Composer();
-createPositionComposer.action("edit-range", (context) => {});
-createPositionComposer.action(
-  "open-position",
-  catchBotRuntimeError(async (context) => {
-    const { info, amount, range } = context.session.createPosition;
+const confirmPosition = async (context: Context) => {
+  const { info, messageId, amount, range } = context.session.createPosition;
 
-    context.session.openPosition = {};
-    context.session.createPosition = {};
-
-    if (info && amount && range) {
-      const name = format("%/%", info.mintA.symbol, info.mintB.symbol);
-
-      const [[, , signature], nftMint] = await createPosition(context.raydium, {
-        range,
-        slippage: Number(context.user.settings.slippage),
-        input: {
-          amount,
-          mint: "So11111111111111111111111111111111111111112",
-        },
-        poolId: info.id,
-      });
-
-      return context.replyWithPhoto(
-        Input.fromURLStream(buildMediaURL(format("%/open-graph", info.id))),
-        {
-          caption: readFileSync(
-            "locale/en/create-position/position-created.md",
-            "utf-8"
-          )
-            .replace("%name%", cleanText(name))
-            .replace("%signature%", cleanText(signature)),
-          reply_markup: Markup.inlineKeyboard([
-            [
-              Markup.button.url(
-                "🔗 View in Explorer",
-                format("https://solscan.io/tx/%", signature)
-              ),
-            ],
-            [
-              Markup.button.callback(
-                "🅇 Close Position",
-                format("close_position-%", nftMint)
-              ),
-            ],
-          ]).reply_markup,
-        }
+  if (info && amount) {
+    const message = readFileSync(
+      "locale/en/create-position/position-config.md",
+      "utf-8"
+    )
+      .replace(
+        "%name%",
+        cleanText(format("%/%", info.mintA.symbol, info.mintB.symbol))
+      )
+      .replace("%range%", cleanText(range.join(", ")))
+      .replace("%price%", cleanText(info.price.toFixed(2)))
+      .replace("%amount%", cleanText(amount.toFixed(2)))
+      .replace(
+        "%strategy%",
+        cleanText(context.session.createPosition.algorithm!)
       );
-    }
 
-    return context.scene.leave();
-  })
-);
+    const reply_markup = Markup.inlineKeyboard([
+      [
+        Markup.button.callback("✏️ Edit Range", "edit-range"),
+        Markup.button.callback("＋ Open Position", "open-position"),
+      ],
+      [Markup.button.callback("🅇 Cancel", "cancel")],
+    ]).reply_markup;
+
+    if (messageId)
+      await context.telegram.editMessageText(
+        context.chat!.id,
+        messageId,
+        undefined,
+        message,
+        { reply_markup, parse_mode: "MarkdownV2" }
+      );
+
+    const { message_id } = await context.replyWithMarkdownV2(message, {
+      reply_markup,
+    });
+
+    context.session.createPosition.messageId = message_id;
+  }
+};
 
 export const createPositionSceneId = "create-position-scene";
 export const createPositionScene = new Scenes.WizardScene(
@@ -138,51 +130,72 @@ export const createPositionScene = new Scenes.WizardScene(
 
       if (singleSided && ["MintA", "MintB"].includes(singleSided)) {
         context.session.createPosition.singleSided = singleSided;
+        if (singleSided === "MintA")
+          context.session.createPosition.range = [0, 0.15];
+        else context.session.createPosition.range = [0.15, 0];
 
         return onNext();
       }
     } else onNext();
   },
   async (context) => {
-    const amount =
+    const text =
       context.message && "text" in context.message
-        ? parseFloat(context.message.text)
-        : context.session.createPosition.amount;
+        ? context.message.text
+        : undefined;
 
-    if (Number.isNaN(amount)) return;
-
-    context.session.createPosition.amount = amount;
-    const { info } = context.session.createPosition;
-
-    if (info && amount) {
-      const message = await context.replyWithMarkdownV2(
-        readFileSync("locale/en/create-position/position-config.md", "utf-8")
-          .replace(
-            "%name%",
-            cleanText(format("%/%", info.mintA.symbol, info.mintB.symbol))
-          )
-          .replace("%range%", cleanText([0.15, 0.15].join(", ")))
-          .replace("%price%", cleanText(info.price.toFixed(2)))
-          .replace("%amount%", cleanText(amount.toFixed(2)))
-          .replace(
-            "%strategy%",
-            cleanText(context.session.createPosition.algorithm!)
-          ),
-        Markup.inlineKeyboard([
-          [
-            Markup.button.callback("✏️ Edit Range", "edit-range"),
-            Markup.button.callback("＋ Open Position", "open-position"),
-          ],
-          [Markup.button.callback("🅇 Cancel", "cancel")],
-        ])
-      );
-
-      context.session.messageIdsStack.push(message.message_id);
+    if (text) {
+      const amount = parseFloat(text);
+      if (!Number.isNaN(amount)) context.session.createPosition.amount = amount;
+      await confirmPosition(context);
+      return context.wizard.next();
     }
-
-    return context.wizard.next();
   },
-  createPositionComposer
+  async (context) => {
+    if (context.callbackQuery && "data" in context.callbackQuery) {
+      const data = context.callbackQuery.data;
+      if (data === "edit-range") {
+        const message = await context.replyWithMarkdownV2(
+          readFileSync("locale/en/create-position/edit-range.md", "utf-8"),
+          Markup.forceReply()
+        );
+
+        context.session.messageIdsStack.push(message.message_id);
+
+        return context.wizard.next();
+      }
+    }
+  },
+  async (context) => {
+    const text =
+      context.message && "text" in context.message
+        ? context.message.text
+        : undefined;
+
+    if (text) {
+      let values = text
+        .split(/\s+|,/)
+        .map(parseFloat)
+        .filter((value) => !Number.isNaN(value));
+
+      values = values.map((value) => (value > 1 ? value / 100 : value));
+
+      const { algorithm, singleSided } = context.session.createPosition;
+      if (algorithm === "single-sided") {
+        if (singleSided === "MintA") values = [0, values[0]];
+        else values = [values[0], 0];
+      } else {
+        if (values.length < 2)
+          return context.replyWithMarkdownV2(
+            readFileSync("locale/en/create-position/invalid-range.md", "utf-8")
+          );
+      }
+
+      context.session.createPosition.range = values as [number, number];
+
+      return confirmPosition(context);
+    }
+  }
 );
 
 createPositionScene.action("cancel", (context) => {
@@ -190,3 +203,55 @@ createPositionScene.action("cancel", (context) => {
   context.session.messageIdsStack = [];
   return context.scene.leave();
 });
+
+createPositionScene.use(authenticateUser).action(
+  "open-position",
+  catchBotRuntimeError(async (context) => {
+    const { info, amount, range } = context.session.createPosition;
+    console.log(range);
+    context.session.openPosition = {};
+    context.session.createPosition = { range: [0.15, 0.15] };
+
+    if (info && amount && range) {
+      const name = format("%/%", info.mintA.symbol, info.mintB.symbol);
+
+      const [[, , signature], nftMint] = await createPosition(context.raydium, {
+        range,
+        slippage: Number(context.user.settings.slippage),
+        input: {
+          amount,
+          mint: "So11111111111111111111111111111111111111112",
+        },
+        poolId: info.id,
+      });
+
+      return context.replyWithPhoto(
+        Input.fromURLStream(buildMediaURL(format("%/open-graph", info.id))),
+        {
+          caption: readFileSync(
+            "locale/en/create-position/position-created.md",
+            "utf-8"
+          )
+            .replace("%name%", cleanText(name))
+            .replace("%signature%", cleanText(signature)),
+          reply_markup: Markup.inlineKeyboard([
+            [
+              Markup.button.url(
+                "🔗 View in Explorer",
+                format("https://solscan.io/tx/%", signature)
+              ),
+            ],
+            [
+              Markup.button.callback(
+                "🅇 Close Position",
+                format("close_position-%", nftMint)
+              ),
+            ],
+          ]).reply_markup,
+        }
+      );
+    }
+
+    return context.scene.leave();
+  })
+);

@@ -20,7 +20,8 @@ type SessionData = {
     address?: string;
   };
   createPosition: {
-    range?: [number, number],
+    messageId?: number;
+    range: [number, number],
     mint?: string;
     amount?: number;
     singleSided?: "MintA" | "MintB";

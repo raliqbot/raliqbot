@@ -1,42 +1,9 @@
-import { Raydium } from "@raydium-io/raydium-sdk-v2";
-import { Scenes, session, type Context, type Telegraf } from "telegraf";
+import { Scenes, session, type Telegraf } from "telegraf";
 
 import { scenes } from "./scenes";
 import registerActions from "./actions";
 import registerCommands from "./commands";
-import { connection, db } from "../instances";
-import { createUser } from "../controllers/users.controller";
-import { loadWallet } from "../controllers/wallets.controller";
-
-export const authenticateUser = async (
-  context: Context,
-  next: () => Promise<void>
-) => {
-  const user = context.from;
-  if (user) {
-    const dbUser = await createUser(db, {
-      id: String(user.id),
-      lastLogin: new Date(),
-    });
-
-    const owner = loadWallet(dbUser.wallet);
-
-    context.user = dbUser;
-    context.wallet = owner;
-    context.raydium = await Raydium.load({
-      owner,
-      connection,
-      cluster: "mainnet",
-      disableLoadToken: true,
-    });
-    if (!context.session) context.session = {} as any;
-    if (!context.session.searchCache) context.session.searchCache = {};
-    if (!context.session.closePosition) context.session.closePosition = {};
-    if (!context.session.createPosition) context.session.createPosition = {};
-    if (!context.session.messageIdsStack) context.session.messageIdsStack = [];
-    return next();
-  }
-};
+import { authenticateUser } from "./middlewares/authenticate-user";
 
 export default function registerBot(bot: Telegraf) {
   const stage = new Scenes.Stage<any>(scenes);
