@@ -27,8 +27,12 @@ export const catchBotRuntimeError = <
       console.error(error);
       const message =
         error instanceof Error ? error.message : JSON.stringify(error);
-      context.session.createPosition = {};
       context.session.openPosition = {};
+      context.session.createPosition = { range: [0.15, 0.15] };
+      context.telegram.deleteMessages(
+        context.chat!.id,
+        context.session.messageIdsStack
+      );
       await context.scene.leave();
       return context.replyWithMarkdownV2(cleanText(message));
     }
