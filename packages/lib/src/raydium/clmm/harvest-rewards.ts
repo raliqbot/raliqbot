@@ -1,21 +1,31 @@
+import { web3 } from "@coral-xyz/anchor";
 import type {
   ApiV3PoolInfoConcentratedItem,
   ClmmPositionLayout,
+  PositionInfoLayout,
   Raydium,
 } from "@raydium-io/raydium-sdk-v2";
-import { getPortfolio } from "./utils";
+
+import { getPoolsWithPositions } from "./utils";
 
 export const harvestRewards = async (
   raydium: Raydium,
-  porfolio: Awaited<ReturnType<typeof getPortfolio>>
+  programId: web3.PublicKey,
+  prefetchedPositions: ReturnType<typeof PositionInfoLayout.decode>[]
 ) => {
   const allPositions = new Map<string, ClmmPositionLayout[]>();
   const allPoolInfo = new Map<string, ApiV3PoolInfoConcentratedItem>();
 
+  const poolsWithPositions = await getPoolsWithPositions(
+    raydium,
+    programId,
+    prefetchedPositions
+  );
+
   for (const {
-    poolInfo: { poolInfo },
+    pool: { poolInfo },
     positions,
-  } of porfolio) {
+  } of poolsWithPositions) {
     const pool = allPoolInfo.get(poolInfo.id);
     const allPosition = allPositions.get(poolInfo.id);
 
@@ -26,8 +36,8 @@ export const harvestRewards = async (
 
   console.log(
     "[claim.harvesting.processing] ",
-    porfolio.map(({ positions }) =>
-      positions.map((position) => position.poolId)
+    poolsWithPositions.flatMap(({ positions }) =>
+      positions.map((position) => position.poolId.toBase58())
     )
   );
 
@@ -39,7 +49,7 @@ export const harvestRewards = async (
     },
   });
 
-  const { txIds } = await execute({ sequentially: true, sendAndConfirm: true });
+  const { txIds } = await execute({ sequentially: true, sendAndConfirm: true,  });
 
   console.log("[claim.harvesting.success] signatures=", txIds);
 

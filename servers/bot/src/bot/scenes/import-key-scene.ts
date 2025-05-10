@@ -51,11 +51,15 @@ export const importKeyScene = new Scenes.WizardScene(
         context.user.wallet = wallet;
         context.wallet = loadWallet(wallet);
 
+        await context.replyWithMarkdownV2(
+          readFileSync("locale/en/wallet/wallet-import-successful.md", "utf-8")
+        );
+
         return context.scene.leave();
       }
 
       await context.replyWithMarkdownV2(
-        readFileSync("locale/en/wallet/invalid-import-key.md", "utf-8")
+        readFileSync("locale/en/wallet/wallet-import-failed.md", "utf-8")
       );
 
       return context.scene.leave();

@@ -28,7 +28,13 @@ export const changeLocaleScene = new Scenes.WizardScene(
       });
       context.user.settings = settings;
       if (context.session.messageId)
-        return onSettings(context.session.messageId)(context);
+        await onSettings(context.session.messageId)(context);
+
+      await context.replyWithMarkdownV2(
+        readFileSync("locale/en/settings/update-successful.md", "utf-8")
+      );
+
+      return context.scene.leave();
     }
   }
 );

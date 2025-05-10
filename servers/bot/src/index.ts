@@ -1,27 +1,35 @@
 import "dotenv/config";
-import fastify from "fastify";
 import { Telegraf } from "telegraf";
 import { format } from "@raliqbot/shared";
+import fastify, { type FastifyInstance } from "fastify";
 
-import { getEnv } from "./core";
 import registerBot from "./bot";
+import { bot } from "./instances";
+import registerRoutes from "./routes";
 
-async function main() {
-  const bot = new Telegraf(getEnv("TELEGRAM_BOT_API_KEY"));
+async function main(server: FastifyInstance, bot: Telegraf) {
   registerBot(bot);
+  registerRoutes(server);
+
+  const promises = [];
+
+  promises.push(
+    server.listen({
+      host: process.env.HOST ? process.env.HOST : "0.0.0.0",
+      port: process.env.PORT ? Number(process.env.PORT!) : 10004,
+    })
+  );
 
   bot.catch((error) => console.error(error));
   if (process.env.DOMAIN) {
-    const server = fastify({ logger: true });
     server.post(
       format("/telegraf/%", bot.secretPathComponent()),
       (await bot.createWebhook({ domain: process.env.DOMAIN! })) as any
     );
-    server.listen({
-      host: process.env.HOST ? process.env.HOST : "0.0.0.0",
-      port: process.env.PORT ? Number(process.env.PORT!) : 10004,
-    });
-  } else bot.launch().then(() => console.log("bot running in background"));
+  } else
+    promises.push(
+      bot.launch().then(() => console.log("bot running in background"))
+    );
 
   process.once("SIGINT", () => bot.stop("SIGINT"));
   process.once("SIGTERM", () => bot.stop("SIGTERM"));
@@ -31,6 +39,10 @@ async function main() {
   process.on("uncaughtException", (reason, promise) => {
     console.error("Unhandled Rejection at:", promise, "reason:", reason);
   });
+
+  return Promise.all(promises);
 }
 
-main();
+const server = fastify({ logger: true, ignoreTrailingSlash: true });
+
+main(server, bot);

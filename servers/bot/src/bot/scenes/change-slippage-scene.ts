@@ -28,7 +28,12 @@ export const changeSlippageScene = new Scenes.WizardScene(
       });
       context.user.settings = settings;
 
-      if (context.session.messageId) await onSettings(context.session.messageId)(context);
+      if (context.session.messageId)
+        await onSettings(context.session.messageId)(context);
+
+      await context.replyWithMarkdownV2(
+        readFileSync("locale/en/settings/update-successful.md", "utf-8")
+      );
 
       return context.scene.leave();
     }

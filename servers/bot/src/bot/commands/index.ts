@@ -1,5 +1,6 @@
 import type { Telegraf } from "telegraf";
 
+import { pnlCommand } from "./pnl-command";
 import { helpCommand } from "./help-command";
 import { startCommand } from "./start-command";
 import { walletCommand } from "./wallet-command";
@@ -11,6 +12,7 @@ import { closePositionCommand } from "./close-position-command";
 
 export const registerCommands = async (telegraf: Telegraf) => {
   helpCommand(telegraf);
+  pnlCommand(telegraf);
   startCommand(telegraf);
   walletCommand(telegraf);
   settingsCommand(telegraf);

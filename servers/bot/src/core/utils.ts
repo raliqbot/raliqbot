@@ -1,5 +1,6 @@
 import { readFileSync } from "fs";
 import { web3 } from "@coral-xyz/anchor";
+
 import { getEnv } from "./env";
 
 export const format = <

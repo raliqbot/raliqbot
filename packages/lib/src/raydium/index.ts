@@ -4,6 +4,8 @@ export {
   createPoolMintAta,
   harvestRewards,
   createPosition,
-  getPoolInfo,
+  getPool,
   getPortfolio,
+  getPoolsWithPositions,
+  getPoolWithPositionsByWallets,
 } from "./clmm";

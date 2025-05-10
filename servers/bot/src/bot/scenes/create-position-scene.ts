@@ -1,9 +1,12 @@
 import { createPosition } from "@raliqbot/lib";
 import { Context, Input, Markup, Scenes } from "telegraf";
 
+import { db } from "../../instances";
 import { buildMediaURL, format } from "../../core";
 import { authenticateUser } from "../middlewares/authenticate-user";
 import { catchBotRuntimeError, cleanText, readFileSync } from "../utils";
+import { createPositions } from "../../controllers/positions.controller";
+import Decimal from "decimal.js";
 
 const confirmPosition = async (context: Context) => {
   const { info, messageId, amount, range } = context.session.createPosition;
@@ -207,22 +210,72 @@ createPositionScene.action("cancel", (context) => {
 createPositionScene.use(authenticateUser).action(
   "open-position",
   catchBotRuntimeError(async (context) => {
-    const { info, amount, range } = context.session.createPosition;
-    console.log(range);
+    const { info, amount, range, algorithm, singleSided } =
+      context.session.createPosition;
     context.session.openPosition = {};
     context.session.createPosition = { range: [0.15, 0.15] };
 
-    if (info && amount && range) {
+    if (info && amount && range && algorithm) {
       const name = format("%/%", info.mintA.symbol, info.mintB.symbol);
 
-      const [[, , signature], nftMint] = await createPosition(context.raydium, {
+      const [
+        [, , signature],
+        nftMint,
+        {
+          solAmountIn,
+          upperTick,
+          lowerTick,
+          liquidity,
+          baseAmount,
+          quoteAmount,
+        },
+      ] = await createPosition(context.raydium, {
         range,
+        rangeBias: 2,
         slippage: Number(context.user.settings.slippage),
         input: {
           amount,
           mint: "So11111111111111111111111111111111111111112",
         },
         poolId: info.id,
+      });
+
+      let amountA: number = 0;
+      let amountB: number = 0;
+
+      if (singleSided) {
+        if (singleSided === "MintA")
+          amountA = new Decimal(baseAmount.toString())
+            .div(Math.pow(10, info.mintA.decimals))
+            .toNumber();
+        else
+          amountB = new Decimal(baseAmount.toString())
+            .div(Math.pow(10, info.mintB.decimals))
+            .toNumber();
+      } else {
+        amountA = new Decimal(baseAmount.toString())
+          .div(Math.pow(10, info.mintA.decimals))
+          .toNumber();
+        if (quoteAmount)
+          amountB = new Decimal(quoteAmount.toString())
+            .div(Math.pow(10, info.mintB.decimals))
+            .toNumber();
+      }
+
+      await createPositions(db, {
+        algorithm,
+        id: nftMint,
+        pool: info.id,
+        enabled: false,
+        wallet: context.user.wallet.id,
+        metadata: {
+          upperTick,
+          lowerTick,
+          amountA,
+          amountB,
+          liquidity: liquidity.toString(),
+          stopLossPercentage: undefined,
+        },
       });
 
       return context.replyWithPhoto(

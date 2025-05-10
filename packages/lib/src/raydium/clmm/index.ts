@@ -4,7 +4,9 @@ export { harvestRewards } from "./harvest-rewards";
 
 export {
   isValidClmm,
-  getPortfolio,
-  getPoolInfo,
+  getPool,
   createPoolMintAta,
+  getPortfolio,
+  getPoolsWithPositions,
+  getPoolWithPositionsByWallets,
 } from "./utils";

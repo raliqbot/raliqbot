@@ -1,27 +1,38 @@
 import { chunk } from "lodash";
 import { BN, web3 } from "@coral-xyz/anchor";
-import { TxVersion, type Raydium } from "@raydium-io/raydium-sdk-v2";
+import {
+  PositionInfoLayout,
+  TxVersion,
+  type Raydium,
+} from "@raydium-io/raydium-sdk-v2";
 
-import { getPortfolio } from "./utils";
+import { getPoolsWithPositions } from "./utils";
 
 export const closePosition = async (
   raydium: Raydium,
-  porfolio: Awaited<ReturnType<typeof getPortfolio>>
+  programId: web3.PublicKey,
+  prefetchedPositions?: ReturnType<typeof PositionInfoLayout.decode>[]
 ) => {
   const transactions = [];
   const txSigners: web3.Signer[][] = [];
 
+  const poolsWithPositions = await getPoolsWithPositions(
+    raydium,
+    programId,
+    prefetchedPositions
+  );
+
   console.log(
     "[position.close.initializing] ",
-    porfolio.map(({ positions }) =>
+    poolsWithPositions.map(({ positions }) =>
       positions.map((position) => position.nftMint.toBase58())
     )
   );
 
   for (const {
-    poolInfo: { poolInfo, poolKeys },
+    pool: { poolInfo, poolKeys },
     positions,
-  } of porfolio) {
+  } of poolsWithPositions) {
     for (const position of positions) {
       const { transaction, signers } = await raydium.clmm.decreaseLiquidity({
         poolInfo,

@@ -11,12 +11,14 @@ import {
 
 import { createPoolMintAta } from "./utils";
 import { createSwap } from "./create-swap";
-import { getPoolInfo } from "./utils/get-pool-info";
+import { getPool } from "./utils/get-pool";
+import { getAllocateTokens } from "./utils/allocate-token";
 
 type CreatePositionParams = {
   poolId: string;
   slippage: number;
   range: [number, number];
+  rangeBias: number;
   input: { mint?: string; amount: number };
   devConfig?: {
     tokenASwapConfig: { poolId: string };
@@ -30,6 +32,7 @@ export const createPosition = async (
     input,
     poolId,
     slippage,
+    rangeBias,
     range: [startPercentage, endPercentage],
   }: CreatePositionParams
 ) => {
@@ -38,7 +41,7 @@ export const createPosition = async (
   const singleSided =
     startPercentage === 0 ? "MintA" : endPercentage === 0 ? "MintB" : undefined;
 
-  const { poolInfo, poolKeys } = await getPoolInfo(raydium, poolId);
+  const { poolInfo, poolKeys } = await getPool(raydium, poolId);
   const ataSignature = await createPoolMintAta(raydium, poolInfo);
 
   if (ataSignature)
@@ -56,9 +59,11 @@ export const createPosition = async (
   const transactions: web3.Transaction[][] = [];
 
   if (inputMintInPool) {
-    const percentageSum = startPercentage + endPercentage;
-    const swapAAmount = (startPercentage / percentageSum) * input.amount;
-    const swapBAmount = (endPercentage / percentageSum) * input.amount;
+    const [swapAAmount, swapBAmount] = getAllocateTokens(
+      [startPercentage, endPercentage],
+      input.amount,
+      rangeBias
+    );
 
     baseAmountIn = new BN(
       new Decimal(swapAAmount)
@@ -73,7 +78,10 @@ export const createPosition = async (
       ] = await createSwap(raydium, {
         slippage,
         epochInfo,
-        input: { mint: input.mint!, amount: swapBAmount },
+        input: {
+          mint: poolInfo[baseIn ? "mintA" : "mintB"].address,
+          amount: swapBAmount,
+        },
         outputMint: poolInfo[baseIn ? "mintB" : "mintA"].address,
       });
 
@@ -83,9 +91,11 @@ export const createPosition = async (
       transactions.push([swapBTransaction]);
     }
   } else {
-    const percentageSum = startPercentage + endPercentage;
-    const swapAAmount = (startPercentage / percentageSum) * input.amount;
-    const swapBAmount = (endPercentage / percentageSum) * input.amount;
+    const [swapAAmount, swapBAmount] = getAllocateTokens(
+      [startPercentage, endPercentage],
+      input.amount,
+      rangeBias
+    );
 
     console.log(
       "[position.swap.config] ",
@@ -222,6 +232,10 @@ export const createPosition = async (
     )
   );
 
+  console.log(
+    singleSided ? singleSided === "MintA" : inputMintInPool ? baseIn : true
+  );
+
   const liquidityInfo = await PoolUtils.getLiquidityAmountOutFromAmountIn({
     poolInfo,
     epochInfo,
@@ -331,5 +345,16 @@ export const createPosition = async (
 
   console.log("[position.created.success] signature=", signature);
 
-  return [signatures, extInfo.nftMint.toBase58()] as const;
+  return [
+    signatures,
+    extInfo.nftMint.toBase58(),
+    {
+      baseAmount,
+      quoteAmount,
+      solAmountIn: input.amount,
+      liquidity: liquidityInfo.liquidity,
+      upperTick,
+      lowerTick,
+    },
+  ] as const;
 };

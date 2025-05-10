@@ -1,8 +1,10 @@
+import Decimal from "decimal.js";
 import { format } from "@raliqbot/shared";
 import { getPortfolio } from "@raliqbot/lib";
-import { CLMM_PROGRAM_ID } from "@raydium-io/raydium-sdk-v2";
+import { CLMM_PROGRAM_ID, TickUtils } from "@raydium-io/raydium-sdk-v2";
 import { Input, Markup, type Context, type Telegraf } from "telegraf";
 
+import { bitquery } from "../../instances";
 import { buildMediaURL } from "../../core";
 import { cleanText, readFileSync } from "../utils";
 
@@ -13,11 +15,11 @@ export const portfolioCommand = (telegraf: Telegraf) => {
         ? context.message.text
         : undefined;
 
-    let porfolios = await getPortfolio(context.raydium, CLMM_PROGRAM_ID);
+    let porfolios = await getPortfolio(context.raydium, bitquery, CLMM_PROGRAM_ID);
 
     if (porfolios.length > 0) {
       return Promise.all(
-        porfolios.map(({ poolInfo: { poolInfo }, positions }) => {
+        porfolios.map(({ pool: { poolInfo }, positions }) => {
           if (text) {
             const [, ...addresses] = text.split(/\s+/g);
             if (addresses.length > 0)
@@ -26,13 +28,27 @@ export const portfolioCommand = (telegraf: Telegraf) => {
               );
           }
 
+          const { tick: currentTick } = TickUtils.getPriceAndTick({
+            poolInfo,
+            price: new Decimal(poolInfo.price),
+            baseIn: true,
+          });
+
           return positions.map((position) => {
+            const active =
+              currentTick >= position.tickLower ||
+              currentTick <= position.tickUpper;
             const positionId = position.nftMint.toBase58();
             const name = format(
               "%/%",
               poolInfo.mintA.symbol,
               poolInfo.mintB.symbol
             );
+
+            const algorithm =
+              position.tickLower !== 0 && position.tickUpper !== 0
+                ? "spot"
+                : "single-sided";
 
             return context.replyWithPhoto(
               Input.fromURLStream(
@@ -45,6 +61,14 @@ export const portfolioCommand = (telegraf: Telegraf) => {
                   "locale/en/position/position-detail.md",
                   "utf-8"
                 )
+                  .replace(
+                    "%algorithm%",
+                    format(algorithm === "spot" ? "⚖️ Spot" : "☘️ Single Sided")
+                  )
+                  .replace(
+                    "%active%",
+                    cleanText(active ? "🟢 Active" : "🔴 Not active")
+                  )
                   .replace("%position_id%", cleanText(positionId))
                   .replace("%name%", cleanText(name)),
                 parse_mode: "MarkdownV2",

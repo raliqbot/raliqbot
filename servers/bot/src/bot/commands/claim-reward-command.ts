@@ -1,6 +1,6 @@
 import { format } from "@raliqbot/shared";
-import type { Context, Telegraf } from "telegraf";
-import { getPortfolio, harvestRewards } from "@raliqbot/lib";
+import { harvestRewards } from "@raliqbot/lib";
+import { Input, type Context, type Telegraf } from "telegraf";
 import { CLMM_PROGRAM_ID } from "@raydium-io/raydium-sdk-v2";
 
 import { catchBotRuntimeError, readFileSync } from "../utils";
@@ -31,31 +31,32 @@ export const claimRewardCommand = (telegraf: Telegraf) => {
       );
     }
 
-    const porfolio = await getPortfolio(
+    const txIds = await harvestRewards(
       context.raydium,
       CLMM_PROGRAM_ID,
       positions
     );
-    const txIds = await harvestRewards(context.raydium, porfolio);
 
     if (txIds)
-      return context.replyWithMarkdownV2(
-        readFileSync(
-          "locale/en/claim-reward/claim-reward-detail.md",
-          "utf-8"
-        ).replace(
-          "%list%",
-          txIds
-            .map((txId, index) =>
-              format(
-                "[Transaction %](%)",
-                index + 1,
-                format("https://solscan.io/tx/%", txId)
+      return context.replyWithAnimation(
+        Input.fromLocalFile("assets/reward.gif"),
+        {
+          caption: readFileSync(
+            "locale/en/claim-reward/claim-reward-detail.md",
+            "utf-8"
+          ).replace(
+            "%list%",
+            txIds
+              .map((txId, index) =>
+                format(
+                  "[Transaction %](%)",
+                  index + 1,
+                  format("https://solscan.io/tx/%", txId)
+                )
               )
-            )
-            .join(" | ")
-        ),
-        { link_preview_options: { is_disabled: true } }
+              .join(" | ")
+          ),
+        }
       );
     else
       return context.replyWithMarkdownV2(

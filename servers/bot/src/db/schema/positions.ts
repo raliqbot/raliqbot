@@ -7,22 +7,20 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-import { pools } from "./pools";
 import { wallets } from "./wallets";
 
 export type PositionMetadata = {
-  entryPrice: number;
-  startPrice: number;
-  endPrice: number;
-  epochTime: number;
-  stopLossPercentage: number;
+  upperTick: number;
+  lowerTick: number;
+  liquidity: string;
+  amountA: number;
+  amountB: number;
+  stopLossPercentage?: number;
 };
 
 export const positions = pgTable("positions", {
   id: text().primaryKey(),
-  pool: text()
-    .references(() => pools.id)
-    .notNull(),
+  pool: text().notNull(),
   wallet: uuid()
     .references(() => wallets.id)
     .notNull(),

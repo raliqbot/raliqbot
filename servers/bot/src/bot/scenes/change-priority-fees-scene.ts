@@ -31,6 +31,10 @@ export const changePriorityFeesScene = new Scenes.WizardScene(
       if (context.session.messageId)
         await onSettings(context.session.messageId)(context);
 
+      await context.replyWithMarkdownV2(
+        readFileSync("locale/en/settings/update-successful.md", "utf-8")
+      );
+
       return context.scene.leave();
     }
   }

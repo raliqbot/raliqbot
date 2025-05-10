@@ -43,6 +43,13 @@
       "when": 1746708569049,
       "tag": "0005_loving_wind_dancer",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1746807367918,
+      "tag": "0006_stale_proemial_gods",
+      "breakpoints": true
     }
   ]
 }

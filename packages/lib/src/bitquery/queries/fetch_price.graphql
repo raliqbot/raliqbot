@@ -1,0 +1,22 @@
+query PairPrice($baseToken: String!, $quoteToken: String!, $poolId: String) {
+  Solana(dataset: realtime) {
+    DEXTradeByTokens(
+      where: {
+        Transaction: { Result: { Success: true } }
+        Trade: {
+          Currency: { MintAddress: { is: $baseToken } }
+          Side: { Currency: { MintAddress: { is: $quoteToken } } }
+          Market: { MarketAddress: { is: $poolId } }
+        }
+      }
+      limitBy: { count: 1, by: Trade_Dex_ProtocolName }
+      orderBy: { descending: Trade_PriceInUSD }
+    ) {
+      Trade {
+        Price
+        PriceInUSD
+        PriceAsymmetry
+      }
+    }
+  }
+}

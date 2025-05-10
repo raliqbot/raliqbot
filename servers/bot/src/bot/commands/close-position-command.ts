@@ -1,6 +1,6 @@
 import { format } from "@raliqbot/shared";
 import { Context, Telegraf } from "telegraf";
-import { closePosition, getPortfolio } from "@raliqbot/lib";
+import { closePosition } from "@raliqbot/lib";
 import { CLMM_PROGRAM_ID } from "@raydium-io/raydium-sdk-v2";
 
 import { catchBotRuntimeError, readFileSync } from "../utils";
@@ -33,15 +33,10 @@ export const closePositionCommand = (telegraf: Telegraf) => {
           )
       );
 
-      const poolsWithPositions = await getPortfolio(
+      const signatures = await closePosition(
         context.raydium,
         CLMM_PROGRAM_ID,
         positions
-      );
-
-      const signatures = await closePosition(
-        context.raydium,
-        poolsWithPositions
       );
       if (signatures)
         return context.replyWithMarkdownV2(

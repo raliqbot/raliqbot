@@ -10,6 +10,10 @@ const aiWriterDouspace = LocalFont({
       weight: "500",
       path: "./assets/fonts/iAWriterDuospace-Regular.ttf",
     },
+    {
+      weight: "700",
+      path: "./assets/fonts/iAWriterDuospace-Bold.ttf",
+    },
   ],
 });
 

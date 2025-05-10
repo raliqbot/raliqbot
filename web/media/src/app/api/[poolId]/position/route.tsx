@@ -1,16 +1,14 @@
 import path from "path";
+import millify from "millify";
 import { readFileSync } from "fs";
 import { ImageResponse } from "next/og";
 import { format } from "@raliqbot/shared";
 import { web3 } from "@coral-xyz/anchor";
-import { isValidClmm } from "@raliqbot/lib";
+import { getPortfolio } from "@raliqbot/lib";
 import { NextResponse, type NextRequest } from "next/server";
-import {
-  ApiV3PoolInfoConcentratedItem,
-  CLMM_PROGRAM_ID,
-  Raydium,
-} from "@raydium-io/raydium-sdk-v2";
+import { CLMM_PROGRAM_ID, Raydium } from "@raydium-io/raydium-sdk-v2";
 
+import { bitquery } from "../../../../instances";
 import { getTokenImage } from "../../../../utils/to-image-url";
 import { getClusterURL } from "../../../../utils/refine-cluster";
 
@@ -28,35 +26,25 @@ export async function GET(request: NextRequest, { params }) {
     connection: new web3.Connection(getClusterURL(cluster)),
   });
 
-  let poolInfo: ApiV3PoolInfoConcentratedItem | undefined;
-
-  const [position] = await raydium.clmm
-    .getOwnerPositionInfo({
-      programId: CLMM_PROGRAM_ID,
-    })
-    .then((positions) =>
-      positions.filter((position) =>
-        position.nftMint.equals(new web3.PublicKey(positionId))
+  const [
+    {
+      pool: { poolInfo },
+      positions: [position],
+    },
+  ] = await getPortfolio(
+    raydium,
+    bitquery,
+    CLMM_PROGRAM_ID,
+    await raydium.clmm
+      .getOwnerPositionInfo({
+        programId: CLMM_PROGRAM_ID,
+      })
+      .then((positions) =>
+        positions.filter((position) =>
+          position.nftMint.equals(new web3.PublicKey(positionId))
+        )
       )
-    );
-
-  if (raydium.cluster === "mainnet") {
-    const pools = await raydium.api.fetchPoolById({
-      ids: position.poolId.toBase58(),
-    });
-
-    for (const pool of pools) {
-      if (isValidClmm(pool.programId)) {
-        poolInfo = pool as ApiV3PoolInfoConcentratedItem;
-        break;
-      }
-    }
-  } else {
-    const pool = await raydium.clmm.getPoolInfoFromRpc(
-      position.poolId.toBase58()
-    );
-    poolInfo = pool.poolInfo;
-  }
+  );
 
   if (poolInfo) {
     const stats = [
@@ -70,19 +58,31 @@ export async function GET(request: NextRequest, { params }) {
       },
       {
         label: "Liquidity",
-        value: `$${poolInfo.tvl.toLocaleString()}`,
+        value: `$${millify(poolInfo.tvl, { precision: 2 })}`,
       },
       {
         label: "24H VOL",
-        value: `$${poolInfo.day.volume.toLocaleString()}`,
+        value: `$${millify(poolInfo.day.volume, { precision: 2 })}`,
       },
       {
         label: "24H Fee",
-        value: `$${poolInfo.day.volumeFee.toLocaleString()}`,
+        value: `$${millify(poolInfo.day.volumeFee, { precision: 2 })}`,
       },
       {
         label: "24H APR",
         value: `${poolInfo.day.apr.toFixed(2)}%`,
+      },
+      {
+        label: "Position",
+        value: `$${millify(position.amountAUSD + position.amountBUSD, {
+          precision: 2,
+        })}`,
+      },
+      {
+        label: "Yield",
+        value: `$${millify(position.tokenFeesAUSD + position.tokenFeesBUSD, {
+          precision: 2,
+        })}`,
       },
     ];
 

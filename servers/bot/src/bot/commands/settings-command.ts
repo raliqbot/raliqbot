@@ -1,10 +1,10 @@
 import moment from "moment";
 import { Markup, type Context, type Telegraf } from "telegraf";
 
-import { cleanText, readFileSync } from "../utils";
+import { catchBotRuntimeError, cleanText, readFileSync } from "../utils";
 
-export const onSettings =
-  (editMessageId?: number) => async (context: Context) => {
+export const onSettings = (editMessageId?: number) =>
+  catchBotRuntimeError(async (context: Context) => {
     const { settings } = context.user;
     const message = readFileSync("locale/en/settings/config.md", "utf-8")
       .replace(
@@ -48,7 +48,7 @@ export const onSettings =
 
     context.session.messageId =
       typeof messageId === "boolean" ? undefined : messageId.message_id;
-  };
+  }, true);
 
 export const settingsCommand = (telegraf: Telegraf) => {
   telegraf.settings(onSettings());
