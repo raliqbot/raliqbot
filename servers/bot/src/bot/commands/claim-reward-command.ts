@@ -54,8 +54,10 @@ export const claimRewardCommand = (telegraf: Telegraf) => {
                   format("https://solscan.io/tx/%", txId)
                 )
               )
-              .join(" | ")
+              .join(" | "),
+
           ),
+          parse_mode: "MarkdownV2"
         }
       );
     else
