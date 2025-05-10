@@ -13,13 +13,6 @@ async function main(server: FastifyInstance, bot: Telegraf) {
 
   const promises = [];
 
-  promises.push(
-    server.listen({
-      host: process.env.HOST ? process.env.HOST : "0.0.0.0",
-      port: process.env.PORT ? Number(process.env.PORT!) : 10004,
-    })
-  );
-
   bot.catch((error) => console.error(error));
   if (process.env.DOMAIN) {
     server.post(
@@ -30,6 +23,13 @@ async function main(server: FastifyInstance, bot: Telegraf) {
     promises.push(
       bot.launch().then(() => console.log("bot running in background"))
     );
+
+  promises.push(
+    server.listen({
+      host: process.env.HOST ? process.env.HOST : "0.0.0.0",
+      port: process.env.PORT ? Number(process.env.PORT!) : 10004,
+    })
+  );
 
   process.once("SIGINT", () => bot.stop("SIGINT"));
   process.once("SIGTERM", () => bot.stop("SIGTERM"));
