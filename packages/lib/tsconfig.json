@@ -1,8 +1,6 @@
 {
   "extends": "@tsconfig/recommended",
   "compilerOptions": {
-    "outDir": "dist",
-    "module": "Preserve",
-    "moduleResolution": "bundler"
+    "outDir": "dist"
   }
 }
