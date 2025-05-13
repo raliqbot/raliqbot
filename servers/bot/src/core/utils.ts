@@ -28,6 +28,10 @@ export const buildMediaURL = (
   params?: Record<string, string>
 ) => {
   const mediaBaseURL = getEnv("MEDIA_APP_URL");
-  const searchParams = new URLSearchParams(params);
+
+  const searchParams = new URLSearchParams({
+    ...params,
+    timestamp: Date.now().toString(),
+  });
   return mediaBaseURL + path + "?" + searchParams.toString();
 };

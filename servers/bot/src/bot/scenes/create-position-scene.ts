@@ -226,12 +226,12 @@ createPositionScene.use(authenticateUser).action(
           upperTick,
           lowerTick,
           liquidity,
-          baseAmount,
-          quoteAmount,
+          baseAmountIn,
+          quoteAmountIn,
         },
       ] = await createPosition(context.raydium, {
         range,
-        rangeBias: 2,
+        rangeBias: false,
         slippage: Number(context.user.settings.slippage),
         input: {
           amount,
@@ -243,24 +243,14 @@ createPositionScene.use(authenticateUser).action(
       let amountA: number = 0;
       let amountB: number = 0;
 
-      if (singleSided) {
-        if (singleSided === "MintA")
-          amountA = new Decimal(baseAmount.toString())
-            .div(Math.pow(10, info.mintA.decimals))
-            .toNumber();
-        else
-          amountB = new Decimal(baseAmount.toString())
-            .div(Math.pow(10, info.mintB.decimals))
-            .toNumber();
-      } else {
-        amountA = new Decimal(baseAmount.toString())
+      if (baseAmountIn)
+        amountA = new Decimal(baseAmountIn.toString())
           .div(Math.pow(10, info.mintA.decimals))
           .toNumber();
-        if (quoteAmount)
-          amountB = new Decimal(quoteAmount.toString())
-            .div(Math.pow(10, info.mintB.decimals))
-            .toNumber();
-      }
+      if (quoteAmountIn)
+        amountB = new Decimal(quoteAmountIn.toString())
+          .div(Math.pow(10, info.mintB.decimals))
+          .toNumber();
 
       await createPositions(db, {
         algorithm,
@@ -274,7 +264,7 @@ createPositionScene.use(authenticateUser).action(
           amountA,
           amountB,
           liquidity: liquidity.toString(),
-          stopLossPercentage: undefined,
+          stopLossPercentage: 0.75,
         },
       });
 

@@ -110,7 +110,7 @@ export const GET = async (request: NextRequest, { params }) => {
               style={{
                 fontSize: "3.75rem",
                 color: profit
-                  ? "rgba(60, 198, 177, 1)"
+                  ? "#00c951"
                   : "rgba(217, 144, 106, 1)",
                 fontWeight: "900",
                 margin: 0,
@@ -120,7 +120,7 @@ export const GET = async (request: NextRequest, { params }) => {
               <span
                 style={{
                   backgroundColor: profit
-                    ? "rgba(59,156,144,0.25)"
+                    ? "rgba(0,201,81,0.25)"
                     : "rgba(178,108,72,0.25)",
                   padding: "0 0.25rem",
                 }}
@@ -137,67 +137,76 @@ export const GET = async (request: NextRequest, { params }) => {
           </div>
           <div
             style={{
-              maxWidth: "75%",
               display: "flex",
-              flexWrap: "wrap",
+              flex: "1 1 0",
               gap: "2rem",
+              flexDirection: "column",
             }}
           >
             {[
-              {
-                label: "Time",
-                value: moment
-                  .duration(moment().diff(moment(cachedPosition.createdAt)))
-                  .humanize(),
-              },
-              {
-                label: "POOL",
-                value: `${poolInfo.mintA.symbol}-${poolInfo.mintB.symbol}`,
-              },
-              {
-                label: "REWARD",
-                value: `$${(
-                  position.tokenFeesAUSD + position.tokenFeesBUSD
-                ).toFixed(2)}`,
-              },
-              {
-                label: "PNL",
-                value: `${sign}${
-                  Number.isFinite(pnl) ? Math.abs(pnl).toFixed(2) : 100
-                }%`,
-              },
-            ].map(({ label, value }) => (
+              [
+                {
+                  label: "Time",
+                  value: moment
+                    .duration(moment().diff(moment(cachedPosition.createdAt)))
+                    .humanize(),
+                },
+                {
+                  label: "POOL",
+                  value: `${poolInfo.mintA.symbol}-${poolInfo.mintB.symbol}`,
+                },
+              ],
+              [
+                {
+                  label: "REWARD",
+                  value: `$${(
+                    position.tokenFeesAUSD + position.tokenFeesBUSD
+                  ).toFixed(2)}`,
+                },
+                {
+                  label: "PNL",
+                  value: `${sign}${
+                    Number.isFinite(pnl) ? Math.abs(pnl).toFixed(2) : 100
+                  }%`,
+                },
+              ],
+            ].map((grid, index) => (
               <div
-                key={label}
-                style={{
-                  flex: "1 1 0",
-                  display: "flex",
-                  flexDirection: "column",
-                  minWidth: "6rem",
-                }}
+                key={index}
+                style={{ display: "flex", gap: "2rem", flex: "1 1 0" }}
               >
-                <p
-                  style={{
-                    textTransform: "uppercase",
-                    fontSize: "0.875rem",
-                    color: "rgba(255, 255, 255, 0.75)",
-                    margin: 0,
-                    padding: 0,
-                  }}
-                >
-                  {label}
-                </p>
-                <p
-                  style={{
-                    whiteSpace: "nowrap",
-                    fontSize: "1rem",
-                    fontWeight: "bold",
-                    margin: 0,
-                    padding: 0,
-                  }}
-                >
-                  {value}
-                </p>
+                {grid.map(({ label, value }, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                    }}
+                  >
+                    <p
+                      style={{
+                        textTransform: "uppercase",
+                        fontSize: "0.875rem",
+                        color: "rgba(255, 255, 255, 0.75)",
+                        margin: 0,
+                        padding: 0,
+                      }}
+                    >
+                      {label}
+                    </p>
+                    <p
+                      style={{
+                        whiteSpace: "nowrap",
+                        fontSize: "1rem",
+                        fontWeight: "bold",
+                        margin: 0,
+                        padding: 0,
+                      }}
+                    >
+                      {value}
+                    </p>
+                  </div>
+                ))}
               </div>
             ))}
           </div>

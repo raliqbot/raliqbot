@@ -4,7 +4,6 @@ import { format } from "@raliqbot/shared";
 import { web3, BN } from "@coral-xyz/anchor";
 import {
   PoolUtils,
-  TxVersion,
   type ClmmKeys,
   type Raydium,
   type ComputeClmmPoolInfo,
@@ -12,41 +11,87 @@ import {
   type ReturnTypeFetchMultiplePoolTickArrays,
 } from "@raydium-io/raydium-sdk-v2";
 
-type BasedCreateSwapParams = {
+import { isValidClmm } from "./utils";
+
+type BasedSimulateCreateSwapParams = {
   slippage: number;
+  swapPoolInfo?: {
+    poolKeys?: ClmmKeys | undefined;
+    clmmPoolInfo: ComputeClmmPoolInfo;
+    poolInfo: ApiV3PoolInfoConcentratedItem;
+    tickCache: ReturnTypeFetchMultiplePoolTickArrays | undefined;
+  };
   epochInfo: web3.EpochInfo;
-  poolKeys?: ClmmKeys | undefined;
-  clmmPoolInfo: ComputeClmmPoolInfo;
-  poolInfo: ApiV3PoolInfoConcentratedItem;
-  tickCache: ReturnTypeFetchMultiplePoolTickArrays;
 };
 
-type CreateSwapParams = (
+type SimulateCreateSwapParams = (
   | {
       outputMint: string;
       input: { mint: string; amount: number };
     }
   | { input: { amount: number }; poolId: string; side: "MintA" | "MintB" }
 ) &
-  BasedCreateSwapParams;
+  BasedSimulateCreateSwapParams;
 
-export const createSwap = async (
+export const simulateCreateSwap = async (
   raydium: Raydium,
   {
     slippage,
     epochInfo,
     input,
-    poolInfo,
-    poolKeys,
-    clmmPoolInfo,
-    tickCache,
+    swapPoolInfo,
     ...params
-  }: CreateSwapParams
+  }: SimulateCreateSwapParams
 ) => {
   assert(
     ("mint" in input && "outputMint" in params) || "poolId" in params,
     "provide input.mint & outputMint or poolId"
   );
+
+  let poolKeys: ClmmKeys | undefined;
+  let clmmPoolInfo: ComputeClmmPoolInfo | undefined;
+  let poolInfo: ApiV3PoolInfoConcentratedItem | undefined;
+  let tickCache: ReturnTypeFetchMultiplePoolTickArrays | undefined;
+
+  if (swapPoolInfo) {
+    poolInfo = swapPoolInfo.poolInfo;
+    poolKeys = swapPoolInfo.poolKeys;
+    tickCache = swapPoolInfo.tickCache;
+    clmmPoolInfo = swapPoolInfo.clmmPoolInfo;
+  } else {
+    if (raydium.cluster === "mainnet") {
+      if ("mint" in input && "outputMint" in params) {
+        const pools = await raydium.api.fetchPoolByMints({
+          mint1: input.mint,
+          mint2: params.outputMint,
+          sort: "liquidity",
+        });
+
+        for (const pool of pools.data) {
+          if (isValidClmm(pool.programId)) {
+            poolInfo = pool as ApiV3PoolInfoConcentratedItem;
+            clmmPoolInfo = await PoolUtils.fetchComputeClmmInfo({
+              connection: raydium.connection,
+              poolInfo,
+            });
+            tickCache = await PoolUtils.fetchMultiplePoolTickArrays({
+              connection: raydium.connection,
+              poolKeys: [clmmPoolInfo],
+            });
+            break;
+          }
+        }
+      }
+    } else if ("poolId" in params) {
+      const pool = await raydium.clmm.getPoolInfoFromRpc(params.poolId);
+      poolInfo = pool.poolInfo;
+      poolKeys = pool.poolKeys;
+      tickCache = pool.tickData;
+      clmmPoolInfo = pool.computePoolInfo;
+    }
+  }
+
+  assert(poolInfo && tickCache && clmmPoolInfo);
 
   let baseIn = false;
 
@@ -98,23 +143,9 @@ export const createSwap = async (
         tokenOut: poolInfo[baseIn ? "mintB" : "mintA"],
       });
 
-    const swapResult = await raydium.clmm.swap({
-      poolInfo,
-      poolKeys,
-      amountIn,
-      remainingAccounts,
-      txVersion: TxVersion.LEGACY,
-      amountOutMin: minAmountOut.amount.raw,
-      observationId: clmmPoolInfo.observationId,
-      inputMint: poolInfo[baseIn ? "mintA" : "mintB"].address,
-      ownerInfo: {
-        useSOLBalance: true,
-      },
-    });
-
     return [
       { minAmountOut, remainingAccounts, ...computedeData },
-      swapResult,
+      { poolInfo, poolKeys, clmmPoolInfo, tickCache },
     ] as const;
   }
 

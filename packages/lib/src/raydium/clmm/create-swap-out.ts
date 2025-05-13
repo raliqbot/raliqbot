@@ -15,6 +15,7 @@ import {
 type BasedCreateSwapParams = {
   slippage: number;
   epochInfo: web3.EpochInfo;
+  outputMint: string;
   poolKeys?: ClmmKeys | undefined;
   clmmPoolInfo: ComputeClmmPoolInfo;
   poolInfo: ApiV3PoolInfoConcentratedItem;
@@ -23,14 +24,13 @@ type BasedCreateSwapParams = {
 
 type CreateSwapParams = (
   | {
-      outputMint: string;
-      input: { mint: string; amount: number };
+      input: { mint: string; amountOut: BN };
     }
-  | { input: { amount: number }; poolId: string; side: "MintA" | "MintB" }
+  | { input: { amountOut: BN }; poolId: string; side: "MintA" | "MintB" }
 ) &
   BasedCreateSwapParams;
 
-export const createSwap = async (
+export const createSwapOut = async (
   raydium: Raydium,
   {
     slippage,
@@ -79,41 +79,35 @@ export const createSwap = async (
     baseIn = params.side === "MintA";
   }
 
-  const amountIn = new BN(
-    new Decimal(input.amount)
-      .mul(Math.pow(10, poolInfo[baseIn ? "mintA" : "mintB"].decimals))
-      .toFixed(0)
-  );
-
   const tickArrayCache = tickCache[poolInfo.id];
 
   if (tickArrayCache) {
-    const { minAmountOut, remainingAccounts, ...computedeData } =
-      PoolUtils.computeAmountOutFormat({
+    const { maxAmountIn, realAmountOut, remainingAccounts, ...computedeData } =
+      PoolUtils.computeAmountIn({
         slippage,
         epochInfo,
-        amountIn,
         tickArrayCache,
+        amountOut: input.amountOut,
+        baseMint: new web3.PublicKey(params.outputMint),
         poolInfo: clmmPoolInfo,
-        tokenOut: poolInfo[baseIn ? "mintB" : "mintA"],
       });
 
-    const swapResult = await raydium.clmm.swap({
+    const swapResult = await raydium.clmm.swapBaseOut({
       poolInfo,
       poolKeys,
-      amountIn,
       remainingAccounts,
+      outputMint: params.outputMint,
+      amountInMax: maxAmountIn.amount,
+      amountOut: realAmountOut.amount,
       txVersion: TxVersion.LEGACY,
-      amountOutMin: minAmountOut.amount.raw,
       observationId: clmmPoolInfo.observationId,
-      inputMint: poolInfo[baseIn ? "mintA" : "mintB"].address,
       ownerInfo: {
         useSOLBalance: true,
       },
     });
 
     return [
-      { minAmountOut, remainingAccounts, ...computedeData },
+      { maxAmountIn, remainingAccounts, ...computedeData },
       swapResult,
     ] as const;
   }
