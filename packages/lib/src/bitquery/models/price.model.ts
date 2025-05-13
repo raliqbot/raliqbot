@@ -5,3 +5,12 @@ export type Price = {
     }[];
   };
 };
+
+export type AvgPrice = {
+  Solana: {
+    DEXTradeByTokens: {
+      Price: number;
+      PriceInUSD: number;
+    }[];
+  };
+};

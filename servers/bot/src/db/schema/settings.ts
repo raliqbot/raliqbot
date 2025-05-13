@@ -9,7 +9,7 @@ export const settings = pgTable("settings", {
     .unique(),
   locale: text().default("en").notNull(),
   vaultAddress: text(),
-  slippage: decimal().default("0.05").notNull(),
+  slippage: decimal().default("0.5").notNull(),
   priorityFees: decimal().default("0.0001").notNull(),
   rebalanceSchedule: integer().default(216000).notNull(),
 });

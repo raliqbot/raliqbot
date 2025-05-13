@@ -1,5 +1,6 @@
-import { buildMediaURL, format } from "core";
 import { Context, Input, Telegraf } from "telegraf";
+
+import { buildMediaURL, format } from "../../core";
 
 export const pnlCommand = (telegraf: Telegraf) => {
   const onPNL = (context: Context) => {
@@ -37,3 +38,6 @@ export const pnlCommand = (telegraf: Telegraf) => {
   telegraf.action(commandFilter, onPNL);
   telegraf.command(commandFilter, onPNL);
 };
+
+pnlCommand.commandName = "pnl";
+pnlCommand.description = "Get pnl for a position. positionId is optional.";

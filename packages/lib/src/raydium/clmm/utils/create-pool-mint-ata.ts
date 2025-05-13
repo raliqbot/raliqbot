@@ -43,7 +43,13 @@ export const createPoolMintAta = async (
   const missingAtas = mintsWithAtas.filter((_, index) => !accountInfos[index]);
 
   if (missingAtas.length > 0) {
-    console.log("[ata.creating] ", missingAtas);
+    console.log(
+      "[ata.creating] ",
+      missingAtas.flatMap((missingAta) =>
+        missingAta.map((missingAta) => missingAta.toBase58())
+      )
+    );
+
     const transaction = new Transaction().add(
       ...missingAtas.map(([mintAddress, programId, ata]) =>
         createAssociatedTokenAccountIdempotentInstruction(

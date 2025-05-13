@@ -15,6 +15,7 @@ import type {
 } from "./db/zod";
 
 type SessionData = {
+  next?: string;
   openPosition: {
     amount?: number;
     address?: string;

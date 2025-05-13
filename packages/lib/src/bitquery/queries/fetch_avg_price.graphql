@@ -1,0 +1,35 @@
+query AvgPrice(
+  $baseToken: String!
+  $quoteToken: String!
+  $pairAddress: String!
+  $timeAgo: DateTime!
+) {
+  Solana(dataset: realtime) {
+    DEXTradeByTokens(
+      where: {
+        Transaction: { Result: { Success: true } }
+        Trade: {
+          Currency: { MintAddress: { is: $baseToken } }
+          Side: { Currency: { MintAddress: { is: $quoteToken } } }
+          Market: { MarketAddress: { is: $pairAddress } }
+        }
+        Block: { Time: { since: $timeAgo } }
+      }
+    ) {
+      Price: average(
+        of: Trade_Price
+        if: {
+          Trade: { Side: { Type: { is: buy } } }
+          Block: { Time: { after: $timeAgo } }
+        }
+      )
+      PriceInUSD: average(
+        of: Trade_PriceInUSD
+        if: {
+          Trade: { Side: { Type: { is: buy } } }
+          Block: { Time: { after: $timeAgo } }
+        }
+      )
+    }
+  }
+}

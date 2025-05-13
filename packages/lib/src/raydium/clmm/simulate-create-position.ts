@@ -222,10 +222,6 @@ export const simulateCreatePosition = async (
     )
   );
 
-  console.log(
-    singleSided ? singleSided === "MintA" : inputMintInPool ? baseIn : true
-  );
-
   const liquidityInfo = await PoolUtils.getLiquidityAmountOutFromAmountIn({
     poolInfo,
     epochInfo,

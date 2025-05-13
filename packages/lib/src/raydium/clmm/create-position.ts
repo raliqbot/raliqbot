@@ -123,6 +123,10 @@ export const createPosition = async (
     )
   );
 
+  poolInfo.price = (
+    await raydium.clmm.getRpcClmmPoolInfo({ poolId: poolInfo.id })
+  ).currentPrice;
+
   const liquidityInfo = await PoolUtils.getLiquidityAmountOutFromAmountIn({
     poolInfo,
     epochInfo,
@@ -235,7 +239,9 @@ export const createPosition = async (
     poolInfo,
     poolKeys,
     otherAmountMax,
-    baseAmount: quoteAmountIn ? quoteAmountIn : baseAmountIn!,
+    baseAmount: quoteAmountIn
+      ? quoteAmountIn.muln(90).divn(100)
+      : baseAmountIn!,
     base: quoteAmountIn ? "MintB" : "MintA",
     tickUpper: Math.max(lowerTick, upperTick),
     tickLower: Math.min(lowerTick, upperTick),
