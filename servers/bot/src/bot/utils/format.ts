@@ -3,25 +3,27 @@ import { type PathOrFileDescriptor, readFileSync as read } from "fs";
 
 export function cleanText(value: string) {
   return value
-    .replace(/\_/g, "\\_")
-    .replace(/\(/g, "\\(")
-    .replace(/\)/g, "\\)")
-    .replace(/\[/g, "\\[")
-    .replace(/\]/g, "\\]")
-    .replace(/\*/g, "\\*")
-    .replace(/\|/g, "\\|")
-    .replace(/\>/g, "\\>")
-    .replace(/\</g, "\\<")
-    .replace(/\`/g, "\\`")
-    .replace(/\~/g, "\\~")
-    .replace(/\#/g, "\\#")
-    .replace(/\+/g, "\\+")
-    .replace(/\-/g, "\\-")
-    .replace(/\=/g, "\\=")
-    .replace(/\{/g, "\\{")
-    .replace(/\}/g, "\\}")
-    .replace(/\./g, "\\.")
-    .replace(/\!/g, "\\!");
+    ? value
+        .replace(/\_/g, "\\_")
+        .replace(/\(/g, "\\(")
+        .replace(/\)/g, "\\)")
+        .replace(/\[/g, "\\[")
+        .replace(/\]/g, "\\]")
+        .replace(/\*/g, "\\*")
+        .replace(/\|/g, "\\|")
+        .replace(/\>/g, "\\>")
+        .replace(/\</g, "\\<")
+        .replace(/\`/g, "\\`")
+        .replace(/\~/g, "\\~")
+        .replace(/\#/g, "\\#")
+        .replace(/\+/g, "\\+")
+        .replace(/\-/g, "\\-")
+        .replace(/\=/g, "\\=")
+        .replace(/\{/g, "\\{")
+        .replace(/\}/g, "\\}")
+        .replace(/\./g, "\\.")
+        .replace(/\!/g, "\\!")
+    : "";
 }
 
 export function readFileSync(...params: Parameters<typeof read>): string;

@@ -264,7 +264,7 @@ export const createPosition = async (
       raydium.connection,
       new web3.Transaction().add(...tx1),
       signers1,
-      { commitment: "confirmed" }
+      { commitment: "processed" }
     );
 
     signatures.push(signature);
@@ -276,7 +276,7 @@ export const createPosition = async (
       raydium.connection,
       new web3.Transaction().add(...txs.flat()),
       signers2,
-      { commitment: "confirmed" }
+      { commitment: "processed" }
     );
 
     console.log("[position.swapB.success] signature=", signature);
@@ -287,7 +287,7 @@ export const createPosition = async (
     raydium.connection,
     positionTransaction,
     [raydium.owner!.signer!, ...positionSigners],
-    { commitment: "confirmed" }
+    { commitment: "processed" }
   );
 
   signatures.push(signature);
