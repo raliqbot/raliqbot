@@ -47,7 +47,7 @@ export const getPositionById = (
     })
     .execute();
 
-export const getPositionsWhere = (db: Database, where: SQL<unknown>) =>
+export const getPositionsWhere = (db: Database, where?: SQL<unknown>) =>
   db.query.positions.findMany({ where }).execute();
 
 export const updatePositionById = (
