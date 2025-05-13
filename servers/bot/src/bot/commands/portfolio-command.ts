@@ -99,7 +99,7 @@ export const portfolioCommand = (telegraf: Telegraf) => {
       );
     } else
       return context.replyWithMarkdownV2(
-        readFileSync("locale/en/porfolio/no-open-position.md", "utf-8")
+        readFileSync("locale/en/portfolio/no-open-position.md", "utf-8")
       );
   };
 
