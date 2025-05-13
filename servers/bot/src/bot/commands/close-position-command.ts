@@ -39,28 +39,31 @@ export const closePositionCommand = (telegraf: Telegraf) => {
         positions
       );
       if (signatures)
-        return context.replyWithMarkdownV2(
-          readFileSync(
-            "locale/en/close-position/position-closed.md",
-            "utf-8"
-          ).replace(
-            "%list%",
-            signatures
-              .map((signature, index) =>
-                format(
-                  "[Transaction %](%)",
-                  index + 1,
-                  format("https://solscan.io/tx/%", signature)
+        return Promise.all([
+          context.replyWithMarkdownV2(
+            readFileSync(
+              "locale/en/close-position/position-closed.md",
+              "utf-8"
+            ).replace(
+              "%list%",
+              signatures
+                .map((signature, index) =>
+                  format(
+                    "[Transaction %](%)",
+                    index + 1,
+                    format("https://solscan.io/tx/%", signature)
+                  )
                 )
-              )
-              .join(" | ")
+                .join(" | ")
+            ),
+            {
+              link_preview_options: {
+                is_disabled: true,
+              },
+            }
           ),
-          {
-            link_preview_options: {
-              is_disabled: true,
-            },
-          }
-        );
+          context.deleteMessage(),
+        ]);
     }
 
     return context.replyWithMarkdownV2(
