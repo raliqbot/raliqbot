@@ -25,7 +25,7 @@ export const startCommand = (telegraf: Telegraf) => {
           .replace("%balance%", cleanText(String(solBalance))),
         parse_mode: "MarkdownV2",
         reply_markup: Markup.inlineKeyboard([
-          [Markup.button.switchToCurrentChat("🔍 Search for pairs", "")],
+          // [Markup.button.switchToCurrentChat("🔍 Search for pairs", "")],
           [Markup.button.callback("➕ Open Position", "open_position")],
           [
             Markup.button.callback("💼 Porfolio", "portfolio"),
