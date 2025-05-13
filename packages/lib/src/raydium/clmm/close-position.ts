@@ -61,14 +61,14 @@ export const closePosition = async (
 
     const chunkedTxs = chunk(transactions, 5);
     const signatures = await Promise.all(
-      chunkedTxs.map((transaction) =>
-        web3.sendAndConfirmTransaction(
+      chunkedTxs.map((transaction) => {
+        return web3.sendAndConfirmTransaction(
           raydium.connection,
           new web3.Transaction().add(...transaction),
           txSigners.flat(),
           { commitment: "confirmed" }
-        )
-      )
+        );
+      })
     );
     console.log("[position.close.processing] signature=", signatures);
 

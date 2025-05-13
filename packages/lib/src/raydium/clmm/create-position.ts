@@ -260,11 +260,17 @@ export const createPosition = async (
   const [signers1, signers2] = signers;
 
   if (tx1 && tx1.length > 0) {
+    const transaction = new web3.Transaction().add(...tx1);
+    const latestBlockHash = await raydium.connection.getLatestBlockhash();
+
+    transaction.recentBlockhash = latestBlockHash.blockhash;
+    transaction.lastValidBlockHeight = latestBlockHash.lastValidBlockHeight;
+
     const signature = await web3.sendAndConfirmTransaction(
       raydium.connection,
-      new web3.Transaction().add(...tx1),
+      transaction,
       signers1,
-      { commitment: "processed" }
+      { commitment: "confirmed" }
     );
 
     signatures.push(signature);
@@ -272,22 +278,34 @@ export const createPosition = async (
   }
 
   if (txs.flat().length > 0) {
+    const transaction = new web3.Transaction().add(...txs.flat());
+    const latestBlockHash = await raydium.connection.getLatestBlockhash();
+
+    transaction.recentBlockhash = latestBlockHash.blockhash;
+    transaction.lastValidBlockHeight = latestBlockHash.lastValidBlockHeight;
+
     const signature = await web3.sendAndConfirmTransaction(
       raydium.connection,
-      new web3.Transaction().add(...txs.flat()),
+      transaction,
       signers2,
-      { commitment: "processed" }
+      { commitment: "confirmed" }
     );
 
     console.log("[position.swapB.success] signature=", signature);
     signatures.push(signature);
   }
 
+  const latestBlockHash = await raydium.connection.getLatestBlockhash();
+
+  positionTransaction.recentBlockhash = latestBlockHash.blockhash;
+  positionTransaction.lastValidBlockHeight =
+    latestBlockHash.lastValidBlockHeight;
+
   const signature = await web3.sendAndConfirmTransaction(
     raydium.connection,
     positionTransaction,
     [raydium.owner!.signer!, ...positionSigners],
-    { commitment: "processed" }
+    { commitment: "confirmed" }
   );
 
   signatures.push(signature);
