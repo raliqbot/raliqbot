@@ -43,7 +43,29 @@ export const onPoolSearchAction = async (context: Context) => {
             .slice(0 + currentOffset, currentOffset + 32)
             .map((pool) => {
               const name = format("%/%", pool.mintA.symbol, pool.mintB.symbol);
-              const photoUrl = buildMediaURL(format("%/open-graph/", pool.id));
+              const photoUrl = buildMediaURL("prefetched/open-graph/", {
+                data: JSON.stringify({
+                  mintA: {
+                    name: pool.mintA.name,
+                    symbol: pool.mintA.symbol,
+                    logoURI: pool.mintA.logoURI,
+                    address: pool.mintA.address,
+                  },
+                  mintB: {
+                    name: pool.mintB.name,
+                    symbol: pool.mintB.symbol,
+                    logoURI: pool.mintB.logoURI,
+                    address: pool.mintB.address,
+                  },
+                  tvl: pool.tvl,
+                  feeRate: pool.feeRate,
+                  day: {
+                    apr: pool.day.apr,
+                    volume: pool.day.volume,
+                    volumeFee: pool.day.volumeFee,
+                  },
+                }),
+              });
 
               return {
                 id: pool.id,
@@ -51,7 +73,24 @@ export const onPoolSearchAction = async (context: Context) => {
                 title: name,
                 thumbnail_width: 64,
                 thumbnail_height: 32,
-                thumbnail_url: buildMediaURL(format("%/mint", pool.id)),
+                thumbnail_url: buildMediaURL("prefetched/mint/", {
+                  data: JSON.stringify({
+                    data: {
+                      mintA: {
+                        name: pool.mintA.name,
+                        symbol: pool.mintA.symbol,
+                        logoURI: pool.mintA.logoURI,
+                        address: pool.mintA.address,
+                      },
+                      mintB: {
+                        name: pool.mintB.name,
+                        symbol: pool.mintB.symbol,
+                        logoURI: pool.mintB.logoURI,
+                        address: pool.mintB.address,
+                      },
+                    },
+                  }),
+                }),
                 description: readFileSync(
                   "locale/en/search-pair/search-description.md",
                   "utf-8"
