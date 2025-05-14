@@ -28,7 +28,7 @@ type PrefetchedData = {
   };
 };
 
-export async function GET(request: NextRequest, { params }) {
+export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const searchParams = new URLSearchParams(url.search);
   const {
