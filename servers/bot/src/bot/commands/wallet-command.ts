@@ -2,10 +2,10 @@ import { Markup, type Context, type Telegraf } from "telegraf";
 
 import { format, getEnv } from "../../core";
 import { connection } from "../../instances";
-import { cleanText, readFileSync } from "../utils";
+import { cleanText, privateFunc, readFileSync } from "../utils";
 
 export const walletCommand = (telegraf: Telegraf) => {
-  const onWallet = async (context: Context) => {
+  const onWallet = privateFunc(async (context: Context) => {
     const address = context.wallet.publicKey.toBase58();
     const solBalance =
       (await connection.getBalance(context.wallet.publicKey)) / Math.pow(10, 9);
@@ -34,7 +34,7 @@ export const walletCommand = (telegraf: Telegraf) => {
         ],
       ])
     );
-  };
+  });
   telegraf.action("wallet", onWallet);
   telegraf.command("wallet", onWallet);
 };

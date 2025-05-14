@@ -7,8 +7,8 @@ import {
 } from "@raydium-io/raydium-sdk-v2";
 
 import { buildMediaURL } from "../../core";
-import { cleanText, isValidAddress, readFileSync } from "../utils";
 import { openPositionSceneId } from "../scenes/open-position-scene";
+import { cleanText, isValidAddress, privateFunc, readFileSync } from "../utils";
 
 export const onOpenPosition = async (context: Context) => {
   const message = context.message;
@@ -132,7 +132,7 @@ export const onOpenPosition = async (context: Context) => {
 };
 
 export const openPositionCommand = async (telegraf: Telegraf) => {
-  const onOpenPosition = (context: Context) => {
+  const onOpenPosition = privateFunc((context: Context) => {
     const text =
       context.message && "text" in context.message
         ? context.message.text
@@ -165,7 +165,7 @@ export const openPositionCommand = async (telegraf: Telegraf) => {
 
       return context.scene.enter(openPositionSceneId);
     }
-  };
+  });
 
   const commandFilter = /^open_position(?:-([1-9A-HJ-NP-Za-km-z]{32,44}))?$/;
 

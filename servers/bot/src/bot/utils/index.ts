@@ -41,3 +41,14 @@ export const catchBotRuntimeError = <
     }
   };
 };
+
+export const privateFunc = <
+  U extends Context,
+  T extends (context: U) => unknown
+>(
+  fn: T
+) => {
+  return async (...[context]: Parameters<T>) => {
+    if (context.chat?.type === "private") return await fn(context);
+  };
+};

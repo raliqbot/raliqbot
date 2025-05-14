@@ -1,9 +1,10 @@
 import { Context, Input, Telegraf } from "telegraf";
 
+import { privateFunc } from "../utils";
 import { buildMediaURL, format } from "../../core";
 
 export const pnlCommand = (telegraf: Telegraf) => {
-  const onPNL = (context: Context) => {
+  const onPNL = privateFunc((context: Context) => {
     const text =
       context.message && "text" in context.message
         ? context.message.text
@@ -27,7 +28,7 @@ export const pnlCommand = (telegraf: Telegraf) => {
         )
       );
     }
-  };
+  });
 
   const commandFilter = /^pnl(?:-([1-9A-HJ-NP-Za-km-z]{32,44}))?$/;
   telegraf.action(commandFilter, onPNL);

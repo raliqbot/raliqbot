@@ -6,10 +6,10 @@ import { Input, Markup, type Context, type Telegraf } from "telegraf";
 
 import { bitquery } from "../../instances";
 import { buildMediaURL } from "../../core";
-import { cleanText, readFileSync } from "../utils";
+import { cleanText, privateFunc, readFileSync } from "../utils";
 
 export const portfolioCommand = (telegraf: Telegraf) => {
-  const onPortfolio = async (context: Context) => {
+  const onPortfolio = privateFunc(async (context: Context) => {
     const text =
       context.message && "text" in context.message
         ? context.message.text
@@ -131,7 +131,7 @@ export const portfolioCommand = (telegraf: Telegraf) => {
       return context.replyWithMarkdownV2(
         readFileSync("locale/en/portfolio/no-open-position.md", "utf-8")
       );
-  };
+  });
 
   telegraf.action("portfolio", onPortfolio);
   telegraf.command("portfolio", onPortfolio);
