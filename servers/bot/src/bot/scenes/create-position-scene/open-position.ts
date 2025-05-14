@@ -111,6 +111,7 @@ export const openPosition = catchBotRuntimeError(
           ).replace("%error%", cleanText(String(error))),
           Markup.inlineKeyboard([
             Markup.button.callback("↪️ Retry", "open-position"),
+            Markup.button.callback("↪🅇 Cancel", "cancel"),
           ])
         );
 
