@@ -25,7 +25,7 @@ export const startCommand = (telegraf: Telegraf) => {
         .approveChatJoinRequest(getEnv("CHANNNEL_ID"), context.from.id)
         .catch((error) => {
           if (error instanceof TelegramError) {
-            if (error.description === "USER_ALREADY_PARTICIPANT") {
+            if (error.description.includes("USER_ALREADY_PARTICIPANT")) {
               return context.replyWithAnimation(
                 Input.fromLocalFile("assets/welcome.gif"),
                 {
