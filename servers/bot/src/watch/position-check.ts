@@ -29,6 +29,8 @@ export const positionChecks = async (
     })
     .execute();
 
+  console.log("[position.checks.execute] wallets=", wallets.length);
+
   for (const dbWallet of wallets) {
     const wallet = loadWallet(dbWallet);
     const raydium = await Raydium.load({ connection, owner: wallet });
@@ -153,4 +155,3 @@ export const positionChecks = async (
     }
   }
 };
-
