@@ -15,7 +15,11 @@ export const portfolioCommand = (telegraf: Telegraf) => {
         ? context.message.text
         : undefined;
 
-    let porfolios = await getPortfolio(context.raydium, bitquery, CLMM_PROGRAM_ID);
+    let porfolios = await getPortfolio(
+      context.raydium,
+      bitquery,
+      CLMM_PROGRAM_ID
+    );
 
     if (porfolios.length > 0) {
       return Promise.all(
@@ -52,8 +56,34 @@ export const portfolioCommand = (telegraf: Telegraf) => {
 
             return context.replyWithPhoto(
               Input.fromURLStream(
-                buildMediaURL(format("%/position", position.nftMint), {
-                  owner: context.raydium.ownerPubKey.toBase58(),
+                buildMediaURL("prefetched/position", {
+                  data: JSON.stringify({
+                    mintA: {
+                      name: poolInfo.mintA.name,
+                      symbol: poolInfo.mintA.symbol,
+                      logoURI: poolInfo.mintA.logoURI,
+                      address: poolInfo.mintA.address,
+                    },
+                    mintB: {
+                      name: poolInfo.mintB.name,
+                      symbol: poolInfo.mintB.symbol,
+                      logoURI: poolInfo.mintB.logoURI,
+                      address: poolInfo.mintB.address,
+                    },
+                    tvl: poolInfo.tvl,
+                    feeRate: poolInfo.feeRate,
+                    day: {
+                      apr: poolInfo.day.apr,
+                      volume: poolInfo.day.volume,
+                      volumeFee: poolInfo.day.volumeFee,
+                    },
+                    position: {
+                      amountAUSD: position.amountAUSD,
+                      amountBUSD: position.amountBUSD,
+                      tokenFeesAUSD: position.tokenFeesAUSD,
+                      tokenFeesBUSD: position.tokenFeesBUSD,
+                    },
+                  }),
                 })
               ),
               {

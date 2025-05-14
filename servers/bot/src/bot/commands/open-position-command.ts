@@ -75,7 +75,29 @@ export const onOpenPosition = async (context: Context) => {
 
           return context.replyWithPhoto(
             Input.fromURLStream(
-              buildMediaURL(format("%/open-graph/", poolInfo.id))
+              buildMediaURL("prefetched/open-graph/", {
+                data: JSON.stringify({
+                  mintA: {
+                    name: poolInfo.mintA.name,
+                    symbol: poolInfo.mintA.symbol,
+                    logoURI: poolInfo.mintA.logoURI,
+                    address: poolInfo.mintA.address,
+                  },
+                  mintB: {
+                    name: poolInfo.mintB.name,
+                    symbol: poolInfo.mintB.symbol,
+                    logoURI: poolInfo.mintB.logoURI,
+                    address: poolInfo.mintB.address,
+                  },
+                  tvl: poolInfo.tvl,
+                  feeRate: poolInfo.feeRate,
+                  day: {
+                    apr: poolInfo.day.apr,
+                    volume: poolInfo.day.volume,
+                    volumeFee: poolInfo.day.volumeFee,
+                  },
+                }),
+              })
             ),
             {
               caption: readFileSync(

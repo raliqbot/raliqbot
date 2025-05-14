@@ -13,12 +13,7 @@ export const pnlCommand = (telegraf: Telegraf) => {
 
     if (text) {
       const [, ...addresses] = text.split(/\s+|,|-/g);
-      console.log(
-        buildMediaURL(format("%/pnl/", addresses[0]), {
-          owner: context.raydium.ownerPubKey.toBase58(),
-          cluster: context.raydium.cluster,
-        })
-      );
+
       return Promise.all(
         addresses.map((address) =>
           context.replyWithPhoto(

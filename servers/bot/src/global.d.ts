@@ -21,10 +21,13 @@ type SessionData = {
     address?: string;
   };
   createPosition: {
-    messageId?: number;
-    range: [number, number],
     mint?: string;
     amount?: number;
+    skipSwapA?: boolean;
+    skipSwapB?: boolean;
+    loading?: boolean;
+    messageId?: number;
+    range: [number, number];
     singleSided?: "MintA" | "MintB";
     algorithm?: "single-sided" | "spot";
     info?: ApiV3PoolInfoConcentratedItem;
@@ -36,7 +39,7 @@ type SessionData = {
     positions: Awaited<ReturnType<Raydium["clmm"]["getOwnerPositionInfo"]>>;
   };
   messageId?: number;
-  messageIdsStack: number[],
+  messageIdsStack: number[];
   searchCache: Record<string, ApiV3PoolInfoItem[]>;
 };
 

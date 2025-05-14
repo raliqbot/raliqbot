@@ -14,6 +14,8 @@ type CreatePositionParams = {
   rangeBias: boolean;
   range: [number, number];
   input: { mint: string; amount: number };
+  skipSwapA?: boolean;
+  skipSwapB?: boolean;
   devConfig?: {
     tokenASwapConfig: { poolId: string };
     tokenBSwapConfig: { poolId: string };
@@ -22,8 +24,14 @@ type CreatePositionParams = {
 
 export const createPosition = async (
   raydium: Raydium,
-  params: CreatePositionParams
+  params: CreatePositionParams,
+  callbacks?: {
+    onOpenPosition?: (signature: string) => void;
+    onSwapA?: (signature: string, amount: number) => void;
+    onSwapB?: (signature: string, amount: number) => void;
+  }
 ) => {
+  const { skipSwapA = false, skipSwapB = false } = params;
   const epochInfo = await raydium.fetchEpochInfo();
 
   const {
@@ -259,41 +267,59 @@ export const createPosition = async (
   const [tx1, ...txs] = transactions;
   const [signers1, signers2] = signers;
 
-  if (tx1 && tx1.length > 0) {
-    const transaction = new web3.Transaction().add(...tx1);
-    const latestBlockHash = await raydium.connection.getLatestBlockhash();
+  if (!skipSwapA)
+    if (tx1 && tx1.length > 0) {
+      const transaction = new web3.Transaction().add(...tx1);
+      const latestBlockHash = await raydium.connection.getLatestBlockhash();
 
-    transaction.recentBlockhash = latestBlockHash.blockhash;
-    transaction.lastValidBlockHeight = latestBlockHash.lastValidBlockHeight;
+      transaction.recentBlockhash = latestBlockHash.blockhash;
+      transaction.lastValidBlockHeight = latestBlockHash.lastValidBlockHeight;
 
-    const signature = await web3.sendAndConfirmTransaction(
-      raydium.connection,
-      transaction,
-      signers1,
-      { commitment: "confirmed" }
-    );
+      const signature = await web3.sendAndConfirmTransaction(
+        raydium.connection,
+        transaction,
+        signers1,
+        { commitment: "confirmed" }
+      );
 
-    signatures.push(signature);
-    console.log("[position.swapA.success] signature=", signature);
-  }
+      signatures.push(signature);
+      console.log("[position.swapA.success] signature=", signature);
 
-  if (txs.flat().length > 0) {
-    const transaction = new web3.Transaction().add(...txs.flat());
-    const latestBlockHash = await raydium.connection.getLatestBlockhash();
+      if (callbacks && callbacks.onSwapA)
+        callbacks.onSwapA(
+          signature,
+          new Decimal(baseAmountIn!.toString())
+            .div(Math.pow(10, poolInfo.mintA.decimals))
+            .toNumber()
+        );
+    }
 
-    transaction.recentBlockhash = latestBlockHash.blockhash;
-    transaction.lastValidBlockHeight = latestBlockHash.lastValidBlockHeight;
+  if (!skipSwapB)
+    if (txs.flat().length > 0) {
+      const transaction = new web3.Transaction().add(...txs.flat());
+      const latestBlockHash = await raydium.connection.getLatestBlockhash();
 
-    const signature = await web3.sendAndConfirmTransaction(
-      raydium.connection,
-      transaction,
-      signers2,
-      { commitment: "confirmed" }
-    );
+      transaction.recentBlockhash = latestBlockHash.blockhash;
+      transaction.lastValidBlockHeight = latestBlockHash.lastValidBlockHeight;
 
-    console.log("[position.swapB.success] signature=", signature);
-    signatures.push(signature);
-  }
+      const signature = await web3.sendAndConfirmTransaction(
+        raydium.connection,
+        transaction,
+        signers2,
+        { commitment: "confirmed" }
+      );
+
+      console.log("[position.swapB.success] signature=", signature);
+      signatures.push(signature);
+
+      if (callbacks && callbacks.onSwapB)
+        callbacks.onSwapB(
+          signature,
+          new Decimal(quoteAmountIn!.toString())
+            .div(Math.pow(10, poolInfo.mintB.decimals))
+            .toNumber()
+        );
+    }
 
   const latestBlockHash = await raydium.connection.getLatestBlockhash();
 
@@ -309,8 +335,10 @@ export const createPosition = async (
   );
 
   signatures.push(signature);
-
   console.log("[position.created.success] signature=", signature);
+
+  if (callbacks && callbacks.onOpenPosition)
+    callbacks.onOpenPosition(signature);
 
   return [
     signatures,
