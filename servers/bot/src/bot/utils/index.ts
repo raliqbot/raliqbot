@@ -19,18 +19,18 @@ export const catchBotRuntimeError = <
   T extends (context: U) => unknown
 >(
   fn: T,
-  silent = false
+  silent = false,
+  onError?: (context: Context, error: unknown) => void
 ) => {
   return async (...[context]: Parameters<T>) => {
     try {
       return await fn(context);
     } catch (error) {
+      if (onError) onError(context, error);
+
       if (!silent) {
-        console.error(error);
         const message =
           error instanceof Error ? error.message : JSON.stringify(error);
-        context.session.openPosition = {};
-        context.session.createPosition = { range: [0.15, 0.15] };
         context.telegram.deleteMessages(
           context.chat!.id,
           context.session.messageIdsStack

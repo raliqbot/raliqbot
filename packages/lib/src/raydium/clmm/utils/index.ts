@@ -7,7 +7,7 @@ export * from "./get-portfolio";
 export * from "./allocate-token";
 export * from "./create-pool-mint-ata";
 export * from "./get-pools-with-positions";
-export * from './get-pool-with-positions-by-wallets';
+export * from "./get-pool-with-positions-by-wallets";
 
 const VALID_PROGRAM_ID = new Set([
   CLMM_PROGRAM_ID.toBase58(),
@@ -21,5 +21,10 @@ export const loadWalletFromFile = (file: string) => {
   const key = readFileSync(file, "utf-8");
   return web3.Keypair.fromSecretKey(Buffer.from(Array.from(JSON.parse(key))));
 };
+
+export const isNativeAddress = (value: string) =>
+  new web3.PublicKey(value).equals(
+    new web3.PublicKey("So11111111111111111111111111111111111111112")
+  );
 
 export const stableCoins = [];

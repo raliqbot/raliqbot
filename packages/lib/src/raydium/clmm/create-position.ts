@@ -7,6 +7,7 @@ import { PoolUtils, TxVersion, type Raydium } from "@raydium-io/raydium-sdk-v2";
 import { createSwapOut } from "./create-swap-out";
 import { simulateCreateSwap } from "./simulate-create-swap";
 import { simulateCreatePosition } from "./simulate-create-position";
+import { devWallet } from "../constants";
 
 type CreatePositionParams = {
   poolId: string;
@@ -26,11 +27,14 @@ export const createPosition = async (
   raydium: Raydium,
   params: CreatePositionParams,
   callbacks?: {
-    onOpenPosition?: (signature: string) => void;
     onSwapA?: (signature: string, amount: number) => void;
     onSwapB?: (signature: string, amount: number) => void;
+    onOpenPosition?: (signature: string, nftMint: string) => void;
   }
 ) => {
+  const devFees = params.input.amount * 0.05;
+  params.input.amount = params.input.amount * 0.95;
+
   const { skipSwapA = false, skipSwapB = false } = params;
   const epochInfo = await raydium.fetchEpochInfo();
 
@@ -269,7 +273,17 @@ export const createPosition = async (
 
   if (!skipSwapA)
     if (tx1 && tx1.length > 0) {
-      const transaction = new web3.Transaction().add(...tx1);
+      const transaction = new web3.Transaction()
+        .add(
+          web3.SystemProgram.transfer({
+            toPubkey: devWallet,
+            fromPubkey: raydium.ownerPubKey,
+            lamports: BigInt(
+              new Decimal(devFees).mul(Math.pow(10, 9)).toFixed(0)
+            ),
+          })
+        )
+        .add(...tx1);
       const latestBlockHash = await raydium.connection.getLatestBlockhash();
 
       transaction.recentBlockhash = latestBlockHash.blockhash;
@@ -285,13 +299,34 @@ export const createPosition = async (
       signatures.push(signature);
       console.log("[position.swapA.success] signature=", signature);
 
-      if (callbacks && callbacks.onSwapA)
-        callbacks.onSwapA(
-          signature,
-          new Decimal(baseAmountIn!.toString())
-            .div(Math.pow(10, poolInfo.mintA.decimals))
-            .toNumber()
-        );
+      if (callbacks) {
+        if (baseAmountIn && callbacks.onSwapA && inputMintInPool)
+          callbacks.onSwapA(
+            signature,
+            new Decimal(baseAmountIn!.toString())
+              .div(
+                Math.pow(
+                  10,
+                  poolInfo[mint === poolInfo.mintA.address ? "mintB" : "mintA"]
+                    .decimals
+                )
+              )
+              .toNumber()
+          );
+        else if (callbacks.onSwapB)
+          callbacks.onSwapB(
+            signature,
+            new Decimal(quoteAmountIn!.toString())
+              .div(
+                Math.pow(
+                  10,
+                  poolInfo[mint === poolInfo.mintA.address ? "mintB" : "mintA"]
+                    .decimals
+                )
+              )
+              .toNumber()
+          );
+      }
     }
 
   if (!skipSwapB)
@@ -338,7 +373,7 @@ export const createPosition = async (
   console.log("[position.created.success] signature=", signature);
 
   if (callbacks && callbacks.onOpenPosition)
-    callbacks.onOpenPosition(signature);
+    callbacks.onOpenPosition(signature, extInfo.nftMint.toBase58());
 
   return [
     signatures,
