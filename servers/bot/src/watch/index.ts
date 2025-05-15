@@ -13,7 +13,7 @@ export const main = async () => {
       db,
       bot,
       bitquery,
-      new web3.Connection(getEnv("RPC_URL"))
+      new web3.Connection(getEnv("WATCH_RPC_URL"))
     ).catch((error) => console.error(error));
   });
 

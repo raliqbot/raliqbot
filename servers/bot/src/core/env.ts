@@ -2,7 +2,7 @@ import "dotenv/config";
 
 import { format } from "@raliqbot/shared";
 
-type Env = "CHANNNEL_ID"|"MEDIA_APP_URL"|"DEV_WALLET"|"DATABASE_URL"|"TELEGRAM_BOT_API_KEY"|"SECRET_KEY"|"BITQUERY_API_KEY"|"RPC_URL";
+type Env = "CHANNNEL_ID"|"MEDIA_APP_URL"|"DEV_WALLET"|"DATABASE_URL"|"TELEGRAM_BOT_API_KEY"|"SECRET_KEY"|"BITQUERY_API_KEY"|"RPC_URL"|"WATCH_RPC_URL";
 
 export const getEnv = <T extends object | number | string | null = string>(
   name: Env,
