@@ -1,4 +1,3 @@
-import { Keypair } from "@solana/web3.js";
 import { web3 } from "@coral-xyz/anchor";
 import {
   ApiV3PoolInfoConcentratedItem,
@@ -11,7 +10,7 @@ import { getPool } from "./get-pool";
 export const getPoolWithPositionsByWallets = async (
   connection: web3.Connection,
   programId: web3.PublicKey,
-  ...wallets: Keypair[]
+  ...wallets: web3.Keypair[]
 ) => {
   const caches = new Map<
     string,
@@ -20,7 +19,7 @@ export const getPoolWithPositionsByWallets = async (
       walletAndPositions: Map<
         string,
         {
-          wallet: Keypair;
+          wallet: web3.Keypair;
           positions: ReturnType<typeof PositionInfoLayout.decode>[];
         }
       >;

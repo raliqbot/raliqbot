@@ -8,8 +8,8 @@ import {
   Raydium,
 } from "@raydium-io/raydium-sdk-v2";
 
-import { getPoolsWithPositions } from "./get-pools-with-positions";
 import { BitQuery } from "../../../bitquery";
+import { getPoolsWithPositions } from "./get-pools-with-positions";
 
 export const getPortfolio = async (
   raydium: Raydium,
