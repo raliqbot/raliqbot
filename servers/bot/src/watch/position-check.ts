@@ -1,3 +1,4 @@
+import { sleep } from "bun";
 import { eq } from "drizzle-orm";
 import Decimal from "decimal.js";
 import { web3 } from "@coral-xyz/anchor";
@@ -179,5 +180,7 @@ export const positionChecks = async (
         }
       }
     }
+    
+    await sleep(2000);
   }
 };
