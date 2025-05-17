@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <div className="fixed inset-0 bg-black text-white flex flex-col px-4 space-y-32 md:px-8 md:max-w-7xl md:mx-auto md:space-y-0">
+    <div className="fixed inset-0 bg-black text-white flex flex-col px-4 space-y-24 md:px-8 md:max-w-7xl md:mx-auto md:space-y-0">
       <header>
         <div className="flex items-center space-x-2 py-2">
           <Image
