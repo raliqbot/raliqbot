@@ -10,7 +10,7 @@ export function Mascot() {
       width={450}
       height={450}
       alt="Raliqbot"
-      className="w-sm h-sm absolute bottom-0 right-0 md:w-auto md:h-auto"
+      className="w-sm h-sm absolute bottom-0 right-0 z-0 md:w-auto md:h-auto"
     />
   );
 }
