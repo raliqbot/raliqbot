@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 
 import { Text } from "../components/Text";
 import { Mascot } from "../components/Image";
+import Link from "next/link";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <div className="fixed inset-0 bg-black text-white flex flex-col px-4 md:px-8 md:max-w-7xl md:mx-auto">
+    <div className="fixed inset-0 bg-black text-white flex flex-col px-4 space-y-32 md:px-8 md:max-w-7xl md:mx-auto md:space-y-0">
       <header>
         <div className="flex items-center space-x-2 py-2">
           <Image
@@ -36,19 +37,29 @@ export default function Page() {
           </h1>
         </div>
       </header>
-      <div className="flex-1 flex flex-col items-center justify-center space-y-4">
+      <div className="flex-1 flex flex-col items-center md:justify-center space-y-4">
         <div className="flex flex-col">
           <Text />
-          <p className="text-sm text-white/75 md:max-w-xl">
+          <p className="text-sm text-white/75 md:max-w-lg">
             Provide Spot and single side liquidity on raydium CLMM pools with by
             just clicking.
           </p>
         </div>
         <div className="flex space-x-8">
-          <button className="border-1 px-4 py-2">Open Bot</button>
-          <button className="bg-[#fff] text-black px-4 py-2 ">
+          <Link
+            href="https://t.me/RaliqBot"
+            target="_blank"
+            className="border-1 px-4 py-2"
+          >
+            Open Bot
+          </Link>
+          <Link
+            href="https://raliqbot-1.gitbook.io/raliqbot"
+            target="_blank"
+            className="bg-[#fff] text-black px-4 py-2 "
+          >
             Documentation
-          </button>
+          </Link>
         </div>
       </div>
       <Mascot />
