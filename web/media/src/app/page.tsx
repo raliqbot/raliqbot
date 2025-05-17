@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { TypeAnimation } from "react-type-animation";
 
 import { Text } from "../components/Text";
 import { Mascot } from "../components/Image";
