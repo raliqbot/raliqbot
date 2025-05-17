@@ -1,9 +1,21 @@
-"use client";
 import Image from "next/image";
+import { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { TypeAnimation } from "react-type-animation";
 
+import { Text } from "../components/Text";
+import { Mascot } from "../components/Image";
+
 const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  openGraph: {
+    title: "RaliqBot | Liquidity Provision Made Faster & Easier",
+    description:
+      "Provide Spot and single side liquidity on raydium CLMM pools by just clicking.",
+    images: ["https://raliqbot.xexohq.com/banner.jpeg"],
+  },
+};
 
 export default function Page() {
   return (
@@ -11,9 +23,9 @@ export default function Page() {
       <header>
         <div className="flex items-center space-x-2 py-2">
           <Image
-            src="/mascot.png"
-            width={56}
-            height={56}
+            src="/favicon.ico"
+            width={64}
+            height={64}
             alt="Raliqbot"
             className="w-10 h-10  md:w-auto md:h-auto"
           />
@@ -27,16 +39,10 @@ export default function Page() {
       </header>
       <div className="flex-1 flex flex-col items-center justify-center space-y-4">
         <div className="flex flex-col">
-          <TypeAnimation
-            className="text-2xl font-bold md:max-w-xl md:text-4xl text-start"
-            sequence={[
-              "Liquidity Provision Made Easier with Raliqbot.",
-              "Just a click away from providing liquidity on Raydium.",
-            ]}
-          />
+          <Text />
           <p className="text-sm text-white/75 md:max-w-xl">
-            Provide Spot and single side liquidity on raydium with just
-            clicking.
+            Provide Spot and single side liquidity on raydium CLMM pools with by
+            just clicking.
           </p>
         </div>
         <div className="flex space-x-8">
@@ -46,13 +52,7 @@ export default function Page() {
           </button>
         </div>
       </div>
-      <Image
-        src="/mascot.png"
-        width={450}
-        height={450}
-        alt="Raliqbot"
-        className="w-xs h-xs absolute bottom-0 right-0 md:w-auto md:h-auto"
-      />
+      <Mascot />
     </div>
   );
 }
