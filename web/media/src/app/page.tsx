@@ -37,7 +37,7 @@ export default function Page() {
           </h1>
         </div>
       </header>
-      <div className="flex-1 flex flex-col items-center md:justify-center space-y-4">
+      <div className="flex-1 flex flex-col md:justify-center space-y-4 md:max-w-lg md:mx-auto">
         <div className="flex flex-col">
           <Text />
           <p className="text-sm text-white/75 md:max-w-lg">
