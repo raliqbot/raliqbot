@@ -9,6 +9,9 @@ import { Mascot } from "../components/Image";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  title: "RaliqBot | Liquidity Provision Made Faster & Easier",
+  description:
+    "Provide Spot and single side liquidity on raydium CLMM pools by just clicking.",
   openGraph: {
     title: "RaliqBot | Liquidity Provision Made Faster & Easier",
     description:
