@@ -2,13 +2,14 @@ import moment from "moment";
 import { Context } from "telegraf";
 
 import { bitquery } from "../../../../instances";
+import { XiorError } from "xior";
 
 export const recommendRange = async (
   context: Context,
   next: () => Promise<unknown>
 ) => {
-  const { info } = context.session.createPosition;
-  if (info) {
+  const { info, range } = context.session.createPosition;
+  if (info && range.some((range) => range === 0.15)) {
     const response = await bitquery.price
       .getAvgPriceWithTime({
         poolId: info.id,
@@ -18,7 +19,13 @@ export const recommendRange = async (
       })
       .then(({ data }) => data.data)
       .catch((error) => {
-        console.error(error);
+        if (error instanceof XiorError)
+          console.error(
+            "[xior.httpError] status=",
+            error.response?.status,
+            "response=",
+            error.response?.data
+          );
         return null;
       });
 
@@ -30,11 +37,10 @@ export const recommendRange = async (
       } = response;
 
       const priceIncrement = info.price - Price;
-      const range = priceIncrement / Price;
-      context.session.createPosition.range = [
-        range > 0 ? range : Math.abs(range * 2),
-        range > 0 ? range * 2 : Math.abs(range),
-      ];
+      let rawRange = Math.abs(priceIncrement / Price);
+
+      if (rawRange < 0.1) rawRange = 0.1 + rawRange;
+      context.session.createPosition.range = [rawRange, rawRange * 2];
     }
   }
 

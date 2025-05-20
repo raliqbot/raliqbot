@@ -2,19 +2,33 @@ import { Composer, type Context, Markup, Scenes } from "telegraf";
 import { PoolFetchType } from "@raydium-io/raydium-sdk-v2";
 
 import { format } from "../../core";
+import tokenList from "../../token_list.json";
 import { cleanText, isValidAddress, readFileSync } from "../utils";
 import { onOpenPosition } from "../commands/open-position-command";
 import { onCreatePosition } from "../actions/create-position-action";
 
 const onAddress = async (context: Context) => {
-  const address =
-    context.message &&
-    "text" in context.message &&
-    isValidAddress(context.message.text)
+  let address =
+    context.message && "text" in context.message
       ? context.message.text
       : context.session.openPosition.address;
 
-  if (context.message && "text" in context.message && address) {
+  if (address) {
+    if (!isValidAddress(address)) {
+      address = tokenList.mintList.find(
+        (token) =>
+          token.symbol.toLowerCase() === address?.toLowerCase() ||
+          token.name.toLowerCase() === address?.toLowerCase()
+      )?.address;
+    }
+  }
+
+  if (
+    context.message &&
+    "text" in context.message &&
+    address &&
+    isValidAddress(address)
+  ) {
     context.message.text = format("open-%", address);
     await onOpenPosition(context);
     return context.scene.leave();
@@ -23,10 +37,14 @@ const onAddress = async (context: Context) => {
     "text" in context.message &&
     context.message.text
   ) {
-    if (/open/.test(context.message.text)) await onOpenPosition(context);
-    if (/createPosition/.test(context.message.text))
+    if (/open/.test(context.message.text)) {
+      await onOpenPosition(context);
+      return context.scene.leave();
+    }
+    if (/createPosition/.test(context.message.text)) {
       await onCreatePosition(context);
-    return context.scene.leave();
+      return context.scene.leave();
+    }
   }
 };
 

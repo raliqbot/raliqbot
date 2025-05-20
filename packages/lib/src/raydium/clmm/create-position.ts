@@ -324,7 +324,26 @@ export const createPosition = async (
 
     if (signatureA) {
       if (callbacks) {
-        if (inputMintInPool) {
+        if (singleSided) {
+          if (singleSided === "MintA" && callbacks.onSwapA)
+            callbacks.onSwapA(
+              signatureA,
+              new Decimal(
+                (baseAmountIn ? baseAmountIn : quoteAmountIn)!.toString()
+              )
+                .div(Math.pow(10, poolInfo.mintA.decimals))
+                .toNumber()
+            );
+          else if (singleSided === "MintB" && callbacks.onSwapB)
+            callbacks.onSwapB(
+              signatureA,
+              new Decimal(
+                (baseAmountIn ? baseAmountIn : quoteAmountIn)!.toString()
+              )
+                .div(Math.pow(10, poolInfo.mintB.decimals))
+                .toNumber()
+            );
+        } else if (inputMintInPool) {
           if (mint === poolInfo.mintA.address && callbacks.onSwapB)
             callbacks.onSwapB(
               signatureA,
@@ -343,27 +362,6 @@ export const createPosition = async (
                 .div(Math.pow(10, poolInfo.mintA.decimals))
                 .toNumber()
             );
-        } else {
-          if (baseAmountIn) {
-            if (singleSided === "MintA" && callbacks.onSwapA)
-              callbacks.onSwapA(
-                signatureA,
-                new Decimal(
-                  (baseAmountIn ? baseAmountIn : quoteAmountIn)!.toString()
-                )
-                  .div(Math.pow(10, poolInfo.mintA.decimals))
-                  .toNumber()
-              );
-            else if (callbacks.onSwapB)
-              callbacks.onSwapB(
-                signatureA,
-                new Decimal(
-                  (baseAmountIn ? baseAmountIn : quoteAmountIn)!.toString()
-                )
-                  .div(Math.pow(10, poolInfo.mintB.decimals))
-                  .toNumber()
-              );
-          }
         }
       }
 

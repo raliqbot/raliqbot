@@ -18,7 +18,10 @@ export const onSettings = (editMessageId?: number) =>
           settings.vaultAddress ? cleanText(settings.vaultAddress) : "Not set"
         )
         .replace("%priority_fee%", cleanText(String(settings.priorityFees)))
-        .replace("%slippage%", cleanText(String(settings.slippage)))
+        .replace(
+          "%slippage%",
+          cleanText(String(Number(settings.slippage) * 100))
+        )
         .replace("%language%", settings.locale)
         .replace(
           "%rebalancing_schedule%",

@@ -10,11 +10,11 @@ export const onEditRange = async (
   const text =
     context.message && "text" in context.message
       ? context.message.text
-      : undefined;
+      : context.callbackQuery && "data" in context.callbackQuery ? context.callbackQuery.data : undefined;
 
   if (text) {
     let values = text
-      .split(/\s+|,/)
+      .split(/\s+|,|-/)
       .map(parseFloat)
       .filter((value) => !Number.isNaN(value));
 

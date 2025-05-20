@@ -1,20 +1,24 @@
 import { chunk } from "lodash";
+import Decimal from "decimal.js";
 import { BN, web3 } from "@coral-xyz/anchor";
 import {
+  PoolUtils,
   PositionInfoLayout,
   TxVersion,
   type Raydium,
 } from "@raydium-io/raydium-sdk-v2";
 
 import { getPoolsWithPositions } from "./utils";
+import { createSwapOut } from "./create-swap-out";
+import { simulateCreateSwap } from "./simulate-create-swap";
 
 export const closePosition = async (
   raydium: Raydium,
   programId: web3.PublicKey,
   prefetchedPositions?: ReturnType<typeof PositionInfoLayout.decode>[]
 ) => {
-  const transactions = [];
-  const txSigners: web3.Signer[][] = [];
+  const txSigners: web3.Signer[] = [];
+  const transactions: web3.Transaction[] = [];
 
   const poolsWithPositions = await getPoolsWithPositions(
     raydium,
@@ -34,6 +38,9 @@ export const closePosition = async (
     positions,
   } of poolsWithPositions) {
     for (const position of positions) {
+      const innerSigners = [];
+      const innerTransactions = [];
+
       const { transaction, signers } = await raydium.clmm.decreaseLiquidity({
         poolInfo,
         poolKeys,
@@ -48,7 +55,7 @@ export const closePosition = async (
         },
       });
 
-      txSigners.push(signers);
+      txSigners.push(...signers);
       transactions.push(transaction);
     }
   }
@@ -59,13 +66,13 @@ export const closePosition = async (
       transactions.length
     );
 
-    const chunkedTxs = chunk(transactions, 5);
+    const chunkedTxs = chunk(transactions, 2);
     const signatures = await Promise.all(
       chunkedTxs.map((transaction) => {
         return web3.sendAndConfirmTransaction(
           raydium.connection,
           new web3.Transaction().add(...transaction),
-          txSigners.flat(),
+          txSigners,
           { commitment: "confirmed" }
         );
       })

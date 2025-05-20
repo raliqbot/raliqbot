@@ -9,30 +9,22 @@ export const confirmPosition = async (
   const { info, messageId, amount, range } = context.session.createPosition;
 
   if (info && amount) {
+    const [tickLower, tickUpper] = range.map((range) => range * 100);
+
     const message = readFileSync(
       "locale/en/create-position/position-config.md",
       "utf-8"
     )
       .replace(
         "%name%",
-        cleanText(format("%/%", info.mintA.symbol, info.mintB.symbol))
+        cleanText(format("%/%", info.mintA.symbol, info.mintB.symbol)).replace(
+          /\s/g,
+          ""
+        )
       )
       .replace(
         "%range%",
-        cleanText(
-          range
-            .map(
-              (range, index) =>
-                `${range > 0 ? index === 0 ? "-" : "+" : ""}${
-                  range.toString().length > 4
-                    ? range.toFixed(4)
-                    : range > 0
-                    ? range.toFixed(2)
-                    : range
-                }%`
-            )
-            .join(", ")
-        )
+        `-${tickLower.toFixed(2)}%, +${tickUpper.toFixed(2)}%`
       )
       .replace("%price%", cleanText(info.price.toFixed(2)))
       .replace("%amount%", cleanText(amount.toFixed(2)))

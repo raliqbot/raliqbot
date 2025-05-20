@@ -11,7 +11,7 @@ export const changeVaultScene = new Scenes.WizardScene(
   changeVaultSceneId,
   async (context) => {
     await context.replyWithMarkdownV2(
-      readFileSync("locale/en/settings/change-slippage.md", "utf-8"),
+      readFileSync("locale/en/settings/change-vault-address.md", "utf-8"),
       Markup.forceReply()
     );
 

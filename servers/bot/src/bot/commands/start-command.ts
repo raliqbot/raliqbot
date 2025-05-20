@@ -7,7 +7,6 @@ import { onCreatePosition } from "../actions/create-position-action";
 
 export const startCommand = (telegraf: Telegraf) => {
   telegraf.start(async (context) => {
-    console.log("chat.id=", context.chat.id);
     const { wallet } = context;
     if (context.message.text) {
       if (/open/.test(context.message.text)) return onOpenPosition(context);

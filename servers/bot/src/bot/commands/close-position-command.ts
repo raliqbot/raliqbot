@@ -37,6 +37,7 @@ export const closePositionCommand = (telegraf: Telegraf) => {
         const signatures = await closePosition(
           context.raydium,
           CLMM_PROGRAM_ID,
+        
           positions
         );
         if (signatures)
