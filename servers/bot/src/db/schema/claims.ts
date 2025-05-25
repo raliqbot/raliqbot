@@ -2,7 +2,7 @@ import { jsonb, pgTable, text, uuid } from "drizzle-orm/pg-core";
 import { positions } from "./positions";
 
 type Metadata = {
-  tokenBalances: Record<string, bigint>;
+  tokenBalances: Record<string, string>;
 };
 
 export const claims = pgTable("claims", {
