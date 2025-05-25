@@ -1,3 +1,4 @@
+import type { z } from "zod";
 import { eq } from "drizzle-orm";
 
 import { Database } from "../db";
@@ -6,8 +7,8 @@ import { insertSettingSChema, selectUserSchema } from "../db/zod";
 
 export const updateSettingsByUser = (
   db: Database,
-  user: Zod.infer<typeof selectUserSchema>["id"],
-  value: Partial<Zod.infer<typeof insertSettingSChema>>
+  user: z.infer<typeof selectUserSchema>["id"],
+  value: Partial<z.infer<typeof insertSettingSChema>>
 ) =>
   db
     .update(settings)

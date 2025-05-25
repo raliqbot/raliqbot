@@ -3,13 +3,14 @@ import { Context, Telegraf } from "telegraf";
 import { closePosition } from "@raliqbot/lib";
 import { CLMM_PROGRAM_ID } from "@raydium-io/raydium-sdk-v2";
 
-import { catchBotRuntimeError, privateFunc, readFileSync } from "../utils";
+import { atomic } from "../utils/atomic";
+import { privateFunc, readFileSync } from "../utils";
 
 const commandFilter = /^close_position(?:-([1-9A-HJ-NP-Za-km-z]{32,44}))?$/;
 
 export const closePositionCommand = (telegraf: Telegraf) => {
   const onClosePosition = privateFunc(
-    catchBotRuntimeError(async (context: Context) => {
+    atomic(async (context: Context) => {
       const text =
         context.message && "text" in context.message
           ? context.message.text
@@ -37,7 +38,7 @@ export const closePositionCommand = (telegraf: Telegraf) => {
         const signatures = await closePosition(
           context.raydium,
           CLMM_PROGRAM_ID,
-        
+
           positions
         );
         if (signatures)

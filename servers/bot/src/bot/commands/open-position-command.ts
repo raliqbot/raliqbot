@@ -1,16 +1,15 @@
 import { format } from "@raliqbot/shared";
-import { isValidClmm } from "@raliqbot/lib";
-import { type Context, Input, Markup, type Telegraf } from "telegraf";
-import {
-  type ApiV3PoolInfoConcentratedItem,
-  PoolFetchType,
-} from "@raydium-io/raydium-sdk-v2";
+import { isValidAddress, isValidClmm } from "@raliqbot/lib";
+import { Input, Markup, type Context, type Telegraf } from "telegraf";
+import { type ApiV3PoolInfoConcentratedItem } from "@raydium-io/raydium-sdk-v2";
 
 import { buildMediaURL } from "../../core";
+import { atomic } from "../utils/atomic";
+import { getPoolInfoOrCachedPoolInfo } from "../../utils/cache";
+import { cleanText, privateFunc, readFileSync } from "../utils";
 import { openPositionSceneId } from "../scenes/open-position-scene";
-import { cleanText, isValidAddress, privateFunc, readFileSync } from "../utils";
 
-export const onOpenPosition = async (context: Context) => {
+export const onOpenPosition = atomic(async (context: Context) => {
   const message = context.message;
   let text =
     message && "text" in message
@@ -26,110 +25,88 @@ export const onOpenPosition = async (context: Context) => {
       const mints = address.split(/,/g);
       let poolInfo: ApiV3PoolInfoConcentratedItem | undefined;
 
-      if (mints.length > 0) {
-        if (context.raydium.cluster === "mainnet") {
-          const [mint1, mint2] = mints;
+      const poolInfos = await getPoolInfoOrCachedPoolInfo(context, ...mints);
+      for (const pool of poolInfos)
+        if (isValidClmm(pool.programId)) {
+          poolInfo = pool as ApiV3PoolInfoConcentratedItem;
+          break;
+        }
 
-          const poolInfos = (
-            await Promise.all([
-              context.raydium.api
-                .fetchPoolByMints({
-                  mint1,
-                  mint2,
-                  sort: "fee24h",
-                  type: PoolFetchType.Concentrated,
-                })
-                .then((poolInfos) => poolInfos.data),
-              context.raydium.api.fetchPoolById({
-                ids: address,
+      if (poolInfo) {
+        context.session.createPosition = {
+          ...context.session.createPosition,
+          info: poolInfo,
+          amount: context.session.openPosition
+            ? context.session.openPosition.amount
+            : undefined,
+        };
+
+        const name = format(
+          "%/%",
+          poolInfo.mintA.symbol,
+          poolInfo.mintB.symbol
+        ).replace(/\s/g, "");
+
+        return context.replyWithPhoto(
+          Input.fromURLStream(
+            buildMediaURL("prefetched/open-graph/", {
+              data: JSON.stringify({
+                mintA: {
+                  name: poolInfo.mintA.name,
+                  symbol: poolInfo.mintA.symbol,
+                  logoURI: poolInfo.mintA.logoURI,
+                  address: poolInfo.mintA.address,
+                },
+                mintB: {
+                  name: poolInfo.mintB.name,
+                  symbol: poolInfo.mintB.symbol,
+                  logoURI: poolInfo.mintB.logoURI,
+                  address: poolInfo.mintB.address,
+                },
+                tvl: poolInfo.tvl,
+                feeRate: poolInfo.feeRate,
+                day: {
+                  apr: poolInfo.day.apr,
+                  volume: poolInfo.day.volume,
+                  volumeFee: poolInfo.day.volumeFee,
+                },
               }),
-            ])
-          ).flat() as ApiV3PoolInfoConcentratedItem[];
-
-          for (const pool of poolInfos)
-            if (isValidClmm(pool.programId)) {
-              poolInfo = pool as ApiV3PoolInfoConcentratedItem;
-              break;
-            }
-        } else {
-          const pool = await context.raydium.clmm
-            .getPoolInfoFromRpc(address)
-            .catch(() => null);
-          if (pool) poolInfo = pool.poolInfo;
-        }
-
-        if (poolInfo) {
-          context.session.createPosition = {
-            ...context.session.createPosition,
-            info: poolInfo,
-            amount: context.session.openPosition
-              ? context.session.openPosition.amount
-              : undefined,
-          };
-
-          const name = format(
-            "%-%",
-            poolInfo.mintA.symbol,
-            poolInfo.mintB.symbol
-          ).replace(/\s/g, "");
-
-          return context.replyWithPhoto(
-            Input.fromURLStream(
-              buildMediaURL("prefetched/open-graph/", {
-                data: JSON.stringify({
-                  mintA: {
-                    name: poolInfo.mintA.name,
-                    symbol: poolInfo.mintA.symbol,
-                    logoURI: poolInfo.mintA.logoURI,
-                    address: poolInfo.mintA.address,
-                  },
-                  mintB: {
-                    name: poolInfo.mintB.name,
-                    symbol: poolInfo.mintB.symbol,
-                    logoURI: poolInfo.mintB.logoURI,
-                    address: poolInfo.mintB.address,
-                  },
-                  tvl: poolInfo.tvl,
-                  feeRate: poolInfo.feeRate,
-                  day: {
-                    apr: poolInfo.day.apr,
-                    volume: poolInfo.day.volume,
-                    volumeFee: poolInfo.day.volumeFee,
-                  },
-                }),
-              })
-            ),
-            {
-              caption: readFileSync(
-                "locale/en/search-pair/search-result.md",
-                "utf-8"
-              )
-                .replace("%pool_id%", cleanText(poolInfo.id))
-                .replace("%name%", cleanText(name)),
-              parse_mode: "MarkdownV2" as const,
-              reply_markup: Markup.inlineKeyboard([
-                [
-                  Markup.button.callback(
-                    "➕ Open Position",
-                    format("createPosition-%", poolInfo.id)
-                  ),
-                ],
-              ]).reply_markup,
-            }
-          );
-        }
-
-        return context.replyWithMarkdownV2(
-          readFileSync("locale/en/create-position/not-found.md", "utf-8")
+            })
+          ),
+          {
+            caption: readFileSync(
+              "locale/en/search-pair/search-result.md",
+              "utf-8"
+            )
+              .replace("%pool_id%", cleanText(poolInfo.id))
+              .replace("%name%", cleanText(name)),
+            parse_mode: "MarkdownV2" as const,
+            reply_markup: Markup.inlineKeyboard([
+              [
+                Markup.button.callback(
+                  "⚖️ Spot",
+                  format("createPosition_spot_%", poolInfo.id)
+                ),
+                Markup.button.callback(
+                  "🧩 Single Sided",
+                  format("createPosition_s_%", poolInfo.id)
+                ),
+              ],
+            ]).reply_markup,
+          }
         );
       }
+
+      return context.replyWithMarkdownV2(
+        readFileSync("locale/en/create-position/not-found.md", "utf-8")
+      );
     }
   }
 
   return context.replyWithMarkdownV2(
     readFileSync("locale/en/create-position/invalid-command.md", "utf-8")
   );
-};
+});
 
 export const openPositionCommand = async (telegraf: Telegraf) => {
   const onOpenPosition = privateFunc((context: Context) => {

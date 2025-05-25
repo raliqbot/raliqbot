@@ -1,8 +1,10 @@
 import { Markup, Scenes } from "telegraf";
+import { isValidAddress } from "@raliqbot/lib";
+
 
 import { db } from "../../instances";
+import { readFileSync } from "../utils";
 import { onSettings } from "../commands/settings-command";
-import { isValidAddress, readFileSync } from "../../bot/utils";
 import { updateSettingsByUser } from "../../controllers/settings.controller";
 
 export const changeVaultSceneId = "change-vault-scene";
@@ -40,3 +42,4 @@ export const changeVaultScene = new Scenes.WizardScene(
     }
   }
 );
+

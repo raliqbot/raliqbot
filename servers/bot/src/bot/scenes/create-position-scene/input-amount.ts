@@ -2,7 +2,7 @@ import { Context, Markup, Scenes } from "telegraf";
 
 export const inputAmount = async (
   context: Context & { wizard: Scenes.WizardContext["wizard"] },
-  next: () => Promise<unknown>
+  next?: () => Promise<unknown>
 ) => {
   if (context.session.createPosition.amount) return context.wizard.next();
 
@@ -13,6 +13,5 @@ export const inputAmount = async (
 
   context.session.messageIdsStack.push(message.message_id);
 
-  context.wizard.next();
-  return next();
+  if (next) return next();
 };

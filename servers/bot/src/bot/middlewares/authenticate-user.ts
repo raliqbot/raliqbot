@@ -27,6 +27,7 @@ export const authenticateUser = async (
       disableLoadToken: true,
     });
     if (!context.session) context.session = {} as any;
+    if (!context.session.cachedPoolInfos) context.session.cachedPoolInfos = {};
     if (!context.session.searchCache) context.session.searchCache = {};
     if (!context.session.closePosition) context.session.closePosition = {};
     if (!context.session.createPosition)

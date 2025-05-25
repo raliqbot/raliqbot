@@ -2,7 +2,10 @@ import { isValidClmm } from "@raliqbot/lib";
 import type { Context, Telegraf } from "telegraf";
 import type { ApiV3PoolInfoConcentratedItem } from "@raydium-io/raydium-sdk-v2";
 
-import { createPositionSceneId } from "../scenes/create-position-scene";
+import {
+  createSingleSidedPositionSceneId,
+  createSpotPositionSceneId,
+} from "../scenes/create-position-scene";
 
 export const onCreatePosition = async (context: Context) => {
   let text =
@@ -13,7 +16,9 @@ export const onCreatePosition = async (context: Context) => {
       : undefined;
 
   if (text) {
-    const [, ...poolIds] = text.replace(/\/start?(\s+)/, "").split(/-/g);
+    const [, algorithm, ...poolIds] = text
+      .replace(/\/start?(\s+)/, "")
+      .split(/_/g);
     const poolId = poolIds.join(",");
 
     if (!context.session.createPosition.info) {
@@ -30,13 +35,20 @@ export const onCreatePosition = async (context: Context) => {
       }
     }
 
-    return context.scene.enter(createPositionSceneId);
+    context.session.createPosition.algorithm =
+      algorithm === "spot" ? "spot" : "single-sided";
+
+    return context.scene.enter(
+      algorithm === "spot"
+        ? createSpotPositionSceneId
+        : createSingleSidedPositionSceneId
+    );
   }
 };
 
 export const createPositionAction = (telegraf: Telegraf) => {
   telegraf.action(
-    /^createPosition(?:-([1-9A-HJ-NP-Za-km-z]{32,44}))?$/,
+    /^createPosition_(s|spot)(?:_([1-9A-HJ-NP-Za-km-z]{32,44}))?$/,
     onCreatePosition
   );
 };

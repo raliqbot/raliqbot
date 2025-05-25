@@ -8,6 +8,7 @@ export const insertUserSchema = createInsertSchema(users);
 export const selectSettingsSchema = createSelectSchema(settings);
 export const insertSettingSChema = createInsertSchema(settings);
 
+export const selectClaimSchema = createSelectSchema(claims);
 export const insertClaimSchema = createInsertSchema(claims);
 
 export const selectPositionSchema = createSelectSchema(positions);

@@ -1,11 +1,13 @@
 import millify from "millify";
-import { Context, Markup } from "telegraf";
 import { format } from "@raliqbot/shared";
+import { Context, Markup } from "telegraf";
+import { isValidAddress } from "@raliqbot/lib";
 
+import { atomic } from "../utils/atomic";
 import { buildMediaURL } from "../../core";
-import { cleanText, isValidAddress, readFileSync } from "../utils";
+import { cleanText, readFileSync } from "../utils";
 
-export const onPoolSearchAction = async (context: Context) => {
+export const onPoolSearchAction = atomic(async (context: Context) => {
   const inlineQuery = context.inlineQuery;
   if (inlineQuery) {
     const query = inlineQuery.query;
@@ -136,4 +138,4 @@ export const onPoolSearchAction = async (context: Context) => {
       }
     }
   }
-};
+});

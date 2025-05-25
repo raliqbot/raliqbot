@@ -8,7 +8,7 @@
   },
   "devDependencies": {},
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5.8.3"
   },
   "dependencies": {
     "@raydium-io/raydium-sdk-v2": "^0.1.128-alpha",
@@ -16,7 +16,7 @@
     "@tsconfig/recommended": "^1.0.8",
     "assert": "^2.1.0",
     "decimal.js": "^10.5.0",
-    "turbo": "^2.5.2",
+    "turbo": "^2.5.3",
     "xior": "^0.7.8"
   },
   "workspaces": [

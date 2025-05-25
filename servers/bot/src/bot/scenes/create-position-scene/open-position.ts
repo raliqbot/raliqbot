@@ -4,8 +4,9 @@ import { type Context, Input, Markup } from "telegraf";
 import { createPosition } from "@raliqbot/lib";
 
 import { db } from "../../../instances";
+import { atomic } from "../../utils/atomic";
 import { buildMediaURL } from "../../../core";
-import { catchBotRuntimeError, cleanText, readFileSync } from "../../utils";
+import { cleanText, readFileSync } from "../../utils";
 import { createPositions } from "../../../controllers/positions.controller";
 
 const onError = (context: Context) => {
@@ -16,7 +17,7 @@ const onError = (context: Context) => {
   };
 };
 
-export const openPosition = catchBotRuntimeError(
+export const openPosition = atomic(
   async (context) => {
     const { info, amount, range, algorithm, skipSwapA, skipSwapB, loading } =
       context.session.createPosition;
@@ -163,6 +164,5 @@ export const openPosition = catchBotRuntimeError(
       }
     }
   },
-  false,
-  onError
+  { onError }
 );

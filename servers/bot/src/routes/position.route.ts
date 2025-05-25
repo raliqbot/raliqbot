@@ -1,3 +1,4 @@
+import type { z } from "zod";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 
 import { db } from "../instances";
@@ -11,7 +12,7 @@ const getPositionsRoute = () => getPositionsWhere(db);
 
 const getPositionRoute = (
   request: FastifyRequest<{
-    Params: Pick<Zod.infer<typeof selectPositionSchema>, "id">;
+    Params: Pick<z.infer<typeof selectPositionSchema>, "id">;
   }>
 ) => getPositionById(db, request.params!.id);
 

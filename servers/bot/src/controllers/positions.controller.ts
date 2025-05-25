@@ -1,12 +1,15 @@
+import type { z } from "zod";
 import { eq, SQL } from "drizzle-orm";
+import { PositionInfoLayout } from "@raydium-io/raydium-sdk-v2";
+
+
 import { Database } from "../db";
 import { positions } from "../db/schema";
 import { insertPositionSchema, selectPositionSchema } from "../db/zod";
-import { PositionInfoLayout } from "@raydium-io/raydium-sdk-v2";
 
 export const createPositions = (
   db: Database,
-  ...values: Zod.infer<typeof insertPositionSchema>[]
+  ...values: z.infer<typeof insertPositionSchema>[]
 ) => db.insert(positions).values(values).returning().execute();
 
 export const cacheOnChainPositions = (
@@ -39,7 +42,7 @@ export const cacheOnChainPositions = (
 
 export const getPositionById = (
   db: Database,
-  id: Zod.infer<typeof selectPositionSchema>["id"]
+  id: z.infer<typeof selectPositionSchema>["id"]
 ) =>
   db.query.positions
     .findFirst({
@@ -52,8 +55,8 @@ export const getPositionsWhere = (db: Database, where?: SQL<unknown>) =>
 
 export const updatePositionById = (
   db: Database,
-  id: Zod.infer<typeof selectPositionSchema>["id"],
-  value: Partial<Zod.infer<typeof insertPositionSchema>>
+  id: z.infer<typeof selectPositionSchema>["id"],
+  value: Partial<z.infer<typeof insertPositionSchema>>
 ) =>
   db
     .update(positions)

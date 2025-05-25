@@ -1,37 +1,34 @@
 import { format } from "@raliqbot/shared";
-import { readFileSync, cleanText } from "bot/utils";
-import { Context, Markup, Scenes } from "telegraf";
+import { Markup, WizardContext } from "telegraf";
+
+import { readFileSync, cleanText } from "../../utils";
 
 export const confirmPosition = async (
-  context: Context,
-  next: () => Promise<unknown>
+  context: WizardContext,
+  next?: () => Promise<unknown>
 ) => {
-  const { info, messageId, amount, range } = context.session.createPosition;
+  const { info, messageId, amount, range, algorithm } =
+    context.session.createPosition;
 
-  if (info && amount) {
-    const [tickLower, tickUpper] = range.map((range) => range * 100);
+  if (info && amount && algorithm) {
+    const [tickLower, tickUpper] = range.map((range) =>
+      (range * 100).toFixed(2)
+    );
+    const formatedRange = `-${tickLower}%, +${tickUpper}%`;
+    const name = format("%/%", info.mintA.symbol, info.mintB.symbol).replace(
+      /\s/g,
+      String()
+    );
 
     const message = readFileSync(
       "locale/en/create-position/position-config.md",
       "utf-8"
     )
-      .replace(
-        "%name%",
-        cleanText(format("%/%", info.mintA.symbol, info.mintB.symbol)).replace(
-          /\s/g,
-          ""
-        )
-      )
-      .replace(
-        "%range%",
-        `-${tickLower.toFixed(2)}%, +${tickUpper.toFixed(2)}%`
-      )
-      .replace("%price%", cleanText(info.price.toFixed(2)))
+      .replace("%name%", cleanText(name))
+      .replace("%range%", formatedRange)
+      .replace("%strategy%", cleanText(algorithm))
       .replace("%amount%", cleanText(amount.toFixed(2)))
-      .replace(
-        "%strategy%",
-        cleanText(context.session.createPosition.algorithm!)
-      );
+      .replace("%price%", cleanText(info.price.toFixed(2)));
 
     const reply_markup = Markup.inlineKeyboard([
       [
@@ -54,9 +51,9 @@ export const confirmPosition = async (
       reply_markup,
     });
 
-    context.session.createPosition.messageId = message_id;
     context.session.messageIdsStack.push(message_id);
+    context.session.createPosition.messageId = message_id;
 
-    return next();
+    if (next) return next();
   }
 };

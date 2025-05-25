@@ -1,13 +1,15 @@
-import { Composer, type Context, Markup, Scenes } from "telegraf";
+import { isValidAddress } from "@raliqbot/lib";
 import { PoolFetchType } from "@raydium-io/raydium-sdk-v2";
+import { Composer, type Context, Markup, Scenes } from "telegraf";
 
 import { format } from "../../core";
+import { atomic } from "../utils/atomic";
 import tokenList from "../../token_list.json";
-import { cleanText, isValidAddress, readFileSync } from "../utils";
+import { cleanText, readFileSync } from "../utils";
 import { onOpenPosition } from "../commands/open-position-command";
 import { onCreatePosition } from "../actions/create-position-action";
 
-const onAddress = async (context: Context) => {
+const onAddress = atomic(async (context: Context) => {
   let address =
     context.message && "text" in context.message
       ? context.message.text
@@ -46,9 +48,9 @@ const onAddress = async (context: Context) => {
       return context.scene.leave();
     }
   }
-};
+});
 
-export const onTrending = async (context: Context) => {
+export const onTrending = atomic(async (context: Context) => {
   const message =
     context.message && "text" in context.message
       ? context.message.text
@@ -156,7 +158,7 @@ export const onTrending = async (context: Context) => {
         [Markup.button.callback("🅇 Cancel", "cancel")],
       ]).reply_markup;
 
-      return context.callbackQuery && Number.isInteger(parseFloat(page))
+      await (context.callbackQuery && Number.isInteger(parseFloat(page))
         ? context.editMessageText(message, {
             reply_markup,
             link_preview_options: { is_disabled: true },
@@ -167,10 +169,13 @@ export const onTrending = async (context: Context) => {
             link_preview_options: {
               is_disabled: true,
             },
-          });
+          }));
     }
+
+    for (const poolInfo of poolInfos.data)
+      context.session.cachedPoolInfos[poolInfo.id] = [poolInfo];
   }
-};
+});
 
 const cancelCommandFilter = /cancel/;
 const trendingCommandFilter = /trending(-\d+)?/;

@@ -1,16 +1,18 @@
-import { Context, Markup, Scenes } from "telegraf";
+import type { WizardContext } from "telegraf";
 
 import { readFileSync } from "../../utils";
 import { confirmPosition } from "./confirm-position";
 
 export const onEditRange = async (
-  context: Context,
-  next: () => Promise<unknown>
+  context: WizardContext,
+  next?: () => Promise<unknown>
 ) => {
   const text =
     context.message && "text" in context.message
       ? context.message.text
-      : context.callbackQuery && "data" in context.callbackQuery ? context.callbackQuery.data : undefined;
+      : context.callbackQuery && "data" in context.callbackQuery
+      ? context.callbackQuery.data
+      : undefined;
 
   if (text) {
     let values = text
@@ -18,8 +20,7 @@ export const onEditRange = async (
       .map(parseFloat)
       .filter((value) => !Number.isNaN(value));
 
-    values = values.map((value) => (value > 1 ? value / 100 : value));
-
+    values = values.map((value) => value / 100);
     const { algorithm, singleSided } = context.session.createPosition;
 
     if (algorithm === "single-sided") {

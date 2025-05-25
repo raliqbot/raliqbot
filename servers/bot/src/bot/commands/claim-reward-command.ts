@@ -3,11 +3,12 @@ import { harvestRewards } from "@raliqbot/lib";
 import { Input, type Context, type Telegraf } from "telegraf";
 import { CLMM_PROGRAM_ID } from "@raydium-io/raydium-sdk-v2";
 
-import { catchBotRuntimeError, privateFunc, readFileSync } from "../utils";
+import { atomic } from "../utils/atomic";
+import { privateFunc, readFileSync } from "../utils";
 
 export const claimRewardCommand = (telegraf: Telegraf) => {
   const onClaimReward = privateFunc(
-    catchBotRuntimeError(async (context: Context) => {
+    atomic(async (context: Context) => {
       const text =
         context.message && "text" in context.message
           ? context.message.text

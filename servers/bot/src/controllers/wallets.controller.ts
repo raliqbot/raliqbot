@@ -1,4 +1,5 @@
 import bs58 from "bs58";
+import type { z } from "zod";
 import { and, eq } from "drizzle-orm";
 import { web3 } from "@coral-xyz/anchor";
 
@@ -14,12 +15,12 @@ import {
 
 export const createWallet = (
   db: Database,
-  value: Zod.infer<typeof insertWalletSchema>
+  value: z.infer<typeof insertWalletSchema>
 ) => db.insert(wallets).values(value).returning().execute();
 
 export const getWalletsByUser = (
   db: Database,
-  user: Zod.infer<typeof selectUserSchema>["id"]
+  user: z.infer<typeof selectUserSchema>["id"]
 ) =>
   db.query.wallets
     .findMany({
@@ -29,9 +30,9 @@ export const getWalletsByUser = (
 
 export const updateWalletByUserAndId = (
   db: Database,
-  user: Zod.infer<typeof selectUserSchema>["id"],
-  id: Zod.infer<typeof selectWalletSchema>["id"],
-  value: Partial<Zod.infer<typeof insertWalletSchema>>
+  user: z.infer<typeof selectUserSchema>["id"],
+  id: z.infer<typeof selectWalletSchema>["id"],
+  value: Partial<z.infer<typeof insertWalletSchema>>
 ) =>
   db
     .update(wallets)
@@ -41,7 +42,7 @@ export const updateWalletByUserAndId = (
     .execute();
 
 export const loadWallet = (
-  wallet: Pick<Zod.infer<typeof selectWalletSchema>, "key">
+  wallet: Pick<z.infer<typeof selectWalletSchema>, "key">
 ) => {
   const data = decrypt<string>(secretKey, wallet.key);
   return web3.Keypair.fromSecretKey(Buffer.from(data, 'base64'));

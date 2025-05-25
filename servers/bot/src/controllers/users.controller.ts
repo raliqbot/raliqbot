@@ -1,10 +1,12 @@
+import type { z } from "zod";
+
 import type { Database } from "../db";
-import { settings, users, wallets } from "../db/schema";
 import { insertUserSchema } from "../db/zod";
+import { settings, users, wallets } from "../db/schema";
 
 export const createUser = async (
   db: Database,
-  value: Zod.infer<typeof insertUserSchema>
+  value: z.infer<typeof insertUserSchema>
 ) => {
   const [user] = await db
     .insert(users)

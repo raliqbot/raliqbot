@@ -1,5 +1,6 @@
+import type { z } from "zod";
 import type { web3 } from "@coral-xyz/anchor";
-import type { Context, Scenes } from "telegraf";
+import type { Context, Scenes, WizardContext } from "telegraf";
 import type {
   ApiV3PoolInfoConcentratedItem,
   ApiV3PoolInfoItem,
@@ -41,19 +42,32 @@ type SessionData = {
   messageId?: number;
   messageIdsStack: number[];
   searchCache: Record<string, ApiV3PoolInfoItem[]>;
+  cachedPoolInfos: Record<string, ApiV3PoolInfoItem[]>;
 };
 
 type Session = SessionData;
 
 declare module "telegraf" {
   interface Context extends Scenes.WizardContext<Session> {
-    user: Zod.infer<typeof selectUserSchema> & {
-      wallet: Zod.infer<typeof selectWalletSchema>;
-      settings: Zod.infer<typeof selectSettingsSchema>;
+    user: z.infer<typeof selectUserSchema> & {
+      wallet: z.infer<typeof selectWalletSchema>;
+      settings: z.infer<typeof selectSettingsSchema>;
     };
     wallet: web3.Keypair;
     raydium: Raydium;
     session: Session;
     scene: Scenes.SceneContext["scene"];
   }
+
+  interface WizardContext extends Context {
+    wizard: Scenes.WizardContext["wizard"];
+  }
 }
+
+declare global {
+  interface StringConstructor {
+    empty: () => string;
+  }
+}
+
+String.empty = () => "";
