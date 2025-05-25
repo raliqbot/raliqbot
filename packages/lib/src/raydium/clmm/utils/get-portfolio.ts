@@ -1,27 +1,24 @@
+import assert from "assert";
 import Decimal from "decimal.js";
 import { BN, web3 } from "@coral-xyz/anchor";
-import {
+import type {
   ApiV3PoolInfoConcentratedItem,
-  ClmmPositionLayout,
-  PoolUtils,
-  PositionInfoLayout,
+  ApiV3Token,
   Raydium,
 } from "@raydium-io/raydium-sdk-v2";
 
-import { BitQuery } from "../../../bitquery";
-import { getPoolsWithPositions } from "./get-pools-with-positions";
+import { getPositions } from "./get-positions";
+import type { DexScreener } from "../../../dexscreener";
 
 export const getPortfolio = async (
   raydium: Raydium,
-  bitquery: BitQuery,
+  dexscreener: DexScreener,
   programId: web3.PublicKey,
-  prefetchedPositions?: ClmmPositionLayout[]
+  prefetchedPositions?: Awaited<ReturnType<typeof getPositions>>
 ) => {
-  const poolsWithPositions = await getPoolsWithPositions(
-    raydium,
-    programId,
-    prefetchedPositions
-  );
+  const poolsWithPositions = prefetchedPositions
+    ? prefetchedPositions
+    : await getPositions(raydium, programId);
 
   const poolsWithPositionsWithAmounts = new Map<
     string,
@@ -30,98 +27,130 @@ export const getPortfolio = async (
         price: { PriceInUSD: number; Price: number };
         poolInfo: ApiV3PoolInfoConcentratedItem;
       };
-      positions: (ReturnType<typeof PositionInfoLayout.decode> & {
-        tokenFeesAUSD: number;
-        tokenFeesBUSD: number;
-        amountA: number;
-        amountB: number;
-        amountAUSD: number;
-        amountBUSD: number;
-      })[];
+      positions: {
+        liquidity: BN,
+        tickLower: number;
+        tickUpper: number;
+        poolId: string;
+        nftMint: string;
+        rewardToken: {
+          reward: number;
+          rewardInUSD: number;
+          mint: ApiV3Token;
+        };
+        tokenA: {
+          amount: number;
+          amountInUSD: number;
+          reward: number;
+          rewardInUSD: number;
+          mint: ApiV3Token;
+        };
+        tokenB: {
+          amount: number;
+          amountInUSD: number;
+          reward: number;
+          rewardInUSD: number;
+          mint: ApiV3Token;
+        };
+      }[];
     }
   >();
 
   for (const { pool, positions } of poolsWithPositions) {
     const { poolInfo } = pool;
-    const epochInfo = await raydium.connection.getEpochInfo();
-    const {
-      data: {
-        data: {
-          Solana: { DEXTradeByTokens },
-        },
-      },
-    } = await bitquery.price.getPairPrice({
-      baseToken: poolInfo.mintA.address,
-      quoteToken: poolInfo.mintB.address,
-      poolId: poolInfo.id,
-    });
+    const rewardMint = pool.poolInfo.rewardDefaultInfos.find(
+      (info) =>
+        info.mint.address !== pool.poolInfo.mintA.address &&
+        info.mint.address !== pool.poolInfo.mintB.address
+    )!;
+    const data = await Promise.all([
+      dexscreener.pair.getPair("solana", poolInfo.id).then(({ data }) => data),
+      dexscreener.token
+        .getPairsByTokenAddresses("solana", rewardMint.mint.address)
+        .then(({ data }) => data),
+    ]);
 
     const [
       {
-        Trade: { Price, PriceInUSD },
+        pairs: [pair],
       },
-    ] = DEXTradeByTokens;
 
-    console.log("price=", Price, " price_in_usd=", PriceInUSD);
+      [rewardPair],
+    ] = data;
+
+    const { priceUsd, priceNative } = pair;
+    const { priceUsd: rewardPriceUsd, priceNative: rewardPriceNative } =
+      rewardPair;
+
+    const Price = Number(priceNative);
+    const PriceInUSD = Number(priceUsd);
+    const RewardPriceInUSD = Number(rewardPriceUsd);
 
     for (const position of positions) {
-      const { amountA: poolAmountA, amountB: poolAmountB } =
-        await PoolUtils.getAmountsFromLiquidity({
-          poolInfo,
-          epochInfo,
-          add: true,
-          slippage: 0,
-          liquidity: position.liquidity,
-          tickLower: position.tickLower,
-          tickUpper: position.tickUpper,
-        });
-
-      const amountA = new Decimal(poolAmountA.amount.toString())
+      const tokenAAmount = new Decimal(position.amountA.toString())
         .div(Math.pow(10, poolInfo.mintA.decimals))
         .toNumber();
-      const amountB = new Decimal(poolAmountB.amount.toString())
+      const tokenBAmount = new Decimal(position.amountB.toString())
         .div(Math.pow(10, poolInfo.mintB.decimals))
         .toNumber();
 
-      const amountAUSD = amountA * PriceInUSD;
-      const amountBUSD = amountB * (PriceInUSD / Price);
-      console.log("poolPrice=", poolInfo.price);
-      console.log("amountA=", amountA, "amountB=", amountB);
-      console.log("amountAUSD=", amountAUSD, "amountBUSD=", amountBUSD);
+      const tokenAAmountUSD = tokenAAmount * PriceInUSD;
+      const tokenBAmountUSD = tokenBAmount * (PriceInUSD / Price);
 
-      const rewards = position.rewardInfos.reduce(
-        (acc, curr) => acc.add(curr.rewardAmountOwed),
-        new BN(0)
+      const feeReward = position.rewardInfos.find(
+        (rewardInfo) =>
+          rewardInfo.mint.address !== poolInfo.mintB.address &&
+          rewardInfo.mint.address !== poolInfo.mintB.address
+      );
+      const feeAReward = position.rewardInfos.find(
+        (rewardInfo) => rewardInfo.mint.address === poolInfo.mintA.address
+      );
+      const feeBReward = position.rewardInfos.find(
+        (rewardInfo) => rewardInfo.mint.address === poolInfo.mintB.address
       );
 
-      console.log("reward total=", rewards.toString());
+      assert(feeAReward && feeBReward && feeReward, "");
 
-      const tokenFeesA = new Decimal(position.tokenFeesOwedA.toString())
-        .div(Math.pow(10, poolInfo.mintA.decimals))
-        .toNumber();
-      const tokenFeesB = new Decimal(position.tokenFeesOwedB.toString())
-        .div(Math.pow(10, poolInfo.mintB.decimals))
+      const tokenReward = new Decimal(feeReward.amount.toString())
+        .div(Math.pow(10, feeReward.mint.decimals))
         .toNumber();
 
-      const tokenFeesAUSD = tokenFeesA * PriceInUSD;
-      const tokenFeesBUSD = tokenFeesB * (PriceInUSD / Price);
+      const tokenAReward = new Decimal(feeAReward.amount.toString())
+        .div(Math.pow(10, feeAReward.mint.decimals))
+        .toNumber();
+      const tokenBReward = new Decimal(feeBReward.amount.toString())
+        .div(Math.pow(10, feeBReward.mint.decimals))
+        .toNumber();
 
-      console.log("tokenFeesA=", tokenFeesA, "tokenFeesB=", tokenFeesB);
-      console.log(
-        "tokenFeesAUSD=",
-        tokenFeesAUSD,
-        "tokenFeesBUSD=",
-        tokenFeesBUSD
-      );
+      const tokenARewardUSD = tokenAReward * PriceInUSD;
+      const tokenBRewardUSD = tokenBReward * (PriceInUSD / Price);
+      const tokenRewardUSD = tokenReward * RewardPriceInUSD;
 
       const positionWithUSDAmounts = {
-        amountA,
-        amountB,
-        amountAUSD,
-        amountBUSD,
-        tokenFeesAUSD,
-        tokenFeesBUSD,
-        ...position,
+        liquidity: position.liquidity,
+        poolId: position.poolId.toBase58(),
+        nftMint: position.nftMint.toBase58(),
+        tickLower: position.tickLower,
+        tickUpper: position.tickUpper,
+        rewardToken: {
+          reward: tokenReward,
+          rewardInUSD: tokenRewardUSD,
+          mint: feeReward.mint,
+        },
+        tokenA: {
+          amount: tokenAAmount,
+          reward: tokenAReward,
+          rewardInUSD: tokenARewardUSD,
+          amountInUSD: tokenAAmountUSD,
+          mint: feeAReward.mint,
+        },
+        tokenB: {
+          amount: tokenBAmount,
+          reward: tokenBReward,
+          rewardInUSD: tokenBRewardUSD,
+          amountInUSD: tokenBAmountUSD,
+          mint: feeBReward.mint,
+        },
       };
 
       const poolWithPositionsWithAmounts = poolsWithPositionsWithAmounts.get(

@@ -49,7 +49,7 @@ export const harvestRewards = async (
     },
   });
 
-  const { txIds } = await execute({ sequentially: true, sendAndConfirm: true,  });
+  const { txIds } = await execute({ sequentially: true, sendAndConfirm: true });
 
   console.log("[claim.harvesting.success] signatures=", txIds);
 

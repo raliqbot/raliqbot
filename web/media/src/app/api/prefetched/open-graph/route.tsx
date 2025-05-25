@@ -26,6 +26,7 @@ type PrefetchedData = {
     volume: number;
     volumeFee: number;
   };
+ 
 };
 
 export async function GET(request: NextRequest) {
@@ -37,7 +38,10 @@ export async function GET(request: NextRequest) {
     feeRate,
     tvl,
     day: { volume, volumeFee, apr },
+   
   } = JSON.parse(searchParams.get("data")) as PrefetchedData;
+
+  
 
   const stats = [
     {
@@ -64,6 +68,7 @@ export async function GET(request: NextRequest) {
       label: "24H APR",
       value: format("%s%", apr.toFixed(2)),
     },
+  
   ];
 
   return new ImageResponse(

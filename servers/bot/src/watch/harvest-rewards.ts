@@ -9,6 +9,4 @@ import { loadWallet } from "../controllers/wallets.controller";
 export const harvestRewards = async (
   db: Database,
   connection: web3.Connection
-) => {
-  
-};
+) => {};

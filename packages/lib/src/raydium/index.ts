@@ -8,4 +8,6 @@ export {
   getPortfolio,
   getPoolsWithPositions,
   getPoolWithPositionsByWallets,
+  parseRewardSignatures,
+  getPositions,
 } from "./clmm";

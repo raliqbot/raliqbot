@@ -6,15 +6,16 @@ import { getEnv } from "../../../env";
 import { loadWalletFromFile } from ".";
 import { BitQuery } from "../../../bitquery";
 import { getPortfolio } from "./get-portfolio";
+import { DexScreener } from "../../../dexscreener";
 
 describe("fetch wallet portfolio", () => {
   let wallet;
   let raydium: Raydium;
-  let bitquery: BitQuery;
+  let bitquery: DexScreener;
 
   beforeAll(async () => {
     wallet = loadWalletFromFile(getEnv("DEV_WALLET"));
-    bitquery = new BitQuery(getEnv("BITQUERY_API_KEY"));
+    bitquery = new DexScreener();
     raydium = await Raydium.load({
       owner: wallet,
       connection: new web3.Connection(web3.clusterApiUrl("mainnet-beta")),

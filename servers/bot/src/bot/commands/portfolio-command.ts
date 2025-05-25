@@ -5,7 +5,7 @@ import { CLMM_PROGRAM_ID, TickUtils } from "@raydium-io/raydium-sdk-v2";
 import { Input, Markup, type Context, type Telegraf } from "telegraf";
 
 import { atomic } from "../utils/atomic";
-import { bitquery } from "../../instances";
+import { dexscreemer } from "../../instances";
 import { buildMediaURL } from "../../core";
 import { cleanText, privateFunc, readFileSync } from "../utils";
 
@@ -19,7 +19,7 @@ export const portfolioCommand = (telegraf: Telegraf) => {
 
       let porfolios = await getPortfolio(
         context.raydium,
-        bitquery,
+        dexscreemer,
         CLMM_PROGRAM_ID
       );
 
@@ -30,7 +30,7 @@ export const portfolioCommand = (telegraf: Telegraf) => {
               const [, ...addresses] = text.split(/\s+/g);
               if (addresses.length > 0)
                 positions = positions.filter((position) =>
-                  addresses.includes(position.nftMint.toBase58())
+                  addresses.includes(position.nftMint)
                 );
             }
 
@@ -41,10 +41,13 @@ export const portfolioCommand = (telegraf: Telegraf) => {
             });
 
             return positions.map((position) => {
+              context.session.cachedPositions[position.nftMint] = position;
+
               const active =
                 currentTick >= position.tickLower ||
                 currentTick <= position.tickUpper;
-              const positionId = position.nftMint.toBase58();
+              const positionId = position.nftMint;
+
               const name = format(
                 "%/%",
                 poolInfo.mintA.symbol,
@@ -80,10 +83,11 @@ export const portfolioCommand = (telegraf: Telegraf) => {
                         volumeFee: poolInfo.day.volumeFee,
                       },
                       position: {
-                        amountAUSD: position.amountAUSD,
-                        amountBUSD: position.amountBUSD,
-                        tokenFeesAUSD: position.tokenFeesAUSD,
-                        tokenFeesBUSD: position.tokenFeesBUSD,
+                        tokenAmountA: position.tokenA.amountInUSD,
+                        tokenAmountB: position.tokenB.amountInUSD,
+                        tokenARewardInUSD: position.tokenA.rewardInUSD,
+                        tokenBRewardInUSD: position.tokenB.rewardInUSD,
+                        rewardInUSD: position.rewardToken.rewardInUSD,
                       },
                     }),
                   })
@@ -109,7 +113,7 @@ export const portfolioCommand = (telegraf: Telegraf) => {
                   reply_markup: Markup.inlineKeyboard([
                     [
                       Markup.button.callback(
-                        "☘️ Generate PNL Card",
+                        "☘️ Generate Reward Card",
                         format("pnl-%", positionId)
                       ),
                     ],

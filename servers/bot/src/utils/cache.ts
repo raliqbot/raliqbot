@@ -1,6 +1,7 @@
 import type { Context } from "telegraf";
 import { format } from "@raliqbot/shared";
-import { PoolFetchType } from "@raydium-io/raydium-sdk-v2";
+import { DexScreener, getPortfolio, getPositions } from "@raliqbot/lib";
+import { CLMM_PROGRAM_ID, PoolFetchType } from "@raydium-io/raydium-sdk-v2";
 
 export const getPoolInfoOrCachedPoolInfo = async (
   { raydium, session }: Context,
@@ -42,4 +43,44 @@ export const getPoolInfoOrCachedPoolInfo = async (
   if (pool) return [pool.poolInfo];
 
   throw new Error(format("poolInfo for id=% not found", address));
+};
+
+export const getPosiitionsOrCachedPositions = async (
+  context: Context,
+  dexscreemer: DexScreener,
+  programId = CLMM_PROGRAM_ID,
+  ...positionIds: string[]
+) => {
+  const positions = [];
+  const notFoundIds = [];
+
+  for (const positionId of positionIds) {
+    const cachedPosition = context.session.cachedPositions[positionId];
+    if (cachedPosition) positions.push(cachedPosition);
+    else notFoundIds.push(positionId);
+  }
+
+  if (notFoundIds.length > 0 || positionIds.length === 0) {
+    const poolWithPositions = await getPositions(
+      context.raydium,
+      programId,
+      ...notFoundIds
+    );
+
+    const porfolio = await getPortfolio(
+      context.raydium,
+      dexscreemer,
+      programId,
+      poolWithPositions
+    );
+
+    for (const { pool, positions } of porfolio) {
+      for (const position of positions) {
+        context.session.cachedPositions[position.nftMint] = position;
+        positions.push(position);
+      }
+    }
+  }
+
+  return positions;
 };

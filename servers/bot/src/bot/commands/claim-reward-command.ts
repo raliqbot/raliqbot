@@ -1,10 +1,12 @@
 import { format } from "@raliqbot/shared";
-import { harvestRewards } from "@raliqbot/lib";
+import { harvestRewards, parseRewardSignatures } from "@raliqbot/lib";
 import { Input, type Context, type Telegraf } from "telegraf";
 import { CLMM_PROGRAM_ID } from "@raydium-io/raydium-sdk-v2";
 
+import { db } from "../../instances";
 import { atomic } from "../utils/atomic";
 import { privateFunc, readFileSync } from "../utils";
+import { createClaims } from "controllers/claims.controller";
 
 export const claimRewardCommand = (telegraf: Telegraf) => {
   const onClaimReward = privateFunc(
@@ -33,14 +35,16 @@ export const claimRewardCommand = (telegraf: Telegraf) => {
         );
       }
 
-      const txIds = await harvestRewards(
+      const signatures = await harvestRewards(
         context.raydium,
         CLMM_PROGRAM_ID,
         positions
       );
 
-      if (txIds)
-        return context.replyWithAnimation(
+      console.log(signatures);
+
+      if (signatures.length > 0) {
+        await context.replyWithAnimation(
           Input.fromLocalFile("assets/reward.gif"),
           {
             caption: readFileSync(
@@ -48,7 +52,7 @@ export const claimRewardCommand = (telegraf: Telegraf) => {
               "utf-8"
             ).replace(
               "%list%",
-              txIds
+              signatures
                 .map((txId, index) =>
                   format(
                     "[Transaction %](%)",
@@ -61,7 +65,24 @@ export const claimRewardCommand = (telegraf: Telegraf) => {
             parse_mode: "MarkdownV2",
           }
         );
-      else
+
+        const tokenBalances = await parseRewardSignatures(
+          context.raydium,
+          ...signatures
+        );
+        const claims = tokenBalances.map((tokenBalances, index) => {
+          const position = positions[index];
+          const signature = signatures[index];
+
+          return {
+            signature,
+            position: position.poolId.toBase58(),
+            metadata: { tokenBalances },
+          };
+        });
+
+        return createClaims(db, ...claims);
+      } else
         return context.replyWithMarkdownV2(
           readFileSync("locale/en/claim-reward/no-reward.md", "utf-8")
         );

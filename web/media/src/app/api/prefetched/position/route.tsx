@@ -28,10 +28,11 @@ type PrefetchedData = {
     volumeFee: number;
   };
   position: {
-    amountAUSD: number;
-    amountBUSD: number;
-    tokenFeesAUSD: number;
-    tokenFeesBUSD: number;
+    tokenAmountA: number;
+    tokenAmountB: number;
+    tokenARewardInUSD: number;
+    tokenBRewardInUSD: number;
+    rewardInUSD: number;
   };
 };
 
@@ -44,8 +45,16 @@ export async function GET(request: NextRequest) {
     feeRate,
     tvl,
     day: { volume, volumeFee, apr },
-    position: { amountAUSD, amountBUSD, tokenFeesAUSD, tokenFeesBUSD },
+    position,
   } = JSON.parse(searchParams.get("data")) as PrefetchedData;
+
+  console.log(position);
+
+  console.log(
+    position.tokenARewardInUSD +
+      position.tokenBRewardInUSD +
+      position.rewardInUSD
+  );
 
   const stats = [
     {
@@ -76,7 +85,7 @@ export async function GET(request: NextRequest) {
       label: "Position",
       value: format(
         "$%s",
-        millify(amountAUSD + amountBUSD, {
+        millify(position.tokenAmountA + position.tokenAmountB, {
           precision: 2,
         })
       ),
@@ -85,9 +94,12 @@ export async function GET(request: NextRequest) {
       label: "Yield",
       value: format(
         "$%s",
-        millify(tokenFeesAUSD + tokenFeesBUSD, {
-          precision: 2,
-        })
+        millify(
+          position.tokenARewardInUSD +
+            position.tokenBRewardInUSD +
+            position.rewardInUSD,
+          { precision: 6 }
+        )
       ),
     },
   ];

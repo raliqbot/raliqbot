@@ -4,10 +4,14 @@ import { CLMM_PROGRAM_ID, DEVNET_PROGRAM_ID } from "@raydium-io/raydium-sdk-v2";
 
 export * from "./get-pool";
 export * from "./get-portfolio";
+export * from "./get-positions";
 export * from "./allocate-token";
 export * from "./create-pool-mint-ata";
+export * from "./parse-reward-signature";
 export * from "./get-pools-with-positions";
 export * from "./get-pool-with-positions-by-wallets";
+
+export const NATIVE_MINT = "So11111111111111111111111111111111111111112";
 
 const VALID_PROGRAM_ID = new Set([
   CLMM_PROGRAM_ID.toBase58(),
@@ -23,8 +27,6 @@ export const loadWalletFromFile = (file: string) => {
 };
 
 export const isNativeAddress = (value: string) =>
-  new web3.PublicKey(value).equals(
-    new web3.PublicKey("So11111111111111111111111111111111111111112")
-  );
+  new web3.PublicKey(value).equals(new web3.PublicKey(NATIVE_MINT));
 
 export const stableCoins = [];

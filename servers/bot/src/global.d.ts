@@ -14,6 +14,7 @@ import type {
   selectUserSchema,
   selectWalletSchema,
 } from "./db/zod";
+import { getPortfolio } from "@raliqbot/lib";
 
 type SessionData = {
   next?: string;
@@ -42,6 +43,10 @@ type SessionData = {
   messageId?: number;
   messageIdsStack: number[];
   searchCache: Record<string, ApiV3PoolInfoItem[]>;
+  cachedPositions: Record<
+    string,
+    Awaited<ReturnType<typeof getPortfolio>>[number]["positions"][number]
+  >;
   cachedPoolInfos: Record<string, ApiV3PoolInfoItem[]>;
 };
 

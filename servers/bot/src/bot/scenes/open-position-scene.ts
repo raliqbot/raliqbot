@@ -105,8 +105,10 @@ export const onTrending = atomic(async (context: Context) => {
         .replace(
           "%list%",
           poolInfos.data
-            .map((poolInfo, index) =>
-              readFileSync(
+            .map((poolInfo, index) => {
+              context.session.cachedPoolInfos[poolInfo.id] = [poolInfo];
+
+              return readFileSync(
                 "locale/en/trending/trending-token-detail.md",
                 "utf-8"
               )
@@ -148,8 +150,8 @@ export const onTrending = atomic(async (context: Context) => {
                 .replace(
                   "%apr%",
                   cleanText(poolInfo.day.apr.toFixed(2).toString())
-                )
-            )
+                );
+            })
             .join("\n")
         );
 
@@ -171,9 +173,6 @@ export const onTrending = atomic(async (context: Context) => {
             },
           }));
     }
-
-    for (const poolInfo of poolInfos.data)
-      context.session.cachedPoolInfos[poolInfo.id] = [poolInfo];
   }
 });
 

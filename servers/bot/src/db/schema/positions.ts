@@ -12,7 +12,7 @@ import { wallets } from "./wallets";
 export type PositionMetadata = {
   upperTick: number;
   lowerTick: number;
-  liquidity: string;
+  liquidity?: string;
   amountA: number;
   amountB: number;
   stopLossPercentage?: number;

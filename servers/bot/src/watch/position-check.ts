@@ -13,6 +13,7 @@ import {
 
 import { Database } from "../db";
 import { buildMediaURL } from "../core";
+import { dexscreemer } from "../instances";
 import { positions as _positions } from "../db/schema";
 import { readFileSync, cleanText } from "../bot/utils";
 import { loadWallet } from "../controllers/wallets.controller";
@@ -37,7 +38,7 @@ export const positionChecks = async (
     const raydium = await Raydium.load({ connection, owner: wallet });
     const poolsWithPositions = await getPortfolio(
       raydium,
-      bitquery,
+      dexscreemer,
       CLMM_PROGRAM_ID
     );
     for (const {
@@ -64,7 +65,7 @@ export const positionChecks = async (
         const active =
           currentTick >= position.tickLower ||
           currentTick <= position.tickUpper;
-        const positionId = position.nftMint.toBase58();
+        const positionId = position.nftMint;
         const name = format(
           "%/%",
           poolInfo.mintA.symbol,
@@ -87,7 +88,7 @@ export const positionChecks = async (
           await db
             .insert(_positions)
             .values({
-              id: position.nftMint.toBase58(),
+              id: position.nftMint,
               pool: poolInfo.id,
               wallet: dbWallet.id,
               enabled: active,
@@ -97,7 +98,6 @@ export const positionChecks = async (
                 amountB: 0,
                 lowerTick: position.tickLower,
                 upperTick: position.tickUpper,
-                liquidity: position.liquidity.toString(),
                 stopLossPercentage: 0.75,
               },
             })
@@ -131,10 +131,11 @@ export const positionChecks = async (
                     volumeFee: poolInfo.day.volumeFee,
                   },
                   position: {
-                    amountAUSD: position.amountAUSD,
-                    amountBUSD: position.amountBUSD,
-                    tokenFeesAUSD: position.tokenFeesAUSD,
-                    tokenFeesBUSD: position.tokenFeesBUSD,
+                    tokenAmountA: position.tokenA.amountInUSD,
+                    tokenAmountB: position.tokenB.amountInUSD,
+                    tokenARewardInUSD: position.tokenA.rewardInUSD,
+                    tokenBRewardInUSD: position.tokenB.rewardInUSD,
+                    rewardInUSD: position.rewardToken.rewardInUSD,
                   },
                 }),
               })
@@ -158,7 +159,7 @@ export const positionChecks = async (
               reply_markup: Markup.inlineKeyboard([
                 [
                   Markup.button.callback(
-                    "☘️ Generate PNL Card",
+                    "☘️ Generate Reward Card",
                     format("pnl-%", positionId)
                   ),
                 ],
@@ -180,7 +181,7 @@ export const positionChecks = async (
         }
       }
     }
-    
+
     await sleep(2000);
   }
 };
