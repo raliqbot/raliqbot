@@ -4,7 +4,7 @@ import Decimal from "decimal.js";
 import { web3 } from "@coral-xyz/anchor";
 import { Input, Markup, Telegraf } from "telegraf";
 import { format } from "@raliqbot/shared";
-import { BitQuery, getPortfolio } from "@raliqbot/lib";
+import { DexScreener, getPortfolio } from "@raliqbot/lib";
 import {
   CLMM_PROGRAM_ID,
   Raydium,
@@ -13,7 +13,6 @@ import {
 
 import { Database } from "../db";
 import { buildMediaURL } from "../core";
-import { dexscreemer } from "../instances";
 import { positions as _positions } from "../db/schema";
 import { readFileSync, cleanText } from "../bot/utils";
 import { loadWallet } from "../controllers/wallets.controller";
@@ -21,7 +20,7 @@ import { loadWallet } from "../controllers/wallets.controller";
 export const positionChecks = async (
   db: Database,
   bot: Telegraf,
-  bitquery: BitQuery,
+  dexscreemer: DexScreener,
   connection: web3.Connection
 ) => {
   const wallets = await db.query.wallets
@@ -41,6 +40,17 @@ export const positionChecks = async (
       dexscreemer,
       CLMM_PROGRAM_ID
     );
+    console.log(
+      "[user.wallet.pool.positions] ",
+      format(
+        "wallet=% poolId=% positions=%",
+        dbWallet.id,
+        poolsWithPositions.filter(
+          (poolWithPositions) => poolWithPositions.positions.length > 0
+        ).length
+      )
+    );
+
     for (const {
       pool: { poolInfo },
       positions,

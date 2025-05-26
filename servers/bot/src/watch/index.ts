@@ -2,7 +2,8 @@ import { nodeCron, type ScheduledTask } from "node-cron";
 import { web3 } from "@coral-xyz/anchor";
 
 import { getEnv } from "../core";
-import { bitquery, bot, db } from "../instances";
+import { bot, db, dexscreemer } from "../instances";
+/// this is important
 import { positionChecks } from "./position-check";
 
 export const main = async () => {
@@ -12,8 +13,8 @@ export const main = async () => {
     await positionChecks(
       db,
       bot,
-      bitquery,
-      new web3.Connection(getEnv("WATCH_RPC_URL"))
+      dexscreemer,
+      new web3.Connection(getEnv("RPC_URL"))
     ).catch((error) => console.error(error));
   });
 

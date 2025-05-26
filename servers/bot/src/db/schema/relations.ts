@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 
 import { users } from "./users";
 import { pools } from "./pools";
+import { claims } from "./claims";
 import { wallets } from "./wallets";
 import { settings } from "./settings";
 import { positions } from "./positions";
@@ -24,10 +25,18 @@ export const poolRelation = relations(pools, ({ many }) => ({
   positions: many(positions),
 }));
 
-export const positionsRelation = relations(positions, ({ one }) => ({
+export const positionsRelation = relations(positions, ({ one, many }) => ({
+  claims: many(claims),
   pool: one(pools, { fields: [positions.pool], references: [pools.id] }),
   wallet: one(wallets, {
     fields: [positions.wallet],
     references: [wallets.id],
+  }),
+}));
+
+export const claimsRelations = relations(claims, ({ one }) => ({
+  position: one(positions, {
+    fields: [claims.position],
+    references: [positions.id],
   }),
 }));

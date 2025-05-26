@@ -6,7 +6,7 @@ import { CLMM_PROGRAM_ID } from "@raydium-io/raydium-sdk-v2";
 import { db } from "../../instances";
 import { atomic } from "../utils/atomic";
 import { privateFunc, readFileSync } from "../utils";
-import { createClaims } from "controllers/claims.controller";
+import { createClaims } from "../../controllers/claims.controller";
 
 export const claimRewardCommand = (telegraf: Telegraf) => {
   const onClaimReward = privateFunc(
