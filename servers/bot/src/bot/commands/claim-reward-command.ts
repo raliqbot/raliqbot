@@ -76,7 +76,7 @@ export const claimRewardCommand = (telegraf: Telegraf) => {
 
           return {
             signature,
-            position: position.poolId.toBase58(),
+            position: position.nftMint.toBase58(),
             metadata: { tokenBalances },
           };
         });
