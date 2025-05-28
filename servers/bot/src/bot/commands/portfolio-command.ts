@@ -88,7 +88,8 @@ export const portfolioCommand = (telegraf: Telegraf) => {
                   );
               })
             )
-            .join("\n")
+            .join("\n"),
+          { link_preview_options: { is_disabled: true } }
         );
       } else
         return context.replyWithMarkdownV2(
