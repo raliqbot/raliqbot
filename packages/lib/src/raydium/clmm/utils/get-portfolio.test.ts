@@ -3,8 +3,7 @@ import { beforeAll, describe, test } from "bun:test";
 import { CLMM_PROGRAM_ID, Raydium } from "@raydium-io/raydium-sdk-v2";
 
 import { getEnv } from "../../../env";
-import { loadWalletFromFile } from ".";
-import { BitQuery } from "../../../bitquery";
+import { getPositions, loadWalletFromFile } from ".";
 import { getPortfolio } from "./get-portfolio";
 import { DexScreener } from "../../../dexscreener";
 
@@ -23,7 +22,17 @@ describe("fetch wallet portfolio", () => {
   });
 
   test("should return porfolio", async () => {
-    const portfolio = await getPortfolio(raydium, bitquery, CLMM_PROGRAM_ID);
+    const positions = await getPositions(
+      raydium,
+      CLMM_PROGRAM_ID,
+      "GVTWxNSSMqTCcCH4YLrMKKZzt5hM2nxYdBN7XMM8BbXo"
+    );
+    const portfolio = await getPortfolio(
+      raydium,
+      bitquery,
+      CLMM_PROGRAM_ID,
+      positions
+    );
     console.log(
       JSON.stringify(
         portfolio.map(({ positions }) => positions),

@@ -76,7 +76,10 @@ export const getPosiitionsOrCachedPositions = async (
 
     for (const { pool, positions } of porfolio) {
       for (const position of positions) {
-        context.session.cachedPositions[position.nftMint] = position;
+        context.session.cachedPositions[position.nftMint] = {
+          ...position,
+          poolInfo: pool.poolInfo,
+        };
         positions.push(position);
       }
     }

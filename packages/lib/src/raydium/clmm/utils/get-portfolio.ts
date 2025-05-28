@@ -10,6 +10,16 @@ import type {
 import { getPositions } from "./get-positions";
 import type { DexScreener } from "../../../dexscreener";
 
+function isAlmostEqual(
+  a: number | string,
+  b: number | string,
+  epsilon = 0.1
+): boolean {
+  const numA = typeof a === "string" ? parseFloat(a) : a;
+  const numB = typeof b === "string" ? parseFloat(b) : b;
+  return Math.abs(numA - numB) <= epsilon;
+}
+
 export const getPortfolio = async (
   raydium: Raydium,
   dexscreener: DexScreener,
@@ -28,7 +38,7 @@ export const getPortfolio = async (
         poolInfo: ApiV3PoolInfoConcentratedItem;
       };
       positions: {
-        liquidity: BN,
+        liquidity: BN;
         tickLower: number;
         tickUpper: number;
         poolId: string;
@@ -79,8 +89,7 @@ export const getPortfolio = async (
     ] = data;
 
     const { priceUsd, priceNative } = pair;
-    const { priceUsd: rewardPriceUsd, priceNative: rewardPriceNative } =
-      rewardPair;
+    const { priceUsd: rewardPriceUsd } = rewardPair;
 
     const Price = Number(priceNative);
     const PriceInUSD = Number(priceUsd);
@@ -94,8 +103,14 @@ export const getPortfolio = async (
         .div(Math.pow(10, poolInfo.mintB.decimals))
         .toNumber();
 
-      const tokenAAmountUSD = tokenAAmount * PriceInUSD;
-      const tokenBAmountUSD = tokenBAmount * (PriceInUSD / Price);
+      const stableCoin = isAlmostEqual(priceNative, priceUsd);
+
+      const tokenAAmountUSD = stableCoin
+        ? tokenAAmount * PriceInUSD
+        : tokenAAmount * (PriceInUSD / Price);
+      const tokenBAmountUSD = stableCoin
+        ? tokenBAmount * (PriceInUSD / Price)
+        : tokenBAmount * PriceInUSD;
 
       const feeReward = position.rewardInfos.find(
         (rewardInfo) =>
@@ -122,8 +137,8 @@ export const getPortfolio = async (
         .div(Math.pow(10, feeBReward.mint.decimals))
         .toNumber();
 
-      const tokenARewardUSD = tokenAReward * PriceInUSD;
-      const tokenBRewardUSD = tokenBReward * (PriceInUSD / Price);
+      const tokenARewardUSD = tokenAReward * (PriceInUSD / Price);
+      const tokenBRewardUSD = tokenBReward * PriceInUSD;
       const tokenRewardUSD = tokenReward * RewardPriceInUSD;
 
       const positionWithUSDAmounts = {

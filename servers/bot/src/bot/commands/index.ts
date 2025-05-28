@@ -9,6 +9,7 @@ import { portfolioCommand } from "./portfolio-command";
 import { claimRewardCommand } from "./claim-reward-command";
 import { openPositionCommand } from "./open-position-command";
 import { closePositionCommand } from "./close-position-command";
+import { portfolioDetailCommand } from "./portfolio-detail-command";
 
 export const registerCommands = async (telegraf: Telegraf) => {
   helpCommand(telegraf);
@@ -20,6 +21,7 @@ export const registerCommands = async (telegraf: Telegraf) => {
   claimRewardCommand(telegraf);
   openPositionCommand(telegraf);
   closePositionCommand(telegraf);
+  portfolioDetailCommand(telegraf);
 };
 
 export default registerCommands;

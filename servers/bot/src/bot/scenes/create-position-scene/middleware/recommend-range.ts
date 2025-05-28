@@ -1,8 +1,9 @@
 import moment from "moment";
-import { Context } from "telegraf";
+import { XiorError } from "xior";
+import type { Context } from "telegraf";
 
 import { bitquery } from "../../../../instances";
-import { XiorError } from "xior";
+import { recommendRange as _recommendRange } from "@raliqbot/lib";
 
 export const recommendRange = async (
   context: Context,
@@ -37,11 +38,15 @@ export const recommendRange = async (
       } = response;
 
       const priceIncrement = info.price - Price;
-      let rawRange = Math.abs(priceIncrement / Price);
-
-      if (rawRange < 0.1) rawRange = 0.1 + rawRange;
-      context.session.createPosition.range = [rawRange, rawRange * 2];
-    }
+      context.session.createPosition.range = _recommendRange(
+        info.config.defaultRangePoint,
+        priceIncrement / Price
+      );
+    } else
+      context.session.createPosition.range = _recommendRange(
+        info.config.defaultRangePoint,
+        info.config.defaultRange
+      );
   }
 
   return next();

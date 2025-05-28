@@ -4,6 +4,7 @@ import { atomic } from "../utils/atomic";
 import { connection } from "../../instances";
 import { cleanText, readFileSync } from "../utils";
 import { onOpenPosition } from "./open-position-command";
+import { onPortfolioDetail } from "./portfolio-detail-command";
 import { onCreatePosition } from "../actions/create-position-action";
 
 export const startCommand = (telegraf: Telegraf) => {
@@ -14,6 +15,8 @@ export const startCommand = (telegraf: Telegraf) => {
         if (/open/.test(context.message.text)) return onOpenPosition(context);
         if (/createPosition/.test(context.message.text))
           return onCreatePosition(context);
+        if (/portfolioDetail/.test(context.message.text))
+          return onPortfolioDetail(context);
       }
 
       if (context.chat.type === "private") {

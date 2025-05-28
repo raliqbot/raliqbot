@@ -27,7 +27,7 @@ describe("open position on raydium", async () => {
       slippage: 0.05,
       rangeBias: false,
       range: [0.15, 0.15],
-      poolId: "FZ8MJvdTPbp8juhtFCCzb7LsKunhexgzShGQ59SUJkNL",
+      poolId: "FDvzCikcaFEUYeVdkBx9osLs92XhACXTrpooDNRvx8gY",
       input: {
         mint: "So11111111111111111111111111111111111111112",
         amount: 0.1,

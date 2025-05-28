@@ -24,7 +24,7 @@ export const changeSlippageScene = new Scenes.WizardScene(
       if (Number.isNaN(slippage)) return context.scene.leave();
 
       const [settings] = await updateSettingsByUser(db, context.user.id, {
-        slippage: String(slippage > 1 ? slippage / 100 : slippage),
+        slippage: String(slippage / 100),
       });
       context.user.settings = settings;
 

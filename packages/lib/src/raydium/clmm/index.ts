@@ -3,12 +3,13 @@ export { createPosition } from "./create-position";
 export { harvestRewards } from "./harvest-rewards";
 
 export {
-  isValidClmm,
   getPool,
+  isValidClmm,
   getPositions,
-  createPoolMintAta,
+  recommendRange,
   getPortfolio,
+  createPoolMintAta,
   getPoolsWithPositions,
-  getPoolWithPositionsByWallets,
   parseRewardSignatures,
+  getPoolWithPositionsByWallets,
 } from "./utils";

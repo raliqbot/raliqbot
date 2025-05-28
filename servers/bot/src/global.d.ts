@@ -45,7 +45,9 @@ type SessionData = {
   searchCache: Record<string, ApiV3PoolInfoItem[]>;
   cachedPositions: Record<
     string,
-    Awaited<ReturnType<typeof getPortfolio>>[number]["positions"][number]
+    Awaited<ReturnType<typeof getPortfolio>>[number]["positions"][number] & {
+      poolInfo: ApiV3PoolInfoConcentratedItem;
+    }
   >;
   cachedPoolInfos: Record<string, ApiV3PoolInfoItem[]>;
 };

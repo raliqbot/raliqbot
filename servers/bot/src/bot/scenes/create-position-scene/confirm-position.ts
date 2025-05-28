@@ -11,10 +11,8 @@ export const confirmPosition = async (
     context.session.createPosition;
 
   if (info && amount && algorithm) {
-    const [tickLower, tickUpper] = range.map((range) =>
-      (range * 100).toFixed(2)
-    );
-    const formatedRange = `-${tickLower}%, +${tickUpper}%`;
+    const [tickLower, tickUpper] = range.map((range) => range * 100);
+    const formatedRange = `\[${tickLower}\%,${tickUpper}\%\]`;
     const name = format("%/%", info.mintA.symbol, info.mintB.symbol).replace(
       /\s/g,
       String()

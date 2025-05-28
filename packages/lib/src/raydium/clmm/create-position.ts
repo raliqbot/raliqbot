@@ -32,8 +32,8 @@ export const createPosition = async (
     onOpenPosition?: (signature: string, nftMint: string) => void;
   }
 ) => {
-  const devFees = params.input.amount * 0.05;
-  params.input.amount = params.input.amount * 0.95;
+  const devFees = params.input.amount * 0.005;
+  params.input.amount = params.input.amount * 0.995;
 
   const { skipSwapA = false, skipSwapB = false } = params;
   const epochInfo = await raydium.fetchEpochInfo();

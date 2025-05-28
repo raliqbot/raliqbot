@@ -41,8 +41,6 @@ export const claimRewardCommand = (telegraf: Telegraf) => {
         positions
       );
 
-      console.log(signatures);
-
       if (signatures.length > 0) {
         await context.replyWithAnimation(
           Input.fromLocalFile("assets/reward.gif"),
