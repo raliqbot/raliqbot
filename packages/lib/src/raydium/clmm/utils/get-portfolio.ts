@@ -104,7 +104,6 @@ export const getPortfolio = async (
         .toNumber();
 
       const stableCoin = isAlmostEqual(priceNative, priceUsd);
-      console.log('stableCoin', stableCoin)
 
       const tokenAAmountUSD = stableCoin
         ? tokenAAmount * PriceInUSD
@@ -138,8 +137,12 @@ export const getPortfolio = async (
         .div(Math.pow(10, feeBReward.mint.decimals))
         .toNumber();
 
-      const tokenARewardUSD = tokenAReward * (PriceInUSD / Price);
-      const tokenBRewardUSD = tokenBReward * PriceInUSD;
+      const tokenARewardUSD = stableCoin
+        ? tokenAReward * PriceInUSD
+        : tokenAReward * (PriceInUSD / Price);
+      const tokenBRewardUSD = stableCoin
+        ? tokenBReward * (PriceInUSD / Price)
+        : tokenBReward * PriceInUSD;
       const tokenRewardUSD = tokenReward * RewardPriceInUSD;
 
       const positionWithUSDAmounts = {

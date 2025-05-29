@@ -19,15 +19,12 @@ describe("fetch wallet portfolio", () => {
     raydium = await Raydium.load({
       owner: wallet,
       disableLoadToken: true,
-      
+
       connection: new web3.Connection(web3.clusterApiUrl("mainnet-beta")),
     });
   });
 
-
   test("should return porfolio", async () => {
-  raydium.api.api = axios;
-
     const positions = await getPositions(
       raydium,
       CLMM_PROGRAM_ID,
