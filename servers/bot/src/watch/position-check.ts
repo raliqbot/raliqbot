@@ -1,8 +1,8 @@
 import { sleep } from "bun";
 import { eq } from "drizzle-orm";
 import Decimal from "decimal.js";
+import { Telegraf } from "telegraf";
 import { web3 } from "@coral-xyz/anchor";
-import { Input, Markup, Telegraf } from "telegraf";
 import { format } from "@raliqbot/shared";
 import { DexScreener, getPortfolio } from "@raliqbot/lib";
 import {
@@ -12,11 +12,9 @@ import {
 } from "@raydium-io/raydium-sdk-v2";
 
 import { Database } from "../db";
-import { buildMediaURL } from "../core";
-import { positions as _positions } from "../db/schema";
-import { readFileSync, cleanText } from "../bot/utils";
-import { loadWallet } from "../controllers/wallets.controller";
 import { positionAlert } from "./position-alert";
+import { positions as _positions } from "../db/schema";
+import { loadWallet } from "../controllers/wallets.controller";
 
 export const positionChecks = async (
   db: Database,
@@ -45,30 +43,21 @@ export const positionChecks = async (
         dexscreemer,
         CLMM_PROGRAM_ID
       );
-      console.log(
-        "[user.wallet.pool.positions] ",
-        format(
-          "wallet=% poolId=% positions=%",
-          dbWallet.id,
-          poolsWithPositions.filter(
-            (poolWithPositions) => poolWithPositions.positions.length > 0
-          ).length
-        )
-      );
 
       for (const {
         pool: { poolInfo },
         positions,
       } of poolsWithPositions) {
-        console.log(
-          "[user.wallet.pool.positions] ",
-          format(
-            "wallet=% poolId=% positions=%",
-            dbWallet.id,
-            poolInfo.id,
-            positions.length
-          )
-        );
+        if (positions.length > 0)
+          console.log(
+            "[user.wallet.pool.positions] ",
+            format(
+              "wallet=% poolId=% positions=%",
+              dbWallet.id,
+              poolInfo.id,
+              positions.length
+            )
+          );
 
         for (const position of positions) {
           const { tick } = TickUtils.getPriceAndTick({
