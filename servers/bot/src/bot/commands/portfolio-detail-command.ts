@@ -15,10 +15,8 @@ export const onPortfolioDetail = privateFunc(
       context.message && "text" in context.message
         ? context.message.text
         : undefined;
-    console.log(text);
     if (text) {
       const [, ...addresses] = text.replace(/start/, String()).split(/-|_/g);
-      console.log(addresses);
       const positions = await getPosiitionsOrCachedPositions(
         context,
         dexscreemer,

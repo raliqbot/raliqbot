@@ -13,7 +13,7 @@ import type { DexScreener } from "../../../dexscreener";
 function isAlmostEqual(
   a: number | string,
   b: number | string,
-  epsilon = 0.1
+  epsilon = 1
 ): boolean {
   const numA = typeof a === "string" ? parseFloat(a) : a;
   const numB = typeof b === "string" ? parseFloat(b) : b;
@@ -104,6 +104,7 @@ export const getPortfolio = async (
         .toNumber();
 
       const stableCoin = isAlmostEqual(priceNative, priceUsd);
+      console.log('stableCoin', stableCoin)
 
       const tokenAAmountUSD = stableCoin
         ? tokenAAmount * PriceInUSD

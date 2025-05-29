@@ -1,3 +1,4 @@
+import axios from "axios";
 import { web3 } from "@coral-xyz/anchor";
 import { beforeAll, describe, test } from "bun:test";
 import { CLMM_PROGRAM_ID, Raydium } from "@raydium-io/raydium-sdk-v2";
@@ -17,15 +18,20 @@ describe("fetch wallet portfolio", () => {
     bitquery = new DexScreener();
     raydium = await Raydium.load({
       owner: wallet,
+      disableLoadToken: true,
+      
       connection: new web3.Connection(web3.clusterApiUrl("mainnet-beta")),
     });
   });
 
+
   test("should return porfolio", async () => {
+  raydium.api.api = axios;
+
     const positions = await getPositions(
       raydium,
       CLMM_PROGRAM_ID,
-      "GVTWxNSSMqTCcCH4YLrMKKZzt5hM2nxYdBN7XMM8BbXo"
+      "CN7UCncok5NrfRu1hikpjWvTomJrDHnPHzrVRTaZSXDk"
     );
     const portfolio = await getPortfolio(
       raydium,
