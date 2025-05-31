@@ -1,5 +1,6 @@
 export {
-  getPool,
+  getPoolById,
+  getPoolByMints,
   isValidClmm,
   getPortfolio,
   getPositions,
@@ -11,4 +12,5 @@ export {
   getPoolsWithPositions,
   parseRewardSignatures,
   getPoolWithPositionsByWallets,
+  convertTokenBalanceChangesToSOL,
 } from "./clmm";

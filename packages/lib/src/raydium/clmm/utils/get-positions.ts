@@ -19,7 +19,7 @@ import { getPoolsWithPositions } from "./get-pools-with-positions";
 export const getPositions = async (
   raydium: Raydium,
   programId: web3.PublicKey,
-  ...positionIds: string[]
+  ...positionIds: (web3.PublicKey | string)[]
 ) => {
   if (positionIds.length === 0) {
     let tokenAccounts = raydium.account.tokenAccounts;
@@ -62,15 +62,12 @@ export const getPositions = async (
         poolInfo: ApiV3PoolInfoConcentratedItem;
         poolKeys?: ClmmKeys;
       };
-      positions: (Omit<
-        ReturnType<typeof PositionInfoLayout.decode>,
-        "rewardInfos" | "tokenFeesOwedA" | "tokenFeesOwedB"
-      > & {
+      positions: (ReturnType<typeof PositionInfoLayout.decode> & {
         amountA: BN;
         amountB: BN;
         priceLower: Decimal;
         priceUpper: Decimal;
-        rewardInfos: { mint: ApiV3Token; amount: BN }[];
+        detailedRewardInfos: { mint: ApiV3Token; amount: BN }[];
       })[];
     }
   > = new Map();
@@ -217,11 +214,11 @@ export const getPositions = async (
         poolsWithPositionsWithAmountAndRewardInfo.get(poolInfo.id);
       const data = {
         ...position,
-        rewardInfos,
         amountA: amountA.amount,
         amountB: amountB.amount,
         priceLower: priceLower.price,
         priceUpper: priceUpper.price,
+        detailedRewardInfos: rewardInfos,
       };
 
       if (poolWithPositionsWithAmountAndRewardInfo)

@@ -5,7 +5,7 @@ import {
   Raydium,
 } from "@raydium-io/raydium-sdk-v2";
 
-import { getPool } from "./get-pool";
+import { getPoolById } from "./get-pool-by-id";
 
 export const getPoolWithPositionsByWallets = async (
   connection: web3.Connection,
@@ -37,7 +37,7 @@ export const getPoolWithPositionsByWallets = async (
         );
         if (innerCache) innerCache.positions.push(position);
       } else {
-        const pool = await getPool(raydium, position.poolId);
+        const pool = await getPoolById(raydium, position.poolId);
         caches.set(position.poolId.toBase58(), {
           pool,
           walletAndPositions: new Map([

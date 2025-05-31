@@ -31,25 +31,20 @@ export const parseRewardSignatures = async (
         for (let index = 0; index < preTokenBalances.length; index++) {
           const { uiTokenAmount, mint } = preTokenBalances[index];
 
-          if (!mintWithTokenBalances[mint])
-            mintWithTokenBalances[mint] = {
-              pre: BigInt(0),
-              post: BigInt(0),
-            };
+          if (mintWithTokenBalances[mint]) continue;
 
-          mintWithTokenBalances[mint].pre += BigInt(uiTokenAmount.amount);
+          mintWithTokenBalances[mint] = {
+            post: BigInt(0),
+            pre: BigInt(uiTokenAmount.amount),
+          };
         }
       }
 
       if (postTokenBalances) {
         for (let index = 0; index < postTokenBalances.length; index++) {
           const { uiTokenAmount, mint } = postTokenBalances[index];
+          if (mintWithTokenBalances[mint].post > 0) continue;
 
-          if (!mintWithTokenBalances[mint])
-            mintWithTokenBalances[mint] = {
-              pre: BigInt(0),
-              post: BigInt(0),
-            };
           mintWithTokenBalances[mint].post += BigInt(uiTokenAmount.amount);
         }
       }
@@ -58,7 +53,9 @@ export const parseRewardSignatures = async (
         mintWithTokenBalances
       )) {
         const delta = post - pre;
-        tokenBalances[mint] = (tokenBalances[mint] || BigInt(0)) + delta;
+        const balanceChange = (tokenBalances[mint] || BigInt(0)) + delta;
+        if (balanceChange > 0) tokenBalances[mint] = balanceChange;
+        else tokenBalances[mint] = balanceChange * BigInt(-1);
       }
 
       for (

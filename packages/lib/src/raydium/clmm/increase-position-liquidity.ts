@@ -10,7 +10,7 @@ import {
   TxVersion,
 } from "@raydium-io/raydium-sdk-v2";
 
-import { isValidClmm } from "./utils";
+import { getPoolById, isValidClmm } from "./utils";
 
 export const increatePositionLiquidity = async (
   raydium: Raydium,
@@ -20,24 +20,7 @@ export const increatePositionLiquidity = async (
   input: { mint: string; amount: number },
   slippage: number
 ) => {
-  let poolKeys: ClmmKeys | undefined;
-  const poolId = position.poolId.toBase58();
-  let poolInfo: ApiV3PoolInfoConcentratedItem | undefined = undefined;
-
-  if (raydium.cluster === "mainnet") {
-    const pools = await raydium.api.fetchPoolById({ ids: poolId });
-    for (const pool of pools)
-      if (isValidClmm(pool.programId)) {
-        poolInfo = pool as ApiV3PoolInfoConcentratedItem;
-        break;
-      }
-  } else {
-    const pool = await raydium.clmm.getPoolInfoFromRpc(poolId);
-    poolInfo = pool.poolInfo;
-    poolKeys = pool.poolKeys;
-  }
-
-  assert(poolInfo, format("target pool=% is not a CLMM pool", poolId));
+  const { poolInfo, poolKeys } = await getPoolById(raydium, position.poolId);
 
   const baseIn = poolInfo.mintA.address === input.mint;
   const amount = new BN(

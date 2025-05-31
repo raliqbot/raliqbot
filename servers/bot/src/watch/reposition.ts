@@ -3,7 +3,7 @@ import moment from "moment";
 import { Telegraf } from "telegraf";
 import { web3 } from "@coral-xyz/anchor";
 import { and, eq, lte } from "drizzle-orm";
-import { getPool, getPortfolio } from "@raliqbot/lib";
+import { getPortfolio } from "@raliqbot/lib";
 import {
   type ApiV3PoolInfoConcentratedItem,
   TickUtils,
@@ -27,5 +27,5 @@ export const reposition = async (
     user: z.infer<typeof selectUserSchema>;
   }
 ) => {
-  // first close position 
+  // first close position
 };

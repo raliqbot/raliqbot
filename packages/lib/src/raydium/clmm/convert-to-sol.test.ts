@@ -5,8 +5,9 @@ import { CLMM_PROGRAM_ID, Raydium } from "@raydium-io/raydium-sdk-v2";
 import { getEnv } from "../../env";
 import { closePosition } from "./close-position";
 import { getPositions, loadWalletFromFile } from "./utils";
+import { convertTokenBalanceChangesToSOL } from "./convert-to-sol";
 
-describe("close-position-test", () => {
+describe("", () => {
   let raydium: Raydium;
 
   beforeAll(async () => {
@@ -18,13 +19,13 @@ describe("close-position-test", () => {
     });
   });
 
-  test("close position", async () => {
-    let poolWithPositions = await getPositions(
+  test("swap to solana from signatures", async () => {
+    let signatures = await convertTokenBalanceChangesToSOL(
       raydium,
-      CLMM_PROGRAM_ID,
-      "CN7UCncok5NrfRu1hikpjWvTomJrDHnPHzrVRTaZSXDk"
+      0.1,
+      "PtSbSY2PjFAedXBZcQWmzYaLSe4BRzKdZZQxKp8kYj1jEYsWrdVe3MYnMfxKotzZHD9Ubcn4SM2coRrR2KjeubN"
     );
-    const signature = await closePosition(raydium, poolWithPositions);
-    console.log(signature);
+
+    console.log(signatures);
   }, 5000000);
 });

@@ -6,7 +6,7 @@ import {
   Raydium,
 } from "@raydium-io/raydium-sdk-v2";
 
-import { getPool } from "./get-pool";
+import { getPoolById } from "./get-pool-by-id";
 
 export const getPoolsWithPositions = async (
   raydium: Raydium,
@@ -34,7 +34,7 @@ export const getPoolsWithPositions = async (
     );
     if (poolWithPositions) poolWithPositions.positions.push(position);
     else {
-      const pool = await getPool(raydium, position.poolId.toBase58());
+      const pool = await getPoolById(raydium, position.poolId.toBase58());
       poolsWithPositions.set(position.poolId.toBase58(), {
         pool,
         positions: [position],

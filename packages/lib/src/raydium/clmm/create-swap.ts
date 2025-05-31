@@ -23,10 +23,14 @@ type BasedCreateSwapParams = {
 
 type CreateSwapParams = (
   | {
-      outputMint: string;
-      input: { mint: string; amount: number };
+      outputMint: string | web3.PublicKey;
+      input: { mint: string | web3.PublicKey; amount: number | bigint };
     }
-  | { input: { amount: number }; poolId: string; side: "MintA" | "MintB" }
+  | {
+      input: { amount: number | bigint };
+      poolId: string;
+      side: "MintA" | "MintB";
+    }
 ) &
   BasedCreateSwapParams;
 
@@ -61,7 +65,11 @@ export const createSwap = async (
     );
 
     assert(
-      [poolInfo.mintA.address, poolInfo.mintB.address].includes(input.mint),
+      [poolInfo.mintA.address, poolInfo.mintB.address].includes(
+        input.mint instanceof web3.PublicKey
+          ? input.mint.toBase58()
+          : input.mint
+      ),
       format(
         "pool for mint1=% and mint2=% not found.",
         poolInfo.mintA.address,
@@ -79,11 +87,14 @@ export const createSwap = async (
     baseIn = params.side === "MintA";
   }
 
-  const amountIn = new BN(
-    new Decimal(input.amount)
-      .mul(Math.pow(10, poolInfo[baseIn ? "mintA" : "mintB"].decimals))
-      .toFixed(0)
-  );
+  const amountIn =
+    typeof input.amount === "bigint"
+      ? new BN(input.amount.toString())
+      : new BN(
+          new Decimal(input.amount)
+            .mul(Math.pow(10, poolInfo[baseIn ? "mintA" : "mintB"].decimals))
+            .toFixed(0)
+        );
 
   const tickArrayCache = tickCache[poolInfo.id];
 

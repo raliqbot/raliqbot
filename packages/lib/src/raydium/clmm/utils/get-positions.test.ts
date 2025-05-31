@@ -30,7 +30,7 @@ describe("get position", () => {
     console.log("pool=", pool.poolInfo.id);
     console.log("amountA=", position.amountA.toString());
     console.log("amountB", position.amountB.toString());
-    for (const rewardInfo of position.rewardInfos)
+    for (const rewardInfo of position.detailedRewardInfos)
       console.log(rewardInfo.amount.toString(), rewardInfo.mint.symbol);
   });
 });

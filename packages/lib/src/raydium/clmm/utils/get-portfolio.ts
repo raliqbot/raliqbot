@@ -112,15 +112,15 @@ export const getPortfolio = async (
         ? tokenBAmount * (PriceInUSD / Price)
         : tokenBAmount * PriceInUSD;
 
-      const feeReward = position.rewardInfos.find(
+      const feeReward = position.detailedRewardInfos.find(
         (rewardInfo) =>
           rewardInfo.mint.address !== poolInfo.mintB.address &&
           rewardInfo.mint.address !== poolInfo.mintB.address
       );
-      const feeAReward = position.rewardInfos.find(
+      const feeAReward = position.detailedRewardInfos.find(
         (rewardInfo) => rewardInfo.mint.address === poolInfo.mintA.address
       );
-      const feeBReward = position.rewardInfos.find(
+      const feeBReward = position.detailedRewardInfos.find(
         (rewardInfo) => rewardInfo.mint.address === poolInfo.mintB.address
       );
 

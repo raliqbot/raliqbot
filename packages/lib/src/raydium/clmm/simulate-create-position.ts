@@ -5,7 +5,7 @@ import { BN, web3 } from "@coral-xyz/anchor";
 import { PoolUtils, type Raydium, TickUtils } from "@raydium-io/raydium-sdk-v2";
 
 import { createPoolMintAta } from "./utils";
-import { getPool } from "./utils/get-pool";
+import { getPoolById } from "./utils/get-pool-by-id";
 import { getAllocateTokens } from "./utils/allocate-token";
 import { simulateCreateSwap } from "./simulate-create-swap";
 
@@ -37,7 +37,7 @@ export const simulateCreatePosition = async (
   const singleSided: "MintA" | "MintB" | undefined =
     startPercentage === 0 ? "MintA" : endPercentage === 0 ? "MintB" : undefined;
 
-  const { poolInfo, poolKeys } = await getPool(raydium, poolId);
+  const { poolInfo, poolKeys } = await getPoolById(raydium, poolId);
   const ataSignature = await createPoolMintAta(raydium, poolInfo);
 
   if (ataSignature)

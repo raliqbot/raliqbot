@@ -2,7 +2,8 @@ import { readFileSync } from "fs";
 import { web3 } from "@coral-xyz/anchor";
 import { CLMM_PROGRAM_ID, DEVNET_PROGRAM_ID } from "@raydium-io/raydium-sdk-v2";
 
-export * from "./get-pool";
+export * from "./get-pool-by-id";
+export * from "./get-pool-by-mints";
 export * from "./range-math";
 export * from "./get-portfolio";
 export * from "./get-positions";

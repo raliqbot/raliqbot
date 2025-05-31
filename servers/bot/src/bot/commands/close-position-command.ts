@@ -1,6 +1,10 @@
 import { format } from "@raliqbot/shared";
 import { Context, Telegraf } from "telegraf";
-import { closePosition } from "@raliqbot/lib";
+import {
+  closePosition,
+  convertTokenBalanceChangesToSOL,
+  getPositions,
+} from "@raliqbot/lib";
 import { CLMM_PROGRAM_ID } from "@raydium-io/raydium-sdk-v2";
 
 import { atomic } from "../utils/atomic";
@@ -21,52 +25,48 @@ export const closePositionCommand = (telegraf: Telegraf) => {
       if (text) {
         const [, ...addresses] = text.split(/\s|-/g);
 
-        let positions = await context.raydium.clmm.getOwnerPositionInfo({
-          programId: CLMM_PROGRAM_ID,
-        });
-
-        positions = positions.filter((position) =>
-          addresses
-            .map((address) => address.toLowerCase())
-            .find(
-              (address) =>
-                address === position.nftMint.toBase58().toLowerCase() ||
-                address === position.poolId.toBase58().toLowerCase()
-            )
-        );
-
-        const signatures = await closePosition(
+        let positions = await getPositions(
           context.raydium,
           CLMM_PROGRAM_ID,
-
-          positions
+          ...addresses
         );
-        if (signatures)
-          return Promise.all([
-            context.replyWithMarkdownV2(
-              readFileSync(
-                "locale/en/close-position/position-closed.md",
-                "utf-8"
-              ).replace(
-                "%list%",
-                signatures
-                  .map((signature, index) =>
-                    format(
-                      "[Transaction %](%)",
-                      index + 1,
-                      format("https://solscan.io/tx/%", signature)
-                    )
+
+        const signatures = await closePosition(context.raydium, positions);
+
+        if (signatures) {
+          await context.deleteMessage();
+
+          signatures.push(
+            ...(await convertTokenBalanceChangesToSOL(
+              context.raydium,
+              Number(context.user.settings.slippage),
+              ...signatures
+            ))
+          );
+
+          return context.replyWithMarkdownV2(
+            readFileSync(
+              "locale/en/close-position/position-closed.md",
+              "utf-8"
+            ).replace(
+              "%list%",
+              signatures
+                .map((signature, index) =>
+                  format(
+                    "[Transaction %](%)",
+                    index + 1,
+                    format("https://solscan.io/tx/%", signature)
                   )
-                  .join(" | ")
-              ),
-              {
-                link_preview_options: {
-                  is_disabled: true,
-                },
-              }
+                )
+                .join(" | ")
             ),
-            context.deleteMessage(),
-          ]);
+            {
+              link_preview_options: {
+                is_disabled: true,
+              },
+            }
+          );
+        }
       }
 
       return context.replyWithMarkdownV2(

@@ -12,16 +12,16 @@ import {
 
 import { isValidClmm } from ".";
 
-export function getPool(
+export function getPoolByMints(
   raydium: Raydium,
-  poolId: string | web3.PublicKey
+  mints: (string | web3.PublicKey)[]
 ): Promise<{
   poolInfo: ApiV3PoolInfoConcentratedItem;
   poolKeys: ClmmKeys | undefined;
 }>;
-export function getPool(
+export function getPoolByMints(
   raydium: Raydium,
-  poolId: string | web3.PublicKey,
+  mints: (string | web3.PublicKey)[],
   withExtraInfo: boolean
 ): Promise<{
   poolInfo: ApiV3PoolInfoConcentratedItem;
@@ -29,9 +29,9 @@ export function getPool(
   clmmPoolInfo: ComputeClmmPoolInfo;
   tickCache: ReturnTypeFetchMultiplePoolTickArrays;
 }>;
-export async function getPool(
+export async function getPoolByMints(
   raydium: Raydium,
-  poolId: string | web3.PublicKey,
+  mints: (string | web3.PublicKey)[],
   withExtraInfo = false
 ) {
   let poolKeys: ClmmKeys | undefined;
@@ -40,8 +40,14 @@ export async function getPool(
   let tickCache: ReturnTypeFetchMultiplePoolTickArrays | undefined;
 
   if (raydium.cluster === "mainnet") {
-    const poolInfos = await raydium.api.fetchPoolById({ ids: poolId.toString() });
-    for (const poolInfoItem of poolInfos)
+    const [mint1, mint2] = mints;
+    const props: Parameters<typeof raydium.api.fetchPoolByMints>[number] = {
+      mint1,
+    };
+    if (mint2) props.mint2 = mint2;
+    const poolInfos = await raydium.api.fetchPoolByMints(props);
+
+    for (const poolInfoItem of poolInfos.data)
       if (isValidClmm(poolInfoItem.programId)) {
         poolInfo = poolInfoItem as ApiV3PoolInfoConcentratedItem;
         if (withExtraInfo) {
@@ -56,21 +62,13 @@ export async function getPool(
         }
         break;
       }
-  } else {
-    const pool = await raydium.clmm.getPoolInfoFromRpc(poolId.toString());
-    poolInfo = pool.poolInfo;
-    poolKeys = pool.poolKeys;
-    if (withExtraInfo) {
-      tickCache = pool.tickData;
-      clmmPoolInfo = pool.computePoolInfo;
-    }
-  }
+  } else throw new Error("this function can't be used in devnet");
 
-  assert(poolInfo, format("target pool=% is not a CLMM pool", poolId));
+  assert(poolInfo, format("target mints=% is not a CLMM pool", mints));
   if (withExtraInfo) {
     assert(
       clmmPoolInfo && tickCache,
-      format("clmmPoolInfo & tickCache is invalid for pool=%", poolId)
+      format("clmmPoolInfo & tickCache is invalid for mints=%", mints)
     );
 
     return { poolInfo, clmmPoolInfo, poolKeys, tickCache };
