@@ -8,7 +8,7 @@ import { getEnv } from "./core";
 export const db = createDB(getEnv("DATABASE_URL"));
 export const bot = new Telegraf(getEnv("TELEGRAM_BOT_API_KEY"));
 export const bitquery = new BitQuery(getEnv("BITQUERY_API_KEY"));
-export const dexscreemer = new DexScreener();
+export const dexscreener = new DexScreener();
 export const connection = new web3.Connection(getEnv("RPC_URL"), {
   commitment: "confirmed",
 });

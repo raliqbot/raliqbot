@@ -5,7 +5,7 @@ import { CLMM_PROGRAM_ID } from "@raydium-io/raydium-sdk-v2";
 import { type Context, type Telegraf } from "telegraf";
 
 import { atomic } from "../utils/atomic";
-import { dexscreemer } from "../../instances";
+import { dexscreener } from "../../instances";
 import { cleanText, privateFunc, readFileSync } from "../utils";
 
 export const portfolioCommand = (telegraf: Telegraf) => {
@@ -13,7 +13,7 @@ export const portfolioCommand = (telegraf: Telegraf) => {
     atomic(async (context: Context) => {
       let porfolios = await getPortfolio(
         context.raydium,
-        dexscreemer,
+        dexscreener,
         CLMM_PROGRAM_ID
       );
 

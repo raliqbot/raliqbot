@@ -4,7 +4,7 @@ import { CLMM_PROGRAM_ID } from "@raydium-io/raydium-sdk-v2";
 import { privateFunc } from "../utils";
 import { atomic } from "../utils/atomic";
 import { buildMediaURL } from "../../core";
-import { db, dexscreemer } from "../../instances";
+import { db, dexscreener } from "../../instances";
 import { getPosiitionsOrCachedPositions } from "../../utils/cache";
 import { getPositionById } from "../../controllers/positions.controller";
 
@@ -23,7 +23,7 @@ export const pnlCommand = (telegraf: Telegraf) => {
       const [, ...addresses] = text.split(/\s+|,|-/g);
       const positions = await getPosiitionsOrCachedPositions(
         context,
-        dexscreemer,
+        dexscreener,
         CLMM_PROGRAM_ID,
         ...addresses
       );

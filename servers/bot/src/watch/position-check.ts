@@ -19,7 +19,7 @@ import { loadWallet } from "../controllers/wallets.controller";
 export const positionChecks = async (
   db: Database,
   bot: Telegraf,
-  dexscreemer: DexScreener,
+  dexscreener: DexScreener,
   connection: web3.Connection
 ) => {
   const wallets = await db.query.wallets
@@ -40,7 +40,7 @@ export const positionChecks = async (
 
       const poolsWithPositions = await getPortfolio(
         raydium,
-        dexscreemer,
+        dexscreener,
         CLMM_PROGRAM_ID
       );
 

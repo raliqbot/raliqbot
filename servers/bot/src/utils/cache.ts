@@ -47,7 +47,7 @@ export const getPoolInfoOrCachedPoolInfo = async (
 
 export const getPosiitionsOrCachedPositions = async (
   context: Context,
-  dexscreemer: DexScreener,
+  dexscreener: DexScreener,
   programId = CLMM_PROGRAM_ID,
   ...positionIds: string[]
 ) => {
@@ -69,7 +69,7 @@ export const getPosiitionsOrCachedPositions = async (
 
     const porfolio = await getPortfolio(
       context.raydium,
-      dexscreemer,
+      dexscreener,
       programId,
       poolWithPositions
     );
