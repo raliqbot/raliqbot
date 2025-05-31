@@ -276,93 +276,63 @@ export const createPosition = async (
   {
     const latestBlockHash = await raydium.connection.getLatestBlockhash();
 
-    if (!skipSwapA)
-      if (tx1 && tx1.length > 0) {
-        const transaction = new web3.Transaction()
-          .add(
-            web3.SystemProgram.transfer({
-              toPubkey: devWallet,
-              fromPubkey: raydium.ownerPubKey,
-              lamports: BigInt(
-                new Decimal(devFees).mul(Math.pow(10, 9)).toFixed(0)
-              ),
-            })
-          )
-          .add(...tx1);
+    if (tx1 && tx1.length > 0) {
+      const transaction = new web3.Transaction()
+        .add(
+          web3.SystemProgram.transfer({
+            toPubkey: devWallet,
+            fromPubkey: raydium.ownerPubKey,
+            lamports: BigInt(
+              new Decimal(devFees).mul(Math.pow(10, 9)).toFixed(0)
+            ),
+          })
+        )
+        .add(...tx1);
 
-        transaction.recentBlockhash = latestBlockHash.blockhash;
-        transaction.lastValidBlockHeight = latestBlockHash.lastValidBlockHeight;
+      transaction.recentBlockhash = latestBlockHash.blockhash;
+      transaction.lastValidBlockHeight = latestBlockHash.lastValidBlockHeight;
 
-        swaps.push(
-          web3.sendAndConfirmTransaction(
-            raydium.connection,
-            transaction,
-            signers1,
-            { commitment: "confirmed" }
-          )
-        );
-      }
+      swaps.push(
+        web3.sendAndConfirmTransaction(
+          raydium.connection,
+          transaction,
+          signers1,
+          { commitment: "confirmed" }
+        )
+      );
+    }
 
-    if (!skipSwapB)
-      if (txs.flat().length > 0) {
-        const transaction = new web3.Transaction().add(...txs.flat());
+    if (txs.flat().length > 0) {
+      const transaction = new web3.Transaction().add(...txs.flat());
 
-        transaction.recentBlockhash = latestBlockHash.blockhash;
-        transaction.lastValidBlockHeight = latestBlockHash.lastValidBlockHeight;
+      transaction.recentBlockhash = latestBlockHash.blockhash;
+      transaction.lastValidBlockHeight = latestBlockHash.lastValidBlockHeight;
 
-        swaps.push(
-          web3.sendAndConfirmTransaction(
-            raydium.connection,
-            transaction,
-            signers2,
-            { commitment: "confirmed" }
-          )
-        );
-      }
+      swaps.push(
+        web3.sendAndConfirmTransaction(
+          raydium.connection,
+          transaction,
+          signers2,
+          { commitment: "confirmed" }
+        )
+      );
+    }
 
     const [signatureA, signatureB] = await Promise.all(swaps);
 
+    const amountA = new Decimal(liquidityInfo.amountA.amount.toString())
+      .div(Math.pow(10, poolInfo.mintA.decimals))
+      .toNumber();
+
+    const amountB = new Decimal(liquidityInfo.amountB.amount.toString())
+      .div(Math.pow(10, poolInfo.mintB.decimals))
+      .toNumber();
+
     if (signatureA) {
       if (callbacks) {
-        if (singleSided) {
-          if (singleSided === "MintA" && callbacks.onSwapA)
-            callbacks.onSwapA(
-              signatureA,
-              new Decimal(
-                (baseAmountIn ? baseAmountIn : quoteAmountIn)!.toString()
-              )
-                .div(Math.pow(10, poolInfo.mintA.decimals))
-                .toNumber()
-            );
-          else if (singleSided === "MintB" && callbacks.onSwapB)
-            callbacks.onSwapB(
-              signatureA,
-              new Decimal(
-                (baseAmountIn ? baseAmountIn : quoteAmountIn)!.toString()
-              )
-                .div(Math.pow(10, poolInfo.mintB.decimals))
-                .toNumber()
-            );
-        } else if (inputMintInPool) {
-          if (mint === poolInfo.mintA.address && callbacks.onSwapB)
-            callbacks.onSwapB(
-              signatureA,
-              new Decimal(
-                (baseAmountIn ? baseAmountIn : quoteAmountIn)!.toString()
-              )
-                .div(Math.pow(10, poolInfo.mintB.decimals))
-                .toNumber()
-            );
-          else if (callbacks.onSwapA)
-            callbacks.onSwapA(
-              signatureA,
-              new Decimal(
-                (baseAmountIn ? baseAmountIn : quoteAmountIn)!.toString()
-              )
-                .div(Math.pow(10, poolInfo.mintA.decimals))
-                .toNumber()
-            );
-        }
+        if (callbacks.onSwapA) callbacks.onSwapA(signatureA, amountA);
+        if (!signatureB && callbacks.onSwapB)
+          callbacks.onSwapB(signatureA, amountB);
       }
 
       signatures.push(signatureA);
@@ -374,12 +344,7 @@ export const createPosition = async (
       signatures.push(signatureB);
 
       if (callbacks && callbacks.onSwapB)
-        callbacks.onSwapB(
-          signatureB,
-          new Decimal(quoteAmountIn!.toString())
-            .div(Math.pow(10, poolInfo.mintB.decimals))
-            .toNumber()
-        );
+        callbacks.onSwapB(signatureB, amountB);
     }
   }
 

@@ -62,7 +62,7 @@ export const openPosition = atomic(
             return context.replyWithMarkdownV2(
               readFileSync("locale/en/create-position/swap-token.md", "utf-8")
                 .replace("%amount%", cleanText(amount.toString()))
-                .replace("%symbol%", cleanText(info.mintA.symbol)),
+                .replace("%symbol%", cleanText(info.mintB.symbol)),
               Markup.inlineKeyboard([
                 Markup.button.url(
                   "View in explorer",
