@@ -8,7 +8,7 @@ import {
 import { CLMM_PROGRAM_ID } from "@raydium-io/raydium-sdk-v2";
 
 import { atomic } from "../utils/atomic";
-import { privateFunc, readFileSync } from "../utils";
+import { cleanText, privateFunc, readFileSync } from "../utils";
 
 const commandFilter = /^close_position(?:-([1-9A-HJ-NP-Za-km-z]{32,44}))?$/;
 
@@ -50,15 +50,17 @@ export const closePositionCommand = (telegraf: Telegraf) => {
               "utf-8"
             ).replace(
               "%list%",
-              signatures
-                .map((signature, index) =>
-                  format(
-                    "[Transaction %](%)",
-                    index + 1,
-                    format("https://solscan.io/tx/%", signature)
+              cleanText(
+                signatures
+                  .map((signature, index) =>
+                    format(
+                      "[Transaction %](%)",
+                      index + 1,
+                      format("https://solscan.io/tx/%", signature)
+                    )
                   )
-                )
-                .join(" | ")
+                  .join(" | ")
+              )
             ),
             {
               link_preview_options: {

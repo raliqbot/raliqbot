@@ -26,8 +26,8 @@ describe("open position on raydium", async () => {
     await createPosition(raydium, {
       slippage: 0.05,
       rangeBias: false,
-      range: [0.15, 0.15],
-      poolId: "FDvzCikcaFEUYeVdkBx9osLs92XhACXTrpooDNRvx8gY",
+      range: [0.11, 0.09],
+      poolId: "5PyWWaKfwcz3rDnA4Y6t5bDzvh3vZMHTtXJfFtP9uAtd",
       input: {
         mint: "So11111111111111111111111111111111111111112",
         amount: 0.1,
