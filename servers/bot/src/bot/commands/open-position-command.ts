@@ -46,55 +46,63 @@ export const onOpenPosition = atomic(async (context: Context) => {
           poolInfo.mintA.symbol,
           poolInfo.mintB.symbol
         ).replace(/\s/g, "");
-
-        return context.replyWithPhoto(
-          Input.fromURLStream(
-            buildMediaURL("prefetched/open-graph/", {
-              data: JSON.stringify({
-                mintA: {
-                  name: poolInfo.mintA.name,
-                  symbol: poolInfo.mintA.symbol,
-                  logoURI: poolInfo.mintA.logoURI,
-                  address: poolInfo.mintA.address,
-                },
-                mintB: {
-                  name: poolInfo.mintB.name,
-                  symbol: poolInfo.mintB.symbol,
-                  logoURI: poolInfo.mintB.logoURI,
-                  address: poolInfo.mintB.address,
-                },
-                tvl: poolInfo.tvl,
-                feeRate: poolInfo.feeRate,
-                day: {
-                  apr: poolInfo.day.apr,
-                  volume: poolInfo.day.volume,
-                  volumeFee: poolInfo.day.volumeFee,
-                },
-              }),
-            })
-          ),
-          {
-            caption: readFileSync(
-              "locale/en/search-pair/search-result.md",
-              "utf-8"
-            )
-              .replace("%pool_id%", cleanText(poolInfo.id))
-              .replace("%name%", cleanText(name)),
-            parse_mode: "MarkdownV2" as const,
-            reply_markup: Markup.inlineKeyboard([
-              [
-                Markup.button.callback(
-                  "⚖️ Spot",
-                  format("createPosition_spot_%", poolInfo.id)
-                ),
-                Markup.button.callback(
-                  "🧩 Single Sided",
-                  format("createPosition_s_%", poolInfo.id)
-                ),
-              ],
-            ]).reply_markup,
-          }
+        const media = Input.fromURLStream(
+          buildMediaURL("prefetched/open-graph/", {
+            data: JSON.stringify({
+              mintA: {
+                name: poolInfo.mintA.name,
+                symbol: poolInfo.mintA.symbol,
+                logoURI: poolInfo.mintA.logoURI,
+                address: poolInfo.mintA.address,
+              },
+              mintB: {
+                name: poolInfo.mintB.name,
+                symbol: poolInfo.mintB.symbol,
+                logoURI: poolInfo.mintB.logoURI,
+                address: poolInfo.mintB.address,
+              },
+              tvl: poolInfo.tvl,
+              feeRate: poolInfo.feeRate,
+              day: {
+                apr: poolInfo.day.apr,
+                volume: poolInfo.day.volume,
+                volumeFee: poolInfo.day.volumeFee,
+              },
+            }),
+          })
         );
+
+        const extra = {
+          caption: readFileSync(
+            "locale/en/search-pair/search-result.md",
+            "utf-8"
+          )
+            .replace("%pool_id%", cleanText(poolInfo.id))
+            .replace("%name%", cleanText(name)),
+          parse_mode: "MarkdownV2" as const,
+          reply_markup: Markup.inlineKeyboard([
+            [
+              Markup.button.callback(
+                "⚖️ Spot",
+                format("createPosition_spot_%", poolInfo.id)
+              ),
+              Markup.button.callback(
+                "🧩 Single Sided",
+                format("createPosition_s_%", poolInfo.id)
+              ),
+            ],
+            [
+              Markup.button.callback(
+                "🔁 Refresh",
+                format("open_position-%", poolInfo.id)
+              ),
+            ],
+          ]).reply_markup,
+        };
+
+        return context.callbackQuery && "data" in context.callbackQuery
+          ? context.editMessageMedia({ media, type: "photo" }, extra)
+          : context.replyWithPhoto(media, extra);
       }
 
       return context.replyWithMarkdownV2(

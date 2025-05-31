@@ -136,8 +136,10 @@ export const onPortfolioDetail = privateFunc(
 );
 
 export const portfolioDetailCommand = (telegraf: Telegraf) => {
-  telegraf.action("portfolioDetail", onPortfolioDetail);
-  telegraf.command("portfolioDetail", onPortfolioDetail);
+  const commandFilter = /^portfolioDetail(?:-([1-9A-HJ-NP-Za-km-z]{32,44}))?$/;
+
+  telegraf.action(commandFilter, onPortfolioDetail);
+  telegraf.command(commandFilter, onPortfolioDetail);
 };
 
 portfolioDetailCommand.commandName = "portfolio";
