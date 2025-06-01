@@ -68,11 +68,14 @@ export const getPortfolio = async (
 
   for (const { pool, positions } of poolsWithPositions) {
     const { poolInfo } = pool;
-    const rewardMint = pool.poolInfo.rewardDefaultInfos.find(
+    let rewardMint = pool.poolInfo.rewardDefaultInfos.find(
       (info) =>
         info.mint.address !== pool.poolInfo.mintA.address &&
         info.mint.address !== pool.poolInfo.mintB.address
-    )!;
+    );
+
+    if (!rewardMint) [rewardMint] = pool.poolInfo.rewardDefaultInfos;
+
     const data = await Promise.all([
       dexscreener.pair.getPair("solana", poolInfo.id).then(({ data }) => data),
       dexscreener.token
