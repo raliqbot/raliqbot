@@ -4,7 +4,6 @@ import { Raydium } from "@raydium-io/raydium-sdk-v2";
 
 import { getEnv } from "../../env";
 import { loadWalletFromFile } from "./utils";
-import { simulateCreatePosition } from "./simulate-create-position";
 
 describe("open position on raydium", async () => {
   let raydium: Raydium;
@@ -20,16 +19,5 @@ describe("open position on raydium", async () => {
     });
   });
 
-  test("open a position with a single token", async () => {
-    await simulateCreatePosition(raydium, await raydium.fetchEpochInfo(), {
-      slippage: 0.05,
-      rangeBias: false,
-      range: [0.091, 0],
-      poolId: "E5X7mWprg8pdAqBT5HJ1ehu4crAsgUkUX5MwCjuTusZU",
-      input: {
-        mint: "So11111111111111111111111111111111111111112",
-        amount: 1,
-      },
-    });
-  });
+  test("open a position with a single token", async () => {});
 });

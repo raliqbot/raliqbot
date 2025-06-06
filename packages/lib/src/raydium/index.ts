@@ -1,4 +1,5 @@
 export {
+  reposition,
   getPoolById,
   getPoolByMints,
   isValidClmm,

@@ -4,6 +4,7 @@ import Decimal from "decimal.js";
 import type { Telegraf } from "telegraf";
 import { web3 } from "@coral-xyz/anchor";
 import { format } from "@raliqbot/shared";
+import { reposition } from "@raliqbot/lib";
 import {
   type DexScreener,
   getPortfolio,
@@ -16,7 +17,6 @@ import {
 } from "@raydium-io/raydium-sdk-v2";
 
 import type { Database } from "../db";
-import { reposition } from "./reposition";
 import { positionAlert } from "./position-alert";
 import { positions as _positions } from "../db/schema";
 import { loadWallet } from "../controllers/wallets.controller";
@@ -120,8 +120,6 @@ export const positionChecks = async (
 
       if (_inactivePoolsWithPositions.length > 0)
         await reposition(
-          db,
-          bot,
           raydium,
           parseFloat(
             dbWallet.user.settings ? dbWallet.user.settings.slippage : "0.01"

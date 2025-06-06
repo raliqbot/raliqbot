@@ -1,3 +1,4 @@
+export { reposition } from "./reposition";
 export { closePosition } from "./close-position";
 export { createPosition } from "./create-position";
 export { harvestRewards } from "./harvest-rewards";
