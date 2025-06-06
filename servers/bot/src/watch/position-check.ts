@@ -1,17 +1,22 @@
 import { sleep } from "bun";
 import { eq } from "drizzle-orm";
 import Decimal from "decimal.js";
-import { Telegraf } from "telegraf";
+import type { Telegraf } from "telegraf";
 import { web3 } from "@coral-xyz/anchor";
 import { format } from "@raliqbot/shared";
-import { DexScreener, getPortfolio } from "@raliqbot/lib";
+import {
+  type DexScreener,
+  getPortfolio,
+  type getPositions,
+} from "@raliqbot/lib";
 import {
   CLMM_PROGRAM_ID,
   Raydium,
   TickUtils,
 } from "@raydium-io/raydium-sdk-v2";
 
-import { Database } from "../db";
+import type { Database } from "../db";
+import { reposition } from "./reposition";
 import { positionAlert } from "./position-alert";
 import { positions as _positions } from "../db/schema";
 import { loadWallet } from "../controllers/wallets.controller";
@@ -24,7 +29,12 @@ export const positionChecks = async (
 ) => {
   const wallets = await db.query.wallets
     .findMany({
-      with: { user: { columns: { id: true } } },
+      with: {
+        user: {
+          with: { settings: { columns: { slippage: true } } },
+          columns: { id: true },
+        },
+      },
       columns: { id: true, key: true },
     })
     .execute();
@@ -43,6 +53,11 @@ export const positionChecks = async (
         dexscreener,
         CLMM_PROGRAM_ID
       );
+
+      const inactivePoolsWithPositions: Record<
+        string,
+        Awaited<ReturnType<typeof getPositions>>[number]
+      > = {};
 
       for (const {
         pool: { poolInfo },
@@ -84,9 +99,35 @@ export const positionChecks = async (
               positionAlert(db, bot, poolInfo, position, active, dbWallet)
             );
 
+          if (!active) {
+            if (!inactivePoolsWithPositions[poolInfo.id])
+              inactivePoolsWithPositions[poolInfo.id] = {
+                pool: { poolInfo },
+                positions: [],
+              };
+            inactivePoolsWithPositions[poolInfo.id].positions.push(
+              position.default
+            );
+          }
+
           await Promise.all(tasks);
         }
       }
+
+      const _inactivePoolsWithPositions = Object.values(
+        inactivePoolsWithPositions
+      );
+
+      if (_inactivePoolsWithPositions.length > 0)
+        await reposition(
+          db,
+          bot,
+          raydium,
+          parseFloat(
+            dbWallet.user.settings ? dbWallet.user.settings.slippage : "0.01"
+          ),
+          ..._inactivePoolsWithPositions
+        );
 
       await sleep(2000);
     }

@@ -1,18 +1,14 @@
-import { z } from "zod";
+import type { z } from "zod";
 import { format } from "@raliqbot/shared";
-import { getPortfolio } from "@raliqbot/lib";
-import { Input, Markup, Telegraf } from "telegraf";
-import {
-  ApiV3PoolInfoConcentratedItem,
-  TickUtils,
-} from "@raydium-io/raydium-sdk-v2";
+import type { getPortfolio } from "@raliqbot/lib";
+import { Input, Markup, type Telegraf } from "telegraf";
+import type { ApiV3PoolInfoConcentratedItem } from "@raydium-io/raydium-sdk-v2";
 
-import { Database } from "../db";
+import type { Database } from "../db";
 import { buildMediaURL } from "../core";
 import { positions } from "../db/schema";
 import { readFileSync, cleanText } from "../bot/utils";
-import { selectUserSchema, selectWalletSchema } from "../db/zod";
-import { eq } from "drizzle-orm";
+import type { selectUserSchema, selectWalletSchema } from "../db/zod";
 
 export const positionAlert = async (
   db: Database,

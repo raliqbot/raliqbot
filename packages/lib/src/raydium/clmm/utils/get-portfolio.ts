@@ -4,6 +4,7 @@ import { BN, web3 } from "@coral-xyz/anchor";
 import type {
   ApiV3PoolInfoConcentratedItem,
   ApiV3Token,
+  PositionInfoLayout,
   Raydium,
 } from "@raydium-io/raydium-sdk-v2";
 
@@ -62,6 +63,9 @@ export const getPortfolio = async (
           rewardInUSD: number;
           mint: ApiV3Token;
         };
+        default: Awaited<
+          ReturnType<typeof getPositions>
+        >[number]["positions"][number];
       }[];
     }
   >();
@@ -173,6 +177,7 @@ export const getPortfolio = async (
           amountInUSD: tokenBAmountUSD,
           mint: feeBReward.mint,
         },
+        default: position,
       };
 
       const poolWithPositionsWithAmounts = poolsWithPositionsWithAmounts.get(

@@ -81,8 +81,9 @@ export const claimRewardCommand = (telegraf: Telegraf) => {
 
         return createClaims(db, ...claims);
       } else
-        return context.replyWithMarkdownV2(
-          readFileSync("locale/en/claim-reward/no-reward.md", "utf-8")
+        return context.answerCbQuery(
+          readFileSync("locale/en/claim-reward/no-reward.md", "utf-8"),
+          { show_alert: true }
         );
     })
   );

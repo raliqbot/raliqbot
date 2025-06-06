@@ -105,14 +105,16 @@ export const onOpenPosition = atomic(async (context: Context) => {
           : context.replyWithPhoto(media, extra);
       }
 
-      return context.replyWithMarkdownV2(
-        readFileSync("locale/en/create-position/not-found.md", "utf-8")
+      return context.answerCbQuery(
+        readFileSync("locale/en/create-position/not-found.md", "utf-8"),
+        { show_alert: true }
       );
     }
   }
 
-  return context.replyWithMarkdownV2(
-    readFileSync("locale/en/create-position/invalid-command.md", "utf-8")
+  return context.answerCbQuery(
+    readFileSync("locale/en/create-position/invalid-command.md", "utf-8"),
+    { show_alert: true }
   );
 });
 

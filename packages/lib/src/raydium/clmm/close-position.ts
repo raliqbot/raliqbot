@@ -8,8 +8,8 @@ export const closePosition = async (
   raydium: Raydium,
   poolsWithPositions: Awaited<ReturnType<typeof getPositions>>
 ) => {
-  const txSigners: web3.Signer[] = [];
-  const transactions: web3.Transaction[] = [];
+  const txSigners: web3.Signer[][] = [];
+  const transactions: web3.Transaction[][] = [];
 
   console.log(
     "[position.close.initializing] ",
@@ -22,6 +22,9 @@ export const closePosition = async (
     pool: { poolInfo, poolKeys },
     positions,
   } of poolsWithPositions) {
+    const innerSigners = [];
+    const innerTransactions = [];
+
     for (const position of positions) {
       const { transaction, signers } = await raydium.clmm.decreaseLiquidity({
         poolInfo,
@@ -37,9 +40,12 @@ export const closePosition = async (
         },
       });
 
-      txSigners.push(...signers);
-      transactions.push(transaction);
+      innerSigners.push(...signers);
+      innerTransactions.push(transaction);
     }
+
+    txSigners.push(innerSigners);
+    transactions.push(innerTransactions);
   }
 
   if (transactions.length > 0) {
@@ -48,13 +54,12 @@ export const closePosition = async (
       transactions.length
     );
 
-    const chunkedTxs = chunk(transactions, 2);
     const signatures = await Promise.all(
-      chunkedTxs.map((transaction) => {
+      transactions.map((innerTransactions, index) => {
         return web3.sendAndConfirmTransaction(
           raydium.connection,
-          new web3.Transaction().add(...transaction),
-          txSigners,
+          new web3.Transaction().add(...innerTransactions),
+          txSigners[index],
           { commitment: "confirmed" }
         );
       })

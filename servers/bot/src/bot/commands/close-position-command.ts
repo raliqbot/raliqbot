@@ -71,11 +71,12 @@ export const closePositionCommand = (telegraf: Telegraf) => {
         }
       }
 
-      return context.replyWithMarkdownV2(
+      return context.answerCbQuery(
         readFileSync(
           "locale/en/close-position/position-id-required.md",
           "utf-8"
-        )
+        ),
+        { show_alert: true }
       );
     })
   );

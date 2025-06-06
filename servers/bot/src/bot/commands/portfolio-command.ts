@@ -92,8 +92,9 @@ export const portfolioCommand = (telegraf: Telegraf) => {
           { link_preview_options: { is_disabled: true } }
         );
       } else
-        return context.replyWithMarkdownV2(
-          readFileSync("locale/en/portfolio/no-open-position.md", "utf-8")
+        return context.answerCbQuery(
+          readFileSync("locale/en/portfolio/no-open-position.md", "utf-8"),
+          { show_alert: true }
         );
     })
   );

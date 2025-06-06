@@ -1,31 +1,55 @@
-import z from "zod";
-import moment from "moment";
-import { Telegraf } from "telegraf";
-import { web3 } from "@coral-xyz/anchor";
-import { and, eq, lte } from "drizzle-orm";
-import { getPortfolio } from "@raliqbot/lib";
+import Decimal from "decimal.js";
+import type { Telegraf } from "telegraf";
+import type { Raydium } from "@raydium-io/raydium-sdk-v2";
 import {
-  type ApiV3PoolInfoConcentratedItem,
-  TickUtils,
-} from "@raydium-io/raydium-sdk-v2";
+  closePosition,
+  createPosition,
+  getPositions,
+  parseRewardSignatures,
+} from "@raliqbot/lib";
 
-import { getEnv } from "../core";
 import type { Database } from "../db";
-import { positions } from "../db/schema";
-import { loadWallet } from "../controllers/wallets.controller";
-import { selectWalletSchema, selectUserSchema } from "../db/zod";
 
 export const reposition = async (
   db: Database,
   bot: Telegraf,
-  poolInfo: ApiV3PoolInfoConcentratedItem,
-  position: Awaited<
-    ReturnType<typeof getPortfolio>
-  >[number]["positions"][number],
-  currentTickAndPrice: ReturnType<typeof TickUtils.getTickPrice>,
-  wallet: z.infer<typeof selectWalletSchema> & {
-    user: z.infer<typeof selectUserSchema>;
-  }
+  raydium: Raydium,
+  slippage: number,
+  ...positions: Awaited<ReturnType<typeof getPositions>>
 ) => {
-  // first close position
+  console.log(
+    "repositioning=",
+    positions.length,
+    "positions=",
+    positions.flatMap(({ positions }) =>
+      positions.map((position) => position.poolId.toBase58())
+    )
+  );
+
+  let signatures = await closePosition(raydium, positions);
+  if (signatures) {
+    for (let index = 0; index < signatures.length; index++) {
+      const pool = positions[index].pool;
+      const baseMint = pool.poolInfo.mintB;
+      const balanceChange = await parseRewardSignatures(raydium, ...signatures);
+
+      [signatures] = await createPosition(raydium, {
+        poolId: pool.poolInfo.id,
+        slippage,
+        rangeBias: false,
+        range: [
+          pool.poolInfo.config.defaultRange * 0.4,
+          pool.poolInfo.config.defaultRange,
+        ],
+        input: {
+          mint: baseMint.address,
+          amount: new Decimal(balanceChange[index][baseMint.address])
+            .div(Math.pow(10, baseMint.decimals))
+            .toNumber(),
+        },
+      });
+
+      console.log("reposition signatures=", signatures);
+    }
+  }
 };
