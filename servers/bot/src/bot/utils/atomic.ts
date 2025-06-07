@@ -1,4 +1,4 @@
-import type { Context } from "telegraf";
+import { TelegramError, type Context } from "telegraf";
 
 import { onError } from ".";
 
@@ -29,6 +29,8 @@ export const atomic = <
       await Promise.all([fn(context)])
         .then(([result]) => result)
         .catch((error) => {
+          if (error instanceof TelegramError) return;
+
           if (!defaultOptions.silent) {
             if (defaultOptions.onError)
               return defaultOptions.onError(context, error);
