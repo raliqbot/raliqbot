@@ -11,6 +11,8 @@ export const startCommand = (telegraf: Telegraf) => {
   telegraf.start(
     atomic(async (context) => {
       const { wallet } = context;
+      await context.scene.leave();
+
       if (context.message.text) {
         if (/open/.test(context.message.text)) return onOpenPosition(context);
         if (/createPosition/.test(context.message.text))

@@ -142,21 +142,22 @@ export const onTrending = atomic(async (context: Context) => {
                   "%liquidity%",
                   cleanText(poolInfo.tvl.toLocaleString())
                 )
-                .replace("%volume%", cleanText(poolInfo.day.volume.toFixed(2)))
                 .replace(
-                  "%fees_24h%",
-                  cleanText(poolInfo.day.volumeFee.toFixed(2))
+                  "%volume%",
+                  cleanText(poolInfo.day.volume.toLocaleString())
                 )
                 .replace(
-                  "%apr%",
-                  cleanText(poolInfo.day.apr.toFixed(2).toString())
-                );
+                  "%fees_24h%",
+                  cleanText(poolInfo.day.volumeFee.toLocaleString())
+                )
+                .replace("%apr%", cleanText(poolInfo.day.apr.toFixed(2)));
             })
             .join("\n")
         );
 
       const reply_markup = Markup.inlineKeyboard([
         buttons,
+        [Markup.button.callback("🔁 Refresh", "trending-1")],
         [Markup.button.callback("🅇 Cancel", "cancel")],
       ]).reply_markup;
 
