@@ -101,7 +101,10 @@ export const onOpenPosition = atomic(async (context: Context) => {
         };
 
         return context.callbackQuery && "data" in context.callbackQuery
-          ? context.editMessageMedia({ media, type: "photo" }, extra)
+          ? Promise.all([
+              context.deleteMessage(),
+              context.replyWithPhoto(media, extra),
+            ])
           : context.replyWithPhoto(media, extra);
       }
 
@@ -128,7 +131,7 @@ export const openPositionCommand = async (telegraf: Telegraf) => {
         : undefined;
 
     if (text) {
-      const [, ...values] = text.split(/\s/g);
+      const [, ...values] = text.split(/\-/g);
       let amount: number | undefined;
       let address: string | undefined;
 
@@ -138,7 +141,7 @@ export const openPositionCommand = async (telegraf: Telegraf) => {
       }
 
       if (values.length > 0) {
-        if (!(address && amount)) {
+        if (!address && !amount) {
           return context.replyWithMarkdownV2(
             readFileSync("locale/en/open-position/invalid-command.md", "utf-8")
           );

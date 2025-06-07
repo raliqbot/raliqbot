@@ -47,6 +47,9 @@ const onAddress = atomic(async (context: Context) => {
       await onCreatePosition(context);
       return context.scene.leave();
     }
+  } else {
+    await onOpenPosition(context);
+    return context.scene.leave();
   }
 });
 
