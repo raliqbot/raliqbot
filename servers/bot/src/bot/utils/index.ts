@@ -18,10 +18,14 @@ export const privateFunc = <
 export const onError = async (context: Context, error: unknown) => {
   const message =
     error instanceof Error ? error.message : JSON.stringify(error);
-  context.telegram.deleteMessages(
-    context.chat!.id,
-    context.session.messageIdsStack
-  );
+  if (
+    context.session.messageIdsStack &&
+    context.session.messageIdsStack.length > 0
+  )
+    context.telegram.deleteMessages(
+      context.chat!.id,
+      context.session.messageIdsStack
+    );
   if (context.scene.current) await context.scene.leave();
   return context.replyWithMarkdownV2(cleanText(message));
 };
