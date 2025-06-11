@@ -4,11 +4,11 @@ import { BN, web3 } from "@coral-xyz/anchor";
 import type {
   ApiV3PoolInfoConcentratedItem,
   ApiV3Token,
-  PositionInfoLayout,
   Raydium,
 } from "@raydium-io/raydium-sdk-v2";
 
 import { getPositions } from "./get-positions";
+import { isStableCoin } from "./is-stable-coin";
 import type { DexScreener } from "../../../dexscreener";
 
 function isAlmostEqual(
@@ -72,19 +72,22 @@ export const getPortfolio = async (
 
   for (const { pool, positions } of poolsWithPositions) {
     const { poolInfo } = pool;
-    let rewardMint = pool.poolInfo.rewardDefaultInfos.find(
-      (info) =>
-        info.mint.address !== pool.poolInfo.mintA.address &&
-        info.mint.address !== pool.poolInfo.mintB.address
-    );
+    let rewardMint: { mint: { address: string } } | undefined =
+      pool.poolInfo.rewardDefaultInfos.find(
+        (info) =>
+          info.mint.address !== pool.poolInfo.mintA.address &&
+          info.mint.address !== pool.poolInfo.mintB.address
+      );
 
     if (!rewardMint) [rewardMint] = pool.poolInfo.rewardDefaultInfos;
 
     const data = await Promise.all([
       dexscreener.pair.getPair("solana", poolInfo.id).then(({ data }) => data),
-      dexscreener.token
-        .getPairsByTokenAddresses("solana", rewardMint.mint.address)
-        .then(({ data }) => data),
+      rewardMint
+        ? dexscreener.token
+            .getPairsByTokenAddresses("solana", rewardMint.mint.address)
+            .then(({ data }) => data)
+        : [],
     ]);
 
     const [
@@ -96,7 +99,9 @@ export const getPortfolio = async (
     ] = data;
 
     const { priceUsd, priceNative } = pair;
-    const { priceUsd: rewardPriceUsd } = rewardPair;
+    let rewardPriceUsd;
+    if (rewardPair) rewardPriceUsd = rewardPair.priceUsd;
+    else rewardPriceUsd = 0;
 
     const Price = Number(priceNative);
     const PriceInUSD = Number(priceUsd);
@@ -109,8 +114,8 @@ export const getPortfolio = async (
       const tokenBAmount = new Decimal(position.amountB.toString())
         .div(Math.pow(10, poolInfo.mintB.decimals))
         .toNumber();
-
-      const stableCoin = isAlmostEqual(priceNative, priceUsd);
+      const stableCoin = isStableCoin(poolInfo.mintA.address);
+      console.log("isStable=", stableCoin);
 
       const tokenAAmountUSD = stableCoin
         ? tokenAAmount * PriceInUSD

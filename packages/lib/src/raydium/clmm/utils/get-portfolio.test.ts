@@ -1,4 +1,3 @@
-import axios from "axios";
 import { web3 } from "@coral-xyz/anchor";
 import { beforeAll, describe, test } from "bun:test";
 import { CLMM_PROGRAM_ID, Raydium } from "@raydium-io/raydium-sdk-v2";
@@ -28,7 +27,7 @@ describe("fetch wallet portfolio", () => {
     const positions = await getPositions(
       raydium,
       CLMM_PROGRAM_ID,
-      "CN7UCncok5NrfRu1hikpjWvTomJrDHnPHzrVRTaZSXDk"
+      "DqXVAZqhhYS1cEG6bBatFMLWoApVXgPBFsc27W7vuPx"
     );
     const portfolio = await getPortfolio(
       raydium,
