@@ -6,3 +6,4 @@ dist
 .env
 .env.prod
 .next
+next-env.d.ts

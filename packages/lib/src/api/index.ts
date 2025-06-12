@@ -1,7 +1,7 @@
 import xior, { type XiorInstance } from "xior";
 import { PositionApi } from "./position.api";
 
-export class API {
+export class RaliqbotClient {
   private readonly xior: XiorInstance;
 
   readonly position: PositionApi;

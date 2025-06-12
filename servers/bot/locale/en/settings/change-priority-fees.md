@@ -1,1 +1,0 @@
-Enter the priority fees you want to use in SOL

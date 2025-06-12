@@ -1,0 +1,4 @@
+NEXT_PUBLIC_API_BASE_URL=https://bot.raliqbot.xexohq.com
+NEXT_PUBLIC_DEVNET_RPC_URL=https://api.devnet.solana.com
+NEXT_PUBLIC_MAINNET_RPC_URL=https://go.getblock.io/02875a0fffb1417cb2d838f3eb35c161
+NEXT_PUBLIC_BITQUERY_ACCESS_TOKEN=ory_at_XAYy6VgOfWlgbO1JRLpefUMKiv_pIzcyrTiHdE3cqes.ccFL4CD69m3ZbLMod8L29kcMgKyI3-3YQ3Y1Sm2MGLs

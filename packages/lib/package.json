@@ -16,10 +16,6 @@
     "./dexscreener": {
       "type": "./src/dexscreener/index.ts",
       "default": "./dist/src/dexscreener/index.js"
-    },
-    "./raydium": {
-      "type": "./src/raydium/index.ts",
-      "default": "./dist/src/raydium/index.js"
     }
   },
   "devDependencies": {
@@ -34,7 +30,6 @@
     "@coral-xyz/anchor": "^0.31.1",
     "@meteora-ag/dlmm": "^1.5.3",
     "@raliqbot/shared": "*",
-    "@raydium-io/raydium-sdk-v2": "^0.1.128-alpha",
     "@solana/spl-token": "^0.4.13",
     "@solana/web3.js": "^1.98.2",
     "@types/lodash": "^4.17.16",

@@ -1,17 +1,15 @@
-import { Scenes, session, type Telegraf } from "telegraf";
+import { session, type Telegraf } from "telegraf";
 
-import { scenes } from "./scenes";
+import registerScenes from "./scenes";
 import registerActions from "./actions";
+import { authUser } from "./middlewares";
 import registerCommands from "./commands";
-import { authenticateUser } from "./middlewares/authenticate-user";
 
 export default function registerBot(bot: Telegraf) {
-  const stage = new Scenes.Stage<any>(scenes);
-  scenes.map((scene) => scene.use(authenticateUser));
   bot.use(session());
-  bot.use(stage.middleware());
-  bot.use(authenticateUser);
+  bot.use(authUser);
 
+  registerScenes(bot);
   registerActions(bot);
   registerCommands(bot);
 }

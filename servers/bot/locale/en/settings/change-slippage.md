@@ -1,1 +1,0 @@
-Enter the slippage you want to use in percentage

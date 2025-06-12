@@ -1,1 +1,0 @@
-Enter private key or secret phrase of wallet you want to import

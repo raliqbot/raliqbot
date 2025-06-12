@@ -1,10 +1,20 @@
 import type { Context } from "telegraf";
 
-import { onError } from ".";
+import { cleanText } from "./format";
+
+export const onError = async (context: Context, error: unknown) => {
+  const message =
+    error instanceof Error ? error.message : JSON.stringify(error);
+  if (context.chat && context.session.messageIdsStack)
+    context.telegram
+      .deleteMessages(context.chat.id, context.session.messageIdsStack)
+      .then(() => (context.session.messageIdsStack = []));
+  if (context.scene.current) await context.scene.leave();
+  return context.replyWithMarkdownV2(cleanText(message));
+};
 
 type AtomicOptions = {
   silent?: boolean;
-  typingInterval?: number;
   chatAction?: "typing";
   onError?: (context: Context, error: unknown) => void;
 };
@@ -19,7 +29,6 @@ export const atomic = <
   const defaultOptions = {
     onError,
     silent: false,
-    typingInterval: 10000,
     chatAction: "typing" as const,
     ...options,
   };
