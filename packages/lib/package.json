@@ -33,6 +33,9 @@
     "@solana/spl-token": "^0.4.13",
     "@solana/web3.js": "^1.98.2",
     "@types/lodash": "^4.17.16",
+    "assert": "^2.1.0",
+    "bn.js": "^5.2.2",
+    "decimal.js": "^10.5.0",
     "fs": "^0.0.1-security",
     "lodash": "^4.17.21",
     "xior": "^0.7.8"
