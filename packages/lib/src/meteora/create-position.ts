@@ -11,7 +11,8 @@ import {
 
 import type { Ratio } from "../ratio";
 import type { MeteoraClient } from "./api";
-import { initialize_swap_in_sol } from "./utils/swap-in-sol";
+import { toUniqueTx } from "./utils/unique-tx";
+import { initialize_swap_from_sol } from "./utils/swap-from-sol";
 import { create_single_sided_position } from "./create-single-sided-position";
 import {
   is_native_mint,
@@ -21,33 +22,40 @@ import {
 } from "../utils";
 
 type CreatePositionArgs = {
+  pool: DLMM;
   ratio?: Ratio;
+  owner: Keypair;
   slippage: number;
-  poolId: string | PublicKey;
+  client: MeteoraClient;
+  connection: Connection;
   input: {
     mint: string | PublicKey;
     amount: string | bigint | number;
   };
   strategyType: StrategyType;
+  rangeIntervals: [number, number];
   singleSided?: string | PublicKey;
 };
 
-export const createPosition = async (
-  connection: Connection,
-  client: MeteoraClient,
-  owner: Keypair,
-  args: CreatePositionArgs
-) => {
+export const create_position = async ({
+  pool,
+  owner,
+  client,
+  connection,
+  rangeIntervals,
+  ...args
+}: CreatePositionArgs) => {
   const position = new Keypair();
   const slippage = new BN(args.slippage);
-  const poolId = new PublicKey(args.poolId);
   const isNativeInput = is_native_mint(args.input.mint);
 
-  // only native mint supported now
   assert(isNativeInput, "non native mint input not supported as input mint.");
 
-  const pool = await DLMM.create(connection, poolId);
   const activeBin = await pool.getActiveBin();
+  const [minRange, maxRange] = rangeIntervals;
+
+  const minBinId = activeBin.binId - minRange;
+  const maxBinId = activeBin.binId + maxRange;
 
   const transactions: Transaction[] = [];
 
@@ -66,8 +74,8 @@ export const createPosition = async (
           ...(await create_single_sided_position(connection, pool, client, {
             ...args,
             slippage,
-            maxBinId: 0,
-            minBinId: 0,
+            maxBinId,
+            minBinId,
             mint: pool.tokenX.mint,
             owner: owner.publicKey,
             positionId: position.publicKey,
@@ -78,8 +86,8 @@ export const createPosition = async (
           ...(await create_single_sided_position(connection, pool, client, {
             ...args,
             slippage,
-            maxBinId: 0,
-            minBinId: 0,
+            maxBinId,
+            minBinId,
             mint: pool.tokenY.mint,
             owner: owner.publicKey,
             positionId: position.publicKey,
@@ -87,6 +95,7 @@ export const createPosition = async (
         );
     }
   } else {
+    console.log("not single sideded");
     assert(args.ratio, "ratio required for non single sided position.");
 
     if (isNativeInput) {
@@ -99,13 +108,15 @@ export const createPosition = async (
           .muln(args.ratio.a)
           .divn(100);
       } else {
+        console.log("not native x");
+
         const amount = BigInt(
           parse_amount_decimal(args.input.amount, pool.tokenX.mint.decimals)
             .mul(args.ratio.a)
             .div(100)
             .toFixed(0)
         );
-        const { swapQuote, transaction } = await initialize_swap_in_sol(
+        const { swapQuote, transaction } = await initialize_swap_from_sol(
           connection,
           client,
           owner.publicKey,
@@ -128,7 +139,8 @@ export const createPosition = async (
             .div(100)
             .toFixed(0)
         );
-        const { swapQuote, transaction } = await initialize_swap_in_sol(
+
+        const { swapQuote, transaction } = await initialize_swap_from_sol(
           connection,
           client,
           owner.publicKey,
@@ -145,8 +157,8 @@ export const createPosition = async (
           user: owner.publicKey,
           positionPubKey: position.publicKey,
           strategy: {
-            maxBinId: 0,
-            minBinId: 0,
+            maxBinId,
+            minBinId,
             strategyType: args.strategyType,
           },
         })
@@ -154,13 +166,16 @@ export const createPosition = async (
     }
   }
 
+  const blockHash = await connection.getLatestBlockhash();
+
+  const transaction = toUniqueTx(131285, ...transactions);
+  transaction.feePayer = owner.publicKey;
+  transaction.recentBlockhash = blockHash.blockhash;
+
   return {
     position,
+    transaction,
     execute: () =>
-      sendAndConfirmTransaction(
-        connection,
-        new Transaction().add(...transactions),
-        [owner, position]
-      ),
+      sendAndConfirmTransaction(connection, transaction, [owner, position]),
   };
 };

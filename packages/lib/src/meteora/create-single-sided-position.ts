@@ -5,7 +5,7 @@ import { Connection, PublicKey } from "@solana/web3.js";
 
 import type { MeteoraClient } from "./api";
 import { is_native_mint, parse_amount, to_bn } from "../utils";
-import { initialize_swap_in_sol } from "./utils/swap-in-sol";
+import { initialize_swap_from_sol } from "./utils/swap-from-sol";
 
 type CreateSingleSidedPositionArgs = {
   slippage: BN;
@@ -59,7 +59,7 @@ export const create_single_sided_position = async (
       }),
     ];
   } else {
-    const { swapQuote, swapForY, transaction } = await initialize_swap_in_sol(
+    const { swapQuote, swapForY, transaction } = await initialize_swap_from_sol(
       connection,
       client,
       owner,

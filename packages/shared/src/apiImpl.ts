@@ -17,9 +17,17 @@ export abstract class ApiImpl {
 
   protected buildPathWithQueryString(
     path: string,
-    query?: Record<string, any>
+    query?: Record<string, string | boolean| number | string[]>
   ) {
-    const q = new URLSearchParams(query);
+    let encodedQuery;
+    if (query)
+      encodedQuery = Object.fromEntries(
+        Object.entries(query).map(([key, value]) => {
+          if (Array.isArray(value)) return [key, value.join(",")];
+          else return [key, value.toString()];
+        })
+      );
+    const q = new URLSearchParams(encodedQuery);
     return format("%?%", path, q.toString());
   }
 }

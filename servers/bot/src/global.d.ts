@@ -22,6 +22,6 @@ declare module "telegraf" {
       settings: z.infer<typeof selectSettingsSchema>;
     };
     session: Session & Scenes.SceneSession<Session>;
-    scene: Scenes.SceneContext<Context, Session>;
+    scene: Scenes.SceneContextScene<Scenes.SceneContext<Session>, Session>;
   }
 }

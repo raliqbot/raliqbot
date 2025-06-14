@@ -6,3 +6,6 @@ export const startCommand = (botInstance: Telegraf) => {
   botInstance.start(onStart);
   botInstance.action("mainmenu", onStart);
 };
+
+startCommand.command = "mainmenu";
+startCommand.description = "update bot to latest version.";

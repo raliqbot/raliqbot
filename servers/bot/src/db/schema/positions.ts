@@ -9,14 +9,7 @@ import {
 
 import { wallets } from "./wallets";
 
-export type PositionMetadata = {
-  upperTick: number;
-  lowerTick: number;
-  liquidity?: string;
-  amountA: number;
-  amountB: number;
-  stopLossPercentage?: number;
-};
+export type PositionMetadata = {};
 
 export const positions = pgTable("positions", {
   id: text().primaryKey(),

@@ -7,6 +7,13 @@ type SettingsData = {
   priorityFees?: number;
   vaultAddress?: string;
   rebalanceSchedule: number;
+  poolSearchConfig?: {
+    poolType?: "DLMMM";
+    marketCap?: {
+      lessThan?: number;
+      greaterThan?: number;
+    };
+  };
 };
 
 export const settings = pgTable("settings", {

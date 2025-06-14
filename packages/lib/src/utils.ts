@@ -1,7 +1,8 @@
 import { BN } from "bn.js";
 import assert from "assert";
 import Decimal from "decimal.js";
-import { PublicKey } from "@solana/web3.js";
+import { readFileSync } from "fs";
+import { PublicKey, Keypair } from "@solana/web3.js";
 import { NATIVE_MINT, NATIVE_MINT_2022 } from "@solana/spl-token";
 
 export const is_valid_address = (address: string) => {
@@ -46,3 +47,8 @@ export function parse_amount_decimal(
 }
 
 export const to_bn = (value: bigint) => new BN(value.toString());
+
+export const loadWalletFromFile = (file: string) => {
+  const key = readFileSync(file, "utf-8");
+  return Keypair.fromSecretKey(Buffer.from(Array.from(JSON.parse(key))));
+};
