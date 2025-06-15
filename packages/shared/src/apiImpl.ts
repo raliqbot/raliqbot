@@ -1,5 +1,5 @@
 import { join } from "path";
-import type { XiorInstance } from "xior";
+import type { XiorInstance, XiorResponse } from "xior";
 
 import { format } from "./utils";
 
@@ -17,7 +17,7 @@ export abstract class ApiImpl {
 
   protected buildPathWithQueryString(
     path: string,
-    query?: Record<string, string | boolean| number | string[]>
+    query?: Record<string, string | boolean | number | string[]>
   ) {
     let encodedQuery;
     if (query)
@@ -29,5 +29,10 @@ export abstract class ApiImpl {
       );
     const q = new URLSearchParams(encodedQuery);
     return format("%?%", path, q.toString());
+  }
+
+  static async getData<T extends object>(response: Promise<XiorResponse<T>>) {
+    const { data } = await response;
+    return data;
   }
 }
