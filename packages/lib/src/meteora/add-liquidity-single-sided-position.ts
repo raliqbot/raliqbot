@@ -7,7 +7,7 @@ import type { MeteoraClient } from "./api";
 import { is_native_mint, parse_amount, to_bn } from "../utils";
 import { initialize_swap_from_sol } from "./utils/swap-from-sol";
 
-type CreateSingleSidedPositionArgs = {
+type AddSingleSidedPositionArgs = {
   slippage: BN;
   owner: PublicKey;
   positionId: PublicKey;
@@ -21,7 +21,7 @@ type CreateSingleSidedPositionArgs = {
   minBinId: number;
 };
 
-export const create_single_sided_position = async (
+export const add_liquidity_single_sided_position = async (
   connection: Connection,
   pool: DLMM,
   client: MeteoraClient,
@@ -34,7 +34,7 @@ export const create_single_sided_position = async (
     strategyType,
     maxBinId,
     minBinId,
-  }: CreateSingleSidedPositionArgs
+  }: AddSingleSidedPositionArgs
 ) => {
   const isNative = is_native_mint(mint.address);
 
@@ -46,7 +46,7 @@ export const create_single_sided_position = async (
     const totalYAmount = swapForY ? to_bn(amount) : new BN(0);
 
     return [
-      await pool.initializePositionAndAddLiquidityByStrategy({
+      await pool.addLiquidityByStrategy({
         totalXAmount,
         totalYAmount,
         user: owner,
@@ -59,18 +59,18 @@ export const create_single_sided_position = async (
       }),
     ];
   } else {
-    const { swapQuote, swapForYtoX, transaction } =
-      await initialize_swap_from_sol(connection, client, owner, {
-        slippage,
-        mint: mint.address,
-        amount: input.amount,
-      });
+    const { swapQuote, swapForYtoX, transaction } = await initialize_swap_from_sol(
+      connection,
+      client,
+      owner,
+      { slippage, mint: mint.address, amount: input.amount }
+    );
     const totalXAmount = swapForYtoX ? new BN(0) : swapQuote.minOutAmount;
     const totalYAmount = swapForYtoX ? swapQuote.minOutAmount : new BN(0);
 
     return [
       transaction,
-      await pool.initializePositionAndAddLiquidityByStrategy({
+      await pool.addLiquidityByStrategy({
         totalXAmount,
         totalYAmount,
         user: owner,

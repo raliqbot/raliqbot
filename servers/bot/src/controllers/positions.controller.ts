@@ -3,12 +3,16 @@ import { eq, SQL } from "drizzle-orm";
 
 import { Database } from "../db";
 import { positions } from "../db/schema";
+import { createPools } from "./pools.controller";
 import { insertPositionSchema, selectPositionSchema } from "../db/zod";
 
-export const createPositions = (
+export const createPositions = async (
   db: Database,
   ...values: z.infer<typeof insertPositionSchema>[]
-) => db.insert(positions).values(values).returning().execute();
+) => {
+  await createPools(db, ...values.map((value) => ({ id: value.pool })));
+  return db.insert(positions).values(values).returning().execute();
+};
 
 export const getPositionById = (
   db: Database,

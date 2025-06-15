@@ -1,7 +1,6 @@
-import bs58 from "bs58";
 import type { z } from "zod";
 import { and, eq } from "drizzle-orm";
-import { web3 } from "@coral-xyz/anchor";
+import { Keypair } from "@solana/web3.js";
 
 import type { Database } from "../db";
 import { wallets } from "../db/schema";
@@ -45,5 +44,5 @@ export const loadWallet = (
   wallet: Pick<z.infer<typeof selectWalletSchema>, "key">
 ) => {
   const data = decrypt<string>(secretKey, wallet.key);
-  return web3.Keypair.fromSecretKey(Buffer.from(data, 'base64'));
+  return Keypair.fromSecretKey(Buffer.from(data, "base64"));
 };

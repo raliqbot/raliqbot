@@ -1,7 +1,7 @@
 import { format } from "@raliqbot/shared";
 import type { Context, MiddlewareFn } from "telegraf";
 
-import { db } from "../instances";
+import { connection, db } from "../instances";
 import { cleanText } from "./utils";
 import { createUser } from "../controllers/users.controller";
 import { loadWallet } from "../controllers/wallets.controller";
@@ -27,4 +27,14 @@ export const authUser = async <T extends Context>(
   return context.reply(
     "You can't access @raliqbot. Contact @onisaibogu for more inforrmation."
   );
+};
+
+export const initializeSession = async <T extends Context>(
+  ...[context, next]: Parameters<MiddlewareFn<T>>
+) => {
+  if (!context.connection) context.connection = connection;
+  if (!context.session.createPosition) context.session.createPosition = {};
+  if (!context.session.messageIdsStack) context.session.messageIdsStack = [];
+
+  return next();
 };

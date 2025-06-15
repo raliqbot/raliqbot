@@ -1,6 +1,6 @@
 import BN from "bn.js";
 import assert from "assert";
-import DLMM, { type StrategyType } from "@meteora-ag/dlmm";
+import DLMM, { LbPosition, type StrategyType } from "@meteora-ag/dlmm";
 import {
   type ConfirmOptions,
   type Connection,
@@ -14,7 +14,7 @@ import type { Ratio } from "../ratio";
 import type { MeteoraClient } from "./api";
 import { toUniqueTx } from "./utils/unique-tx";
 import { initialize_swap_from_sol } from "./utils/swap-from-sol";
-import { create_single_sided_position } from "./create-single-sided-position";
+import { add_liquidity_single_sided_position } from "./add-liquidity-single-sided-position";
 import {
   is_native_mint,
   parse_amount,
@@ -22,11 +22,12 @@ import {
   to_bn,
 } from "../utils";
 
-type CreatePositionArgs = {
+type AddLiquidityToPositionArgs = {
   pool: DLMM;
   ratio?: Ratio;
   owner: Keypair;
   slippage: number;
+  position: LbPosition;
   client: MeteoraClient;
   connection: Connection;
   input: {
@@ -38,15 +39,15 @@ type CreatePositionArgs = {
   singleSided?: string | PublicKey;
 };
 
-export const create_position = async ({
+export const add_liquidity_to_position = async ({
   pool,
   owner,
   client,
+  position,
   connection,
   rangeIntervals,
   ...args
-}: CreatePositionArgs) => {
-  const position = new Keypair();
+}: AddLiquidityToPositionArgs) => {
   const slippage = new BN(args.slippage);
   const isNativeInput = is_native_mint(args.input.mint);
 
@@ -72,27 +73,37 @@ export const create_position = async ({
     if (isNativeInput) {
       if (pool.tokenX.mint.address.equals(singleSided))
         transactions.push(
-          ...(await create_single_sided_position(connection, pool, client, {
-            ...args,
-            slippage,
-            maxBinId,
-            minBinId,
-            mint: pool.tokenX.mint,
-            owner: owner.publicKey,
-            positionId: position.publicKey,
-          }))
+          ...(await add_liquidity_single_sided_position(
+            connection,
+            pool,
+            client,
+            {
+              ...args,
+              slippage,
+              maxBinId,
+              minBinId,
+              mint: pool.tokenX.mint,
+              owner: owner.publicKey,
+              positionId: position.publicKey,
+            }
+          ))
         );
       else
         transactions.push(
-          ...(await create_single_sided_position(connection, pool, client, {
-            ...args,
-            slippage,
-            maxBinId,
-            minBinId,
-            mint: pool.tokenY.mint,
-            owner: owner.publicKey,
-            positionId: position.publicKey,
-          }))
+          ...(await add_liquidity_single_sided_position(
+            connection,
+            pool,
+            client,
+            {
+              ...args,
+              slippage,
+              maxBinId,
+              minBinId,
+              mint: pool.tokenY.mint,
+              owner: owner.publicKey,
+              positionId: position.publicKey,
+            }
+          ))
         );
     }
   } else {
@@ -152,7 +163,7 @@ export const create_position = async ({
       }
 
       transactions.push(
-        await pool.initializePositionAndAddLiquidityByStrategy({
+        await pool.addLiquidityByStrategy({
           totalXAmount,
           totalYAmount,
           user: owner.publicKey,
@@ -174,14 +185,8 @@ export const create_position = async ({
   transaction.recentBlockhash = blockHash.blockhash;
 
   return {
-    position,
     transaction,
     execute: (options?: ConfirmOptions) =>
-      sendAndConfirmTransaction(
-        connection,
-        transaction,
-        [owner, position],
-        options
-      ),
+      sendAndConfirmTransaction(connection, transaction, [owner], options),
   };
 };

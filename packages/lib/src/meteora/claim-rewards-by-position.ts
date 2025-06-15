@@ -1,4 +1,4 @@
-import DLMM, { LbPosition } from "@meteora-ag/dlmm";
+import DLMM, { type LbPosition } from "@meteora-ag/dlmm";
 import {
   Connection,
   Keypair,
@@ -6,7 +6,7 @@ import {
   Transaction,
 } from "@solana/web3.js";
 
-export const claim_position = async (
+export const claim_reward_by_position = async (
   connection: Connection,
   pool: DLMM,
   owner: Keypair,

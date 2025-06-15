@@ -1,4 +1,8 @@
+import { isNumber } from "lodash";
+import { is_valid_address } from "@raliqbot/lib";
 import type { Context, Telegraf } from "telegraf";
+
+import { Strategies, Strategy } from "../../utils";
 import { createPositionSceneId } from "../scenes/create-position-scene";
 
 export const createPositionCommand = (bot: Telegraf) => {
@@ -11,8 +15,15 @@ export const createPositionCommand = (bot: Telegraf) => {
         : undefined;
 
     if (text) {
-      const [, pair, amount, strategy] = text.split(/\s/g);
-      return context.scene.enter(createPositionSceneId);
+      const [, poolId, amount, strategy] = text.split(/\s/g);
+      if (poolId && is_valid_address(poolId))
+        context.session.createPosition.poolId = poolId;
+      if (amount && isNumber(parseFloat(amount)))
+        context.session.createPosition.amount = parseFloat(amount);
+      if (strategy && strategy in Strategies)
+        context.session.createPosition.strategy =
+          Strategy[strategy as keyof typeof Strategy];
+      if (poolId) return context.scene.enter(createPositionSceneId);
     }
   };
 

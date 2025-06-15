@@ -17,9 +17,10 @@ export const positions = pgTable("positions", {
   wallet: uuid()
     .references(() => wallets.id)
     .notNull(),
+  signature: text(),
   algorithm: text({ enum: ["spot", "single-sided"] }).notNull(),
   metadata: jsonb().$type<PositionMetadata>().notNull(),
-  enabled: boolean().default(true).notNull(),
+  active: boolean().default(true).notNull(),
   createdAt: timestamp().defaultNow().notNull(),
   updatedAt: timestamp().defaultNow().notNull(),
 });
