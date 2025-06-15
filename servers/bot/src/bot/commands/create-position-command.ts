@@ -33,6 +33,8 @@ export const createPositionCommand = (bot: Telegraf) => {
   bot.command(commandFilter, onCreatePositionCommand);
 };
 
-createPositionCommand.command = "createPosition";
-createPositionCommand.description =
-  "Create new position for a pool. /help createPosition for detailed help.";
+createPositionCommand.config = {
+  command: "createPosition",
+  description:
+    "Create new position for a pool. /help createPosition for detailed help.",
+};

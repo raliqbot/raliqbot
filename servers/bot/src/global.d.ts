@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import type { i18n } from "i18next";
 import type { Ratio } from "@raliqbot/lib";
 import type DLMM, { type LbPosition, StrategyType } from "@meteora-ag/dlmm";
 import type { Connection, Keypair } from "@solana/web3.js";
@@ -30,6 +31,7 @@ type Session = SessionData & Scenes.SceneSessionData;
 
 declare module "telegraf" {
   interface Context extends Scenes.WizardContext<Session> {
+    i18: i18n;
     connection: Connection;
     wallet: Keypair;
     user: z.infer<typeof selectUserSchema> & {

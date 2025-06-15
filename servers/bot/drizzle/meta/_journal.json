@@ -5,57 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1746132977041,
-      "tag": "0000_redundant_korath",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1746333915263,
-      "tag": "0001_tranquil_hydra",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1746334077649,
-      "tag": "0002_black_johnny_blaze",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1746459123241,
-      "tag": "0003_omniscient_molly_hayes",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1746557042294,
-      "tag": "0004_thankful_tyger_tiger",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1746708569049,
-      "tag": "0005_loving_wind_dancer",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1746807367918,
-      "tag": "0006_stale_proemial_gods",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1748213400122,
-      "tag": "0007_rare_meggan",
+      "when": 1750023460820,
+      "tag": "0000_petite_ezekiel",
       "breakpoints": true
     }
   ]

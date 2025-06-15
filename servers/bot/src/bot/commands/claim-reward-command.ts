@@ -62,6 +62,8 @@ export const claimRewardCommand = (bot: Telegraf) => {
   bot.command(commandFilter, onClaimRewardCommand);
 };
 
-claimRewardCommand.command = "claimReward";
-claimRewardCommand.description =
-  "Claim rewards for a single position or multiple positions. /help claimReward for detailed help.";
+claimRewardCommand.config = {
+  command: "claimReward",
+  description:
+    "Claim rewards for a single position or multiple positions. /help claimReward for detailed help.",
+};

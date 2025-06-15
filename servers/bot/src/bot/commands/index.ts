@@ -2,6 +2,7 @@ import type { Telegraf } from "telegraf";
 
 import { pnlCommand } from "./pnl-command";
 import { startCommand } from "./start-command";
+import { searchCommand } from "./search-command";
 import { addLiquidityCommand } from "./add-liquidity-command";
 import { closePositionCommand } from "./close-position-command";
 import { createPositionCommand } from "./create-position-command";
@@ -10,6 +11,7 @@ import { removeLiquidityCommand } from "./remove-liquidity-command";
 export default function registerCommands(bot: Telegraf) {
   pnlCommand(bot);
   startCommand(bot);
+  searchCommand(bot);
   addLiquidityCommand(bot);
   closePositionCommand(bot);
   createPositionCommand(bot);

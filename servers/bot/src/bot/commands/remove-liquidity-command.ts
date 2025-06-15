@@ -20,6 +20,8 @@ export const removeLiquidityCommand = (bot: Telegraf) => {
   bot.command(commandFilter, onRemoveLiquidityCommand);
 };
 
-removeLiquidityCommand.command = "removeLiquiditys";
-removeLiquidityCommand.description =
-  "Decrease liquidity for a single position or multiple positions. /help removeLiquidity for detailed help.";
+removeLiquidityCommand.config = {
+  command: "removeLiquiditys",
+  description:
+    "Decrease liquidity for a single position or multiple positions. /help removeLiquidity for detailed help.",
+};

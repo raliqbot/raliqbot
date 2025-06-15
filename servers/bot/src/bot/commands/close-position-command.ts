@@ -62,6 +62,8 @@ export const closePositionCommand = (bot: Telegraf) => {
   bot.command(commandFilter, onClosePositionCommand);
 };
 
-closePositionCommand.command = "closePosition";
-closePositionCommand.description =
-  "Close a single position or multiple positions. /help closePosition for detailed help.";
+closePositionCommand.config = {
+  command: "closePosition",
+  description:
+    "Close a single position or multiple positions. /help closePosition for detailed help.",
+};

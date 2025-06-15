@@ -2,7 +2,7 @@ import { jsonb, pgTable, text, uuid } from "drizzle-orm/pg-core";
 import { users } from "./users";
 
 type SettingsData = {
-  locale: "em";
+  locale: "en";
   slippage: number;
   priorityFees?: number;
   vaultAddress?: string;
@@ -25,7 +25,7 @@ export const settings = pgTable("settings", {
   data: jsonb()
     .$type<SettingsData>()
     .default({
-      locale: "em",
+      locale: "en",
       slippage: 0.05,
       rebalanceSchedule: 108000,
     })

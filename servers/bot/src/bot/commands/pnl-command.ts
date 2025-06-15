@@ -20,6 +20,8 @@ export const pnlCommand = (bot: Telegraf) => {
   bot.command(commandFilter, onPnlCommand);
 };
 
-pnlCommand.command = "pnl";
-pnlCommand.description=
-  "pnl for a single position or multiple positions. /help pnl for detailed help.";
+pnlCommand.config = {
+  command: "pnl",
+  description:
+    "pnl for a single position or multiple positions. /help pnl for detailed help.",
+};
